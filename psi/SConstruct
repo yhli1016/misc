@@ -1,0 +1,12 @@
+import os
+
+
+env = Environment()
+env['ENV']['PATH'] = os.environ['PATH']
+env['CC'] = 'icc'
+env['CFLAGS'] = '-O3'
+
+env.Program('psi.x', ['psi.c', 'checkinp.c'], LIBS=['func'], LIBPATH=['.'])
+env.Program('rad.x', ['rad.c'], LIBS=['func'], LIBPATH=['.'])
+env.Program('overlap.x', ['overlap.c'], LIBS=['func'], LIBPATH=['.'])
+env.Library('func', ['rnl.c', 'ylm.c'])

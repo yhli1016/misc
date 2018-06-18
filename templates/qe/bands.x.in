@@ -1,0 +1,16 @@
+#
+# Input Template for bands.x
+#
+# Version: 1.0.0
+#
+# Notes:
+#
+# (1) We have to use no_overlap = .TRUE., otherwise the band
+#     structure would be ugly. 
+#
+&BANDS
+    prefix     = 
+    outdir     = './'
+    filband    = 'bndstr.dat'
+    no_overlap = .TRUE.
+/

@@ -1,0 +1,28 @@
+#
+# Input Template for plotxct.$flavor.x
+#
+# Version: 1.2.0
+#
+# Notes:
+#
+# (1) This file applies for semiconducting periodic systems only.
+#
+
+## Index of state to be plotted, as it appears in eigenvectors
+plot_state  #20
+
+## q-shift used in the calculation of valence bands (WFNq_fi file)
+q_shift   #0.00000  0.00000  0.00000
+
+## Size of supercell
+supercell_size    #7 7 1
+
+## coordinates of hole, in FRACTIONAL UNITS
+hole_position    #3.5 3.5 0.5
+
+# lattice vectors in atomic BOHR
+begin lattice_vectors
+#  22.775924122   0.000000000   0.000000000
+#   7.143240281  21.626762076   0.000000000
+#  -0.000356856   0.000034353  22.718098500
+end

@@ -1,0 +1,70 @@
+#
+# Input Template for absorption.$flavor.x
+#
+# Version: 1.2.0
+#
+# Notes:
+#
+# (1) This file applies for semiconducting periodic systems only.
+#
+
+## number of valence and conduction bands on coarse k-grid
+number_val_bands_coarse  #3
+number_cond_bands_coarse #4
+
+## number of valence and conduction bands on fine k-grid
+number_val_bands_fine  #3
+number_cond_bands_fine #4
+
+## symmetries of coarse, fine and shifted fine k-grid
+## SPECIFY ONE FOR EACH OF THE THREE!
+#no_symmetries_coarse_grid
+#use_symmetries_coarse_grid
+#no_symmetries_fine_grid
+#use_symmetries_fine_grid
+#no_symmetries_shifted_grid
+#use_symmetries_shifted_grid
+
+## quasi-particle energies corrections
+## TYPICALLY eqp_co_corrections
+## USE eqp_corrections TO SKIP INTERPOLATION
+eqp_co_corrections
+#eqp_corrections
+
+## diagonalization or haydock, TYPICALLY diagonalization
+#haydock
+diagonalization
+
+## which type of eigengectors to calculate
+spin_singlet
+#spin_triplet
+#local_fields
+
+## screening type
+screening_semiconductor
+#screening_metal
+#screening_graphene
+
+## FFTW truncation scheme
+#cell_box_truncation
+#cell_wire_truncation
+#cell_slab_truncation
+
+## method to calculate transtition matrix elements
+## SPECIFY EITHER OF THE TWO, TYPICALLY use_momentum
+#use_velocity
+#q_shift #0.001 0.0 0.0
+use_momentum
+polarization #1.0 0.0 0.0
+
+## broadening for absorption spectra
+#lorentzian_broadening
+gaussian_broadening
+energy_resolution #0.05
+
+## number of eigenvectors to write
+write_eigenvectors -1
+
+## use this option to skip interpolarition
+## meanwhile you should use eqp_corrections and eqp.dat/eqp_q.dat
+#skip_interpolation

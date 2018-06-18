@@ -1,0 +1,20 @@
+# 
+# Input Template for projwfc.x
+# 
+# Version: 1.0.0
+#
+# Notes:
+#
+# (1) By default gaussian broadening is used.
+#
+&PROJWFC
+    prefix  = 
+    outdir  = './'
+    ngauss  = 0
+    degauss = 0.001
+    Emin    = 
+    Emax    = 
+    DeltaE  = 0.01
+    filpdos = 
+    filproj = 'proj.dat'
+/

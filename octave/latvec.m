@@ -1,0 +1,13 @@
+function y = latvec(latconst)
+    a = latconst(1);
+    b = latconst(2);
+    c = latconst(3);
+    alpha = latconst(4) / 180 * pi;
+    beta  = latconst(5) / 180 * pi;
+    gamma = latconst(6) / 180 * pi;
+    y = zeros(3, 3);
+    y(1,:) = [ a, 0, 0 ];
+    y(2,:) = [ b*cos(gamma), b*sin(gamma), 0 ];
+    y(3,1) = c * cos(beta);
+    y(3,2) = c * (cos(alpha) - cos(beta)*cos(gamma)) / sin(gamma);
+    y(3,3) = c * sqrt(1 + 2*cos(alpha)*cos(beta)*cos(gamma) - cos(alpha)^2 - cos(beta)^2 - cos(gamma)^2) / sin(gamma);

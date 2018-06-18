@@ -1,0 +1,39 @@
+#
+# Input Template for surface.x
+#
+# Version: 1.0.0
+#
+
+header #edit me
+
+inputfilename #edit me
+inputfileformat cube
+outputfilename #edit me
+outputfileformat povray
+
+isovalue #edit me
+sign positive
+power 1
+algorithm cube
+smooth T
+box T
+basis T
+
+uc T
+uco
+0.0 0.0 0.0
+ucv
+#  22.775924122   0.000000000   0.000000000
+#   7.143240281  21.626762076   0.000000000
+#  -0.000356856   0.000034353  22.718098500
+ucu angstrom
+
+sc F
+sco
+0.0 0.0 0.0
+scv
+1.0 0.0 0.0
+0.0 1.0 0.0
+0.0 0.0 1.0
+scu latvec
+sct F

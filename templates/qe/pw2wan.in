@@ -1,0 +1,9 @@
+&INPUTPP 
+   prefix    = 
+   outdir    = './'
+   seedname  = 
+   wan_mode  = 'standalone'
+   write_mmn = .true.
+   write_amn = .true.
+   write_unk = .false.
+/

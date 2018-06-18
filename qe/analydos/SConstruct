@@ -1,0 +1,11 @@
+import os
+
+
+env = Environment()
+env['ENV']['PATH'] = os.environ['PATH']
+env['F90'] = 'ifort'
+env['F90FLAGS'] = '-O3'
+env['FORTRAN'] = 'ifort'
+
+env.Program('analypdos.x', Split('analypdos.f90 sumpdos.f90 shareddata.f90'))
+env.Program('analyldos.x', Split('analyldos.f90 sumldos.f90 shareddata.f90'))

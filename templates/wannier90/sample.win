@@ -1,0 +1,57 @@
+## System parameters
+num_wann =
+num_bands =
+
+begin unit_cell_cart
+ang
+#
+end unit_cell_cart
+
+begin atoms_frac
+#
+end atoms_frac
+
+mp_grid =
+
+begin kpoints
+#
+end kpoints
+
+## Projections
+begin projections
+#
+end projections
+
+## Job control
+#restart =
+#exclude_bands =
+
+## Disentanglement
+#dis_win_min =
+#dis_win_max =
+#dis_froz_min =
+#dis_froz_max =
+
+## Wannierise
+num_iter =
+
+## Plot
+#wannier_plot = .true.
+#wannier_plot_format = xcrysden
+#wannier_plot_mode = crystal
+#wannier_plot_supercell =
+#wannier_plot_list =
+#
+#bands_plot = .true.
+#bands_plot_format = gnuplot
+#bands_plot_mode = cut
+#bands_plot_dim =
+#hr_cutoff = 1.0E-4
+#one_dim_axis =
+#bands_num_points = 100
+#
+#begin kpoint_path
+##
+#end kpoint_path
+
+write_hr = .true

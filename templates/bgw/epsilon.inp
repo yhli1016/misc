@@ -1,0 +1,39 @@
+#
+# Input Template for epsilon.$flavor.x
+#
+# Version: 1.2.0
+#
+# Notes:
+#
+# (1) This file applies for semiconducting periodic systems only.
+#
+# (2) Unlike sigma.cplx.x, epsilon.cplx.x does not have flags related
+#     to screening type.
+#
+
+## kinetic energy cutoff for dielectric matrix
+epsilon_cutoff #1.00
+
+## number of bands involved in summation
+number_bands #360
+
+## FFTW truncation scheme
+#cell_box_truncation
+#cell_wire_truncation
+#cell_slab_truncation
+
+## list of q-points
+begin qpoints
+#  0.000000    0.000000    0.001000   1.0   1
+#  0.000000    0.000000    0.062500   1.0   0
+end
+
+## parallelism flags
+#gcomm_matrix
+#gcomm_elements
+#number_valence_pools 1
+
+## job control
+#skip_epsilon
+#skip_chi
+#restart

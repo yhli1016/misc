@@ -1,0 +1,24 @@
+#
+# Input Template for pw2bgw.x
+#
+# Version: 1.0.0
+#
+# Notes:
+# 
+# (1) Complex version is always used (real_or_complex = 2).
+#
+# (2) This file is used to generate WFN_fi.
+#
+&INPUT_PW2BGW
+    prefix          = 
+    real_or_complex = 2
+    wfng_flag       = .true.
+    wfng_file       = 'WFN_fi'
+    wfng_kgrid      = .true.
+    wfng_nk1        = 
+    wfng_nk2        = 
+    wfng_nk3        = 
+    wfng_dk1        = 
+    wfng_dk2        = 
+    wfng_dk3        = 
+/

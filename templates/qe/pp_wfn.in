@@ -1,0 +1,25 @@
+#
+# Input Template for pp.x
+#
+# Version: 1.0.0
+#
+# Notes:
+#
+# (1) This file is for calculating |psi_nk(r)|^2.
+#
+# (2) By default the output is in G98 cube format.
+#
+&INPUTPP
+    prefix         = 
+    outdir         = './'
+    filplot        = 'wfn'
+    plot_num       = 7
+    kpoint         = 
+    kband          = 
+    spin_component = 0
+/
+&PLOT
+    iflag          = 3
+    output_format  = 6
+    fileout        = 'wfn.cube'
+/
