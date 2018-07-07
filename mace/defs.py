@@ -20,7 +20,7 @@ def include(filename, nl=[0,0]):
 ################################################################################
 
 
-m = macro = {}
+m = macro = dict()
 
 # Macros can be strings, integers and floats.
 m["PREFIX"] = "'test'"

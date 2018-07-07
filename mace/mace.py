@@ -17,6 +17,16 @@ def parse_args():
     return args
 
 
+def expand_content(macro, content_raw):
+    content_expanded = []
+    for line in content_raw:
+        flag = True
+        while flag is True:
+            line, flag = expand_line(macro, line)
+        content_expanded.append(line)
+    return content_expanded
+
+
 def expand_line(macro, line):
     flag = False
     for mac_name, mac_text in macro.items():
@@ -28,23 +38,13 @@ def expand_line(macro, line):
 
 
 def main(macro, template, output):
-    # Read in template
     try:
         with open(template, "r") as in_file:
             content_raw = in_file.readlines()
     except IOError:
         print("ERROR: cannot read '%s'" % template)
         sys.exit(-1)
-
-    # Expand macros
-    content_expanded = []
-    for line in content_raw:
-        flag = True
-        while flag is True:
-            line, flag = expand_line(macro, line)
-        content_expanded.append(line)
-
-    # Output
+    content_expanded = expand_content(macro, content_raw)
     try:
         with open(output, "w") as out_file:
             for line in content_expanded:
