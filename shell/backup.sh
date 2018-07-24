@@ -1,19 +1,13 @@
 #! /bin/bash
 
 # Back up configuration
-mkdir -p bak/config
-itemlist=".bash* .dircolors .inputrc .octaverc .vimrc \
-.ssh"
-for item in $itemlist; do
-	cp -r ~/$item bak/config
-done
+itemlist=".bash_profile .bashrc .bash_logout \
+.dircolors .inputrc .vimrc .ssh"
 
-# Back up software
-mkdir -p bak/soft
-itemlist="bin octave templates"
+mkdir rc_bak
 for item in $itemlist; do
-    cp -r ~/soft/$item bak/soft
+	cp -r ~/$item rc_bak
 done
 
 # Archiving
-tar -cjf bak.tar.bz2 bak && rm -rf bak
+tar -cjf rc_bak.tar.bz2 rc_bak && rm -rf rc_bak
