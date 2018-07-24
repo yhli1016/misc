@@ -1,3 +1,15 @@
+# Python
+/*__pycache__*
+*.pyc
+
+# Output files
 *.png
 *.pdf
-*.pyc
+*.cube
+
+# Object files and executables
+*.o
+*.mod
+*.a
+*.so
+*.x
