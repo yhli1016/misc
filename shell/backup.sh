@@ -10,4 +10,4 @@ for item in $itemlist; do
 done
 
 # Archiving
-tar -cjf rc_bak.tar.bz2 rc_bak && rm -rf rc_bak
+tar -cjf rc_bak_$(date +%F).tar.bz2 rc_bak && rm -rf rc_bak
