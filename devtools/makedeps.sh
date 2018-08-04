@@ -20,6 +20,11 @@ includedep.sh $DEPENDS >> make.depend
 sed '/@mpi@/d' make.depend > make.depend.tmp
 mv make.depend.tmp make.depend
 
+# remove cyclic dependencies
+sed 's/://g' make.depend | \
+awk '!match($2, $1) {printf "%s: %s\n", $1, $2}' > make.depend.tmp
+mv make.depend.tmp make.depend
+
 # check for missing dependencies 
 if grep @ make.depend
 then
