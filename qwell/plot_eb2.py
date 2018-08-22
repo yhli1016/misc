@@ -19,19 +19,28 @@ yfi = np.linspace(yco.min(), yco.max(), 100)
 zfi = new_func(xfi, yfi)
 
 # Plot
-plt.rc("font", size=12)
+plt.rc("font", size=12, family="Times New Roman", weight="bold")
 fig, axes = plt.subplots()
 
 img = axes.contourf(xfi, yfi, zfi, 15, cmap="jet")
 
-axes.set_title("Binding energy", fontsize="large")
-axes.set_xlabel("Thickness (nm)", fontsize="large")
-axes.set_ylabel("$\epsilon_2$", fontsize="large")
+axes.set_title("Binding energy", fontsize="large", weight="bold")
+axes.set_xlabel("Thickness (nm)", fontsize="large", weight="bold")
+axes.set_ylabel("$\epsilon_2$", fontsize="large", weight="bold")
 axes.minorticks_on()
+axes.xaxis.set_minor_locator(ticker.MultipleLocator(2.5))
+axes.yaxis.set_minor_locator(ticker.MultipleLocator(0.5))
+axes.tick_params(which="both", direction="in")
 fig.colorbar(img, label="meV")
-fig.savefig(prefix + "/eb2.pdf")
+
+# Add the samples
+eps1 = np.array([8.1, 8.1, 8.1, 8.1, 8.1])
+eps2 = np.array([3.52, 3.52, 3.52, 3.52, 3.52])
+d = np.array([5.8, 7.8, 10.1, 14.3, 26.2])
+axes.plot(d, eps2, "wo")
 
 # Save to file
+fig.savefig(prefix + "/eb2.pdf")
 with open (prefix + "/eb_eps2.dat", "w") as f:
     for i, x in enumerate(xfi):
         for j, y in enumerate(yfi):
