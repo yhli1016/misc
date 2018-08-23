@@ -1,0 +1,32 @@
+# Startup parameters
+PREC = Accurate
+ISTART = 1
+ICHARG = 11
+
+# Electronic relaxation
+ENCUT = 500
+EDIFF = 1E-8
+NELM = 60
+NELMIN = 2
+LREAL = .FALSE.
+GGA = PE
+VOSKOWN = 1
+NBANDS = 360
+ALGO = Exact
+
+# Ionic relaxtion
+ISYM = 1
+
+# DOS related values
+ISMEAR = 0
+SIGMA = 0.05
+CSHIFT = 0.1
+NEDOS = 2000
+
+# I/O
+LWAVE = .TURE.
+LCHARG = .FALSE.
+
+# Response functions
+LOPTICS = .TRUE.
+LRPA = .FALSE.

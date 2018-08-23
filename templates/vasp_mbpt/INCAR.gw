@@ -1,0 +1,40 @@
+# Startup parameters
+PREC = Accurate
+ISTART = 1
+ICHARG = 11
+
+# Electronic relaxation
+ENCUT = 500
+EDIFF = 1E-8
+NELM = 1
+NELMIN = 1
+LREAL = .FALSE.
+GGA = PE
+VOSKOWN = 1
+NBANDS = 360
+ALGO = GW0
+
+# Ionic relaxtion
+ISYM = 1
+
+# DOS related values
+ISMEAR = 0
+SIGMA = 0.05
+#CSHIFT = 0.1
+#NEDOS = 2000
+
+# I/O
+LWAVE = .FALSE.
+LCHARG = .FALSE.
+
+# Response functions
+LOPTICS = .TRUE.
+LRPA = .FALSE.
+
+# QP corrections
+NOMEGA = 72
+LSPECTRAL = .TRUE.
+ENCUTGW = 200
+LSELFENERGY = .FALSE.
+NBANDSGW = 36
+DIM = 2
