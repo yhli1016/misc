@@ -52,7 +52,7 @@ figure_dpi = 300
 
 # Font settings
 font_size = 12
-font_family = "Calibri"
+font_family = "Arial"
 font_weight = "bold"
 
 # Axes and spines settings
@@ -62,8 +62,8 @@ axes_width = 1.5
 spines_width = 1.5
 
 # Length, width of lines and labels
-line_width = 1.5
-label_length = 0.1
+line_width = 1.0
+label_length = 0.3
 label_width = 1.5
 
 # Global settings and create the figure
@@ -73,31 +73,22 @@ fig, axes = plt.subplots(figsize=figure_size)
 # Plot the MEPs
 # Names for colors: (b)lue, (r)ed, (g)reen, (c)yan, (m)agenta, blac(k), (w)hite
 # Allowd linestyles are "-", "--", "-.", ":"
-x = [0, 1, 2]
-add_mep(x, [0, 1.3, -0.7],   ['k', 'b', 'b'], color="b", linestyle=":", label="A")
-add_mep(x, [0, 0.47, 0.13],  ['k', 'r', 'r'], color="r", linestyle=":", label="B")
-add_mep(x, [0, 1.35, 1.63],  ['k', 'k', 'k'], color="k", linestyle=":", label="C")
-add_mep(x, [0, 0.80, -1.9],  ['k', 'b', 'b'], color="b", linestyle="-", label="A")
-add_mep(x, [0, 0.89, -1.4],  ['k', 'r', 'r'], color="r", linestyle="-", label="B")
-add_mep(x, [0, 1.48, -0.66], ['k', 'k', 'k'], color="k", linestyle="-", label="C")
+x = [0, 1, 2, 3, 4]
+add_mep(x, [0, 3.04, 2.50, 4.34, 2.67],   ["k", "b", "r", "c" ,"m"], color="k", linestyle="-", label="Path-A")
+add_mep(x, [0, 2.70, 2.95, 1.35, 2.00],   ["k", "b", "r", "c" ,"m"], color="b", linestyle="-", label="Path-B")
 
 # Adjusting the figures
 axes.set_xlabel("Reaction coordinate", fontsize="large", weight=font_weight)
 axes.set_ylabel("Energy (eV)", fontsize="large", weight=font_weight)
 
 axes.set_xticks([])
-axes.set_ylim(ymin, ymax)
+#axes.set_ylim(ymin, ymax)
 axes.tick_params(axis="y", width=axes_width)
 
-# Hide borders
-#axes.spines["top"].set_visible(False)
-#axes.spines["bottom"].set_visible(False)
-#axes.spines["right"].set_visible(False)
-
-# Show borders
-axes.spines["top"].set_linewidth(spines_width)
-axes.spines["bottom"].set_linewidth(spines_width)
-axes.spines["right"].set_linewidth(spines_width)
+# Hide or show borders
+for key in ("top", "bottom", "right"):
+    #axes.spines[key].set_visible(False)
+    axes.spines[key].set_linewidth(spines_width)
 
 # Left border is always shown
 axes.spines["left"].set_linewidth(spines_width)
@@ -107,4 +98,4 @@ axes.legend(edgecolor="w")
 
 # Save the figure
 fig.tight_layout()
-fig.savefig("mep.png", dpi=figure_dpi)
+fig.savefig("mep_curve.png", dpi=figure_dpi)
