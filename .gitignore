@@ -13,3 +13,8 @@
 *.a
 *.so
 *.x
+
+# PyCharm workspace
+/.idea
+*.xml
+*.iml
