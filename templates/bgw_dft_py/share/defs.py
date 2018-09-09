@@ -5,7 +5,7 @@ import sys
 
 
 ################################################################################
-def include(filename, nl=[0,0]):
+def include(filename, nl0=None, nl1=None):
     try:
         with open(filename, "r") as infile:
             content = infile.readlines()
@@ -13,8 +13,8 @@ def include(filename, nl=[0,0]):
         print("ERROR: cannot include '%s'" % filename)
         sys.exit(-1)
     else:
-        nl_start = nl[0] if nl[0] != 0 else 1
-        nl_end   = nl[1] if nl[1] != 0 else len(content)
+        nl_start = nl0 if nl0 is not None else 1
+        nl_end   = nl1 if nl1 is not None else len(content)
         longline = "".join(content[(nl_start-1):nl_end])
         return longline
 ################################################################################
