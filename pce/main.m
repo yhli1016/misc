@@ -8,7 +8,7 @@ Ec_max = 1.0;
 
 % load solar spectrum and calculate the denorminator
 global AM15G;
-AM15G = load('AM15G.dat');
+AM15G = load('AM15G.DAT');
 
 % evaluate ita on a coarse grid
 NGrid = 25;
