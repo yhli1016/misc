@@ -1,11 +1,16 @@
-"""Functions for setting up the Hamiltonian and diagonalization."""
+"""Class representing the Hamiltonian."""
 
 import numpy as np
+from core import set_ham
 
 
 class TBModel(object):
+    """A simple yet efficient tight-binding model."""
+
     def __init__(self, num_orbital):
-        self.hr_terms = []
+        self.Rn = None
+        self.ij = None
+        self.tij = None
         self.hamiltonian = np.zeros((num_orbital, num_orbital), dtype="complex")
 
     def read_hr(self, filename, threshold=1.0e-4):
@@ -19,29 +24,22 @@ class TBModel(object):
         """
         with open(filename, "r") as hr_file:
             hr_content = hr_file.readlines()
+        Rn_list, ij_list, tij_list = [], [], []
         for line in hr_content:
             line_split = line.split()
-            Rn = np.array([float(line_split[0]), float(line_split[1]),
-                           float(line_split[2])])
-            ij = (int(line_split[3])-1, int(line_split[4])-1)
+            Rn = [float(line_split[0]), float(line_split[1]),
+                  float(line_split[2])]
+            ij = [int(line_split[3]) - 1, int(line_split[4]) - 1]
             tij = float(line_split[5]) + 1j * float(line_split[6])
             if np.abs(tij) >= threshold:
-                self.hr_terms.append([Rn, ij, tij])
-
-    def set_hamiltonian(self, kpoint):
-        """
-        Set up the Hamiltonian in Bloch basis set for given kpoint.
-
-        :param kpoint: 1*3 array
-        :return: None.
-        """
-        self.hamiltonian *= 0.0
-        for hr in self.hr_terms:
-            Rn = hr[0]
-            ij = hr[1]
-            tij = hr[2]
-            hij = tij * np.exp(1j * 2 * np.pi * np.dot(kpoint, Rn))
-            self.hamiltonian[ij] += hij
+                Rn_list.append(Rn)
+                ij_list.append(ij)
+                tij_list.append(tij)
+        self.Rn = np.array(Rn_list, dtype="float")
+        self.ij = np.array(ij_list, dtype="int32")
+        self.tij = np.array(tij_list, dtype="complex")
+        orbital_indices = set([ij[0] for ij in self.ij])
+        assert len(orbital_indices) == self.hamiltonian.shape[0]
 
     def eval_energies(self, kpoints, orbital_list=None):
         """
@@ -53,8 +51,6 @@ class TBModel(object):
         :return: energies, Nk * N_orbital array
         :return: projection, Nk * N_orbital array
         """
-        orbital_indices = set([hr[1][0] for hr in self.hr_terms])
-        assert len(orbital_indices) == self.hamiltonian.shape[0]
         num_k_point = len(kpoints)
         energies = np.zeros((num_k_point, self.hamiltonian.shape[0]),
                             dtype="float")
@@ -65,7 +61,7 @@ class TBModel(object):
                              for i in range(self.hamiltonian.shape[0])])
 
         for ik, kpoint in enumerate(kpoints):
-            self.set_hamiltonian(kpoint)
+            set_ham(self.hamiltonian, self.ij, self.Rn, self.tij, kpoint)
             if orbital_list is not None:
                 eigval, eigvec = np.linalg.eig(self.hamiltonian)
                 energies[ik] = eigval.real
