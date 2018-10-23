@@ -39,7 +39,7 @@ for pos in ("top", "bottom", "left", "right"):
     axes.spines[pos].set_linewidth(1.5)
 
 # Set legend
-axes.legend(edgecolor="w")
+axes.legend(edgecolor="w", fontsize="large")
 
 # Save figure
 fig.tight_layout()

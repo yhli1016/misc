@@ -25,7 +25,7 @@ x = 1 / data[:, 0]**2
 y = data[:, 1]
 
 # Least square fitting
-k0 = [1, 0]
+k0 = [0, 1]
 result = opt.leastsq(residuals, k0, args=(x, y))
 print(result)
 
@@ -44,7 +44,7 @@ axes.plot(x_plot*1000, y_plot, "b", label=r"\textbf{Fitted}")
 
 # Set ticks
 axes.set_xlabel(r"$\mathbf{d^{-2} (10^{-3}nm^{-2})}$")
-axes.set_ylabel(r"$\mathbf{E_g (eV)}$")
+axes.set_ylabel(r"$\mathbf{E (eV)}$")
 axes.set_xlim([0, 30])
 axes.set_ylim([2.34, 2.44])
 axes.set_xticks([i for i in range(0, 35, 5)])
