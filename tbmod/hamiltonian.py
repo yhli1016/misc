@@ -47,7 +47,7 @@ class TBModel(object):
 
         :param kpoints: N*3 array
         :param orbital_list: indices of orbitals on which the projection will
-                be evaluated
+                be evaluated, counted from 1
         :return: energies, Nk * N_orbital array
         :return: projection, Nk * N_orbital array
         """
@@ -57,7 +57,7 @@ class TBModel(object):
         if orbital_list is not None:
             projection = np.zeros((num_k_point, self.hamiltonian.shape[0]),
                                   dtype="float")
-            mask = np.array([True if i in orbital_list else False
+            mask = np.array([True if i+1 in orbital_list else False
                              for i in range(self.hamiltonian.shape[0])])
 
         for ik, kpoint in enumerate(kpoints):

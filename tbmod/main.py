@@ -29,7 +29,7 @@ print("Time elapsed in setting up Hamiltonian: %fs" % (t1 - t0))
 
 # Calculate projection-resolved band structure.
 t0 = time.time()
-energies, projection = tbmod.eval_energies(kpath, [9, 13])
+energies, projection = tbmod.eval_energies(kpath, [10, 14])
 t1 = time.time()
 print("Time elapsed in calculating band structure: %fs" % (t1 - t0))
 
