@@ -1,5 +1,6 @@
 # Compiler settings
 FC = gfortran
+FPPFLAGS = -cpp -DQE6
 FCFLAGS = -O2
 
 # Top level pseudo-targets
@@ -10,12 +11,11 @@ clean:
 	rm *.o *.mod *.x
 
 # Executables
-analyldos.x: sumldos.o shareddata.o
-analypdos.x: sumpdos.o shareddata.o
-%.x: %.o
-	$(FC) $(FCFLAGS) -o $@ $^
+%.x: %.o sumdos.o projection.o
+	$(FC) $(FPPFLAGS) $(FCFLAGS) -o $@ $^
 
 # Objects
-analyldos.o analypdos.o sumldos.o sumpdos.o: shareddata.o
+analyldos.o analypdos.o: sumdos.o projection.o
+sumdos.o: projection.o
 %.o: %.f90
-	$(FC) $(FCFLAGS) -c -o $@ $<
+	$(FC) $(FPPFLAGS) $(FCFLAGS) -c -o $@ $<

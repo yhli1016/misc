@@ -2,7 +2,7 @@
 !
 ! REMEMBER TO REMOVE THE HEAD LINES BEFORE INVOKING THIS PROGRAM.
 !
-! THE PROJECTION FILE TO ANALYZE MUST BE IN THE FOLLOWING FORM:
+! THE PROJECTION FILE TO ANALYZE MUST BE IN THE FOLLOWING FORM FOR QE 5.x:
 !     234       1     144
 !    F    F
 !    1    1C      1    0    1
@@ -15,6 +15,15 @@
 !       1       7        0.0000000000
 !       1       8        0.0005048665
 !       1       9        0.0000052600
+!
+! FOR QE 6.x IT SHOULD BE:
+!
+!      64     121      16
+!    F    F
+!    1    1  In  5s     1    0    1
+!       1       1        0.1095559867
+!       1       2        0.0554159126
+!       1       3        0.2140375616
 !
 ! This program summates the projection of specified states \Psi_{ikpoint,iband}
 ! on the atomic states with specified atomid. It is helpful when calculating the
@@ -33,11 +42,9 @@
 !
 !===============================================================================
 
-
 program analyldos
-
-    use shareddata
-
+    use projection, only: load_projection, free_projection
+    use sumdos,     only: sumldos
     implicit none
 
     ! file names of input file, projection file and output file
@@ -47,45 +54,26 @@ program analyldos
     integer(kind=4), allocatable, dimension(:) :: atomlist
     ! contribution collected from listed atoms in percentage
     real(kind=8) :: pct
-    ! temporary integers to read verbose information
-    integer(kind=4) :: tempa, tempb
     ! loop counters
     integer(kind=4) :: i, j, k
 
     ! parse cli-parameters and read input
-    call get_command_argument( 1, inpfn )
-    call get_command_argument( 2, outfn )
-    open (unit=7, file=inpfn, status="old")
+    call get_command_argument(1, inpfn)
+    call get_command_argument(2, outfn)
+    open(unit=7, file=inpfn, status="old")
     read (7,*) projfn
     read (7,*) ikmin, ikmax
     read (7,*) ibmin, ibmax
     read (7,*) natom
-    allocate( atomlist(natom) )
+    allocate(atomlist(natom))
     read (7,*) atomlist(:)
-    close (unit=7)
+    close(unit=7)
 
     ! read projection file. 
-    ! MUST BE TREATED WITH SPECIAL CARE!
-    open ( unit=7, file=projfn, status="old" )
-    read (7,*) nwfc, nkpoint, nband
-    read (7,*) lnoncolin, lspinorbit
-    allocate( wfcid(nwfc)  )
-    allocate( atomid(nwfc) )
-    allocate( atomsym(nwfc) )
-    allocate( nlm(nwfc,3) )
-    allocate( proj(nwfc,nkpoint,nband) )
-    do i = 1, nwfc
-        read (7,"(2I5,A3,3I5)") wfcid(i), atomid(i), atomsym(i), nlm(i,:)
-        do j = 1, nkpoint
-            do k = 1, nband
-                 read (7,*) tempa, tempb, proj(i,j,k)
-            end do
-        end do
-    end do
-    close ( unit=7 )
+    call load_projection(projfn)
 
     ! collect projection from specified atoms
-    open ( unit=7, file=outfn, status="replace" )
+    open(unit=7, file=outfn, status="replace")
     write (7,"(2A8,A14)") "#  ikpnt", "iband", "Proj"
     do i = ikmin, ikmax
         do j = ibmin, ibmax
@@ -96,13 +84,9 @@ program analyldos
             write (7,"(2I8,F14.9)") i, j, pct 
         end do
     end do
+    close(unit=7)
 
     ! clean up
     deallocate( atomlist )
-    deallocate( wfcid )
-    deallocate( atomid )
-    deallocate( atomsym )
-    deallocate( nlm )
-    deallocate( proj )
-
-end program analyldos
+    call free_projection()
+end program
