@@ -51,7 +51,7 @@ program analypdos
     character(len=32) :: inpfn, projfn, outfn
     ! flags in the input file
     integer(kind=4) :: ikmin, ikmax, ibmin, ibmax, ntype
-    character(len=2), allocatable :: atomic_species(:)
+    character(len=3), allocatable :: atomic_species(:)
     integer(kind=4), allocatable :: nlm_inp(:,:)
     ! contribution collected from listed atomic species in percentage
     real(kind=8) :: pct

@@ -37,7 +37,7 @@ module sumdos
         implicit none
 
         integer(kind=4),  intent(in)  :: ikpoint, iband
-        character(len=2), intent(in)  :: atomic_species
+        character(len=3), intent(in)  :: atomic_species
         integer(kind=4), dimension(3), intent(in)  :: nlm_cmp
         real(kind=8),     intent(out) :: pct
         integer(kind=4) :: i, j
