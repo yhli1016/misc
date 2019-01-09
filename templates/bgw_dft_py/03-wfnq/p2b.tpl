@@ -13,14 +13,14 @@
 #     That is to say, wfng_dki = dki + nki * qki
 #
 &INPUT_PW2BGW
-    prefix          = <PREFIX>
+    prefix          = '<PREFIX>'
     real_or_complex = 2
     wfng_flag       = .true.
     wfng_file       = 'WFNq'
     wfng_kgrid      = .true.
-    wfng_nk1        = <NK1>
-    wfng_nk2        = <NK2>
-    wfng_nk3        = <NK3>
+    wfng_nk1        = <NK1Q>
+    wfng_nk2        = <NK2Q>
+    wfng_nk3        = <NK3Q>
     wfng_dk1        = <DK1Q>
     wfng_dk2        = <DK2Q>
     wfng_dk3        = <DK3Q>

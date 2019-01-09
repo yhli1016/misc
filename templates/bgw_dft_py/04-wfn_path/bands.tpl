@@ -16,7 +16,7 @@
 #     band structure.
 #
 &CONTROL
-    prefix           = <PREFIX>
+    prefix           = '<PREFIX>'
     calculation      = 'bands'
     restart_mode     = 'from_scratch'
     pseudo_dir       = './'

@@ -17,7 +17,7 @@
 #     wave functions for BGW.
 #
 &CONTROL
-    prefix           = <PREFIX>
+    prefix           = '<PREFIX>'
     calculation      = 'bands'
     restart_mode     = 'from_scratch'
     pseudo_dir       = './'

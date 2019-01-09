@@ -13,7 +13,7 @@
 #     lines are required. For that purpose, we set wfng_kgrid to false.
 #
 &INPUT_PW2BGW
-    prefix          = <PREFIX>
+    prefix          = '<PREFIX>'
     real_or_complex = 2
     wfng_flag       = .true.
     wfng_file       = 'WFN_fi'

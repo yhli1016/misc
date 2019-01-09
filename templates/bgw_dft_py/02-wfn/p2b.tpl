@@ -10,7 +10,7 @@
 # (2) This file is used to generate WFN, RHO and vxc.dat.
 #
 &INPUT_PW2BGW
-    prefix           = <PREFIX>
+    prefix           = '<PREFIX>'
     real_or_complex  = 2
     wfng_flag        = .true.
     wfng_file        = 'WFN'

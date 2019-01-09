@@ -10,7 +10,7 @@
 # (2) This file is used to generate WFN_fi.
 #
 &INPUT_PW2BGW
-    prefix          = <PREFIX>
+    prefix          = '<PREFIX>'
     real_or_complex = 2
     wfng_flag       = .true.
     wfng_file       = 'WFN_fi'
@@ -18,7 +18,7 @@
     wfng_nk1        = <NK1_FI>
     wfng_nk2        = <NK2_FI>
     wfng_nk3        = <NK3_FI>
-    wfng_dk1        = <DK1>
-    wfng_dk2        = <DK2>
-    wfng_dk3        = <DK3>
+    wfng_dk1        = <DK1_FI>
+    wfng_dk2        = <DK2_FI>
+    wfng_dk3        = <DK3_FI>
 /

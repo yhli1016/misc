@@ -13,7 +13,7 @@
 #     'CELL_PARAMETERS {alat}'.
 #
 &CONTROL
-    prefix           = '<PREFIX>'
+    prefix           = '0.000'
     calculation      = 'scf'
     restart_mode     = 'from_scratch'
     pseudo_dir       = './'
@@ -25,9 +25,14 @@
 &SYSTEM
     ibrav            = 0
     celldm(1)        = 1.889726125
-    ntyp             = <NTYP>
-    nat              = <NAT>
-    ecutwfc          = <ECUTWFC>
+    ntyp             = 2
+    nat              = 4
+    ecutwfc          = 70
+    nbnd             = 16
+    occupations      = 'smearing'
+    smearing         = 'gaussian'
+    degauss          = 0.005
+
 /
 &ELECTRONS
     electron_maxstep = 250
@@ -39,5 +44,18 @@
     diago_david_ndim = 4
     diago_full_acc   = .TRUE.
 /
-<POS>
-<KPT_SCF>
+ATOMIC_SPECIES
+  In 114.8  In.pbe-mt_fhi.UPF
+  Se  78.96 Se.pbe-mt_fhi.UPF
+CELL_PARAMETERS {alat}
+   2.027733378   3.512137236   0.000000000
+  -2.027733378   3.512137236   0.000000000
+   0.000000000   0.000000000  20.500000000
+ATOMIC_POSITIONS {crystal}
+  In   0.333334671   0.333334671   0.431781565
+  In   0.333334812   0.333334812   0.568224866
+  Se   0.666665091   0.666665091   0.369744698
+  Se   0.666665427   0.666665427   0.630258871
+
+K_POINTS {automatic}
+ 12 12 1 0 0 0
