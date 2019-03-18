@@ -54,9 +54,9 @@ class TBModel(object):
         num_k_point = len(kpoints)
         energies = np.zeros((num_k_point, self.hamiltonian.shape[0]),
                             dtype="float")
+        projection = np.zeros((num_k_point, self.hamiltonian.shape[0]),
+                              dtype="float")
         if orbital_list is not None:
-            projection = np.zeros((num_k_point, self.hamiltonian.shape[0]),
-                                  dtype="float")
             mask = np.array([True if i+1 in orbital_list else False
                              for i in range(self.hamiltonian.shape[0])])
 

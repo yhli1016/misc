@@ -17,9 +17,9 @@ def gen_lattice_vectors(lattice_parameters):
     a = lattice_parameters[0]
     b = lattice_parameters[1]
     c = lattice_parameters[2]
-    alpha = lattice_parameters[3] / 180 * pi
-    beta = lattice_parameters[4] / 180 * pi
-    gamma = lattice_parameters[5] / 180 * pi
+    alpha = lattice_parameters[3] * 1.0 / 180 * pi
+    beta = lattice_parameters[4] * 1.0 / 180 * pi
+    gamma = lattice_parameters[5] * 1.0 / 180 * pi
     lattice_vectors = np.zeros((3, 3))
     lattice_vectors[0, :] = [a, 0, 0]
     lattice_vectors[1, :] = [b*cos(gamma), b*sin(gamma), 0]

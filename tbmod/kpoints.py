@@ -20,7 +20,7 @@ def gen_kpath(hs_kpoints, num_kpoints):
         k1 = hs_kpoints[i+1]
         nk = num_kpoints[i]
         for j in range(nk):
-            kpath.append(k0 + j / nk * (k1 - k0))
+            kpath.append(k0 + j * 1.0 / nk * (k1 - k0))
     kpath.append(hs_kpoints[-1])
     return np.array(kpath)
 
@@ -52,7 +52,7 @@ def gen_kmesh(grid_size):
     """
     assert len(grid_size) == 3
     kmesh = np.array([[kx, ky, kz]
-                     for kx in np.linspace(0, 1-1/grid_size[0], grid_size[0])
-                     for ky in np.linspace(0, 1-1/grid_size[1], grid_size[1])
-                     for kz in np.linspace(0, 1-1/grid_size[2], grid_size[2])])
+                     for kx in np.linspace(0, 1-1./grid_size[0], grid_size[0])
+                     for ky in np.linspace(0, 1-1./grid_size[1], grid_size[1])
+                     for kz in np.linspace(0, 1-1./grid_size[2], grid_size[2])])
     return kmesh
