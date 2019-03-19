@@ -38,15 +38,25 @@ def gen_reciprocal_vectors(lattice_vectors):
     :param lattice_vectors: 3*3 array
     :return: reciprocal_vectors: 3*3 array
     """
+    reciprocal_vectors = np.zeros((3, 3))
+
+    # NOTE: the volume here should have a sign, i.e. DO NOT add any abs()
+    # here. Otherwise the results will be wrong when volume < 0.
     a0 = lattice_vectors[0]
     a1 = lattice_vectors[1]
     a2 = lattice_vectors[2]
-    volume = np.abs(np.dot(np.cross(a0, a1), a2))
-    reciprocal_vectors = np.zeros((3, 3))
+    volume = np.dot(np.cross(a0, a1), a2)
     reciprocal_vectors[0] = np.cross(a1, a2)
     reciprocal_vectors[1] = np.cross(a2, a0)
     reciprocal_vectors[2] = np.cross(a0, a1)
     reciprocal_vectors *= (2 * pi / volume)
+
+    # Alternatively, you can use the algorithm below which strictly follows the
+    # definition of reciprocal lattice vectors.
+    #product = 2 * pi * np.eye(3)
+    #for i in range(3):
+    #    reciprocal_vectors[i] = np.linalg.solve(lattice_vectors, product[i]);
+
     return reciprocal_vectors
 
 
