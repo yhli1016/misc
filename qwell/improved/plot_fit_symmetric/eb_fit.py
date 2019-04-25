@@ -10,7 +10,7 @@ fit_exp = np.array([
 [10.100000,  92.1],
 [14.300000,  71.4],
 [26.200000,  69.5]])
-fit_cal = np.loadtxt("theo_fi_1.dat")
+fit_cal = np.loadtxt("theo_fi.dat")
 
 # Global settings
 plt.rc("text", usetex=True)

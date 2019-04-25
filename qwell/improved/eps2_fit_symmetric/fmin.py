@@ -1,8 +1,9 @@
 """
-Some papers say that if there is a vacuum layer between the substrate and the
-perovskite layer, than the bottom barrier of the quantum well should be also
-vacuum (eps1=1). This script checks if this statement yields better exciton
-binding energies and radii.
+Fitting eps2 to exciton binding energies from experiments using fmin from SciPy,
+by minimizing either the sum of squares or absolute values.
+
+One of the referee doubts whether it is essential to consider an asymmetric quantum
+well model. This test deals with this problem by assuming eps1 = eps3.
 """
 import numpy as np
 import scipy.optimize as opt
@@ -34,13 +35,14 @@ def calc_eb(x):
     return binding_energy
 
 
-def residuals(x):
+def opt_eps2(x):
     global eps2, a_B, R, k, q, l, zgrid, sin_zgrid, num_series
-    eb_fit_list = np.zeros(eb_ref_list.shape)
 
     # Update epsilon_2
     x = comm.bcast(x, root=0)
     eps2 = x
+
+    residual = 0.0
     for i, qw_width in enumerate(qw_width_list):
         # Update global variables
         a_B = eps2 / mu
@@ -59,8 +61,14 @@ def residuals(x):
         xopt, fopt, ninter, funcalls, warnflag = opt.fmin(calc_eb, x0=1.0, xtol=1.0e-7,
                                                  ftol=1.0e-7, full_output=True, disp=False)
         eb_meV = -fopt * R * har2eV * 1000
-        eb_fit_list[i] = eb_meV
-    return eb_fit_list - eb_ref_list
+        residual += (eb_meV - eb_ref_list[i])**2
+        #residual += abs(eb_meV - eb_ref_list[i])
+    return residual
+
+
+def echo(x):
+    if rank == 0:
+        print(x, flush=True)
 
 
 # Physical constants
@@ -77,10 +85,10 @@ har2eV = 27.211385
 # eps3: relative dielectric constant of the top barrier
 mu = 0.117
 qw_width_list = [59, 78, 101, 143, 262]
-eb_ref_list = np.array([147.6, 123.5, 92.1, 71.4, 69.5])
-eps1 = 1.0
+eb_ref_list = [147.6, 123.5, 92.1, 71.4, 69.5]
+eps1 = 7.0
 eps2 = None
-eps3 = 1.0
+eps3 = 7.0
 
 # Parameters controlling the integral
 #
@@ -99,6 +107,8 @@ size = comm.Get_size()
 jobs = [[i for i in range(num_grid) if i % size == k] for k in range(size)]
 
 # Now we begin with the fitting.
-result = opt.leastsq(residuals, x0=4.8, xtol=1.0e-3, ftol=1.0e-3)
+xopt, fopt, ninter, funcalls, warnflag = opt.fmin(opt_eps2, x0=4.8, xtol=1.0e-3,
+                                         ftol=1.0e-3, full_output=True, disp=False,
+                                         callback=echo)
 if rank == 0:
-   print(result)
+   print(xopt, fopt)

@@ -1,10 +1,9 @@
 """
-Some papers say that if there is a vacuum layer between the substrate and the
-perovskite layer, than the bottom barrier of the quantum well should be also
-vacuum (eps1=1). This script checks if this statement yields better exciton
-binding energies and radii.
+Generate data for plotting fitted curve against experimental exciton binding
+energies.
 
-This script is used in tadem with leastsq.py.
+One of the referee doubts whether it is essential to consider an asymmetric quantum
+well model. This test deals with this problem by assuming eps1 = eps3.
 """
 import numpy as np
 import scipy.optimize as opt
@@ -49,10 +48,10 @@ har2eV = 27.211385
 # eps3: relative dielectric constant of the top barrier
 mu = 0.117
 params = [[qw_width, eps1, eps2, eps3]
-          for qw_width in np.linspace(15, 300, 100).tolist()
-          for eps1 in [1.0]
-          for eps2 in [6.66218937]
-          for eps3 in [1.0]]
+          for qw_width in [59, 78, 101, 143, 262]
+          for eps1 in [7.0]
+          for eps2 in [2.9469997]
+          for eps3 in [7.0]]
 x0 = 1.0
 for param in params:
     qw_width, eps1, eps2, eps3 = param[0], param[1], param[2], param[3]
