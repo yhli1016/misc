@@ -1,26 +1,8 @@
 #! /usr/bin/env python
-"""Macro definitions."""
-
-import sys
+from mace import main, include
 
 
-################################################################################
-def include(filename, nl0=None, nl1=None):
-    try:
-        with open(filename, "r") as infile:
-            content = infile.readlines()
-    except IOError:
-        print("ERROR: cannot include '%s'" % filename)
-        sys.exit(-1)
-    else:
-        nl_start = nl0 if nl0 is not None else 1
-        nl_end   = nl1 if nl1 is not None else len(content)
-        longline = "".join(content[(nl_start-1):nl_end])
-        return longline
-################################################################################
-
-
-m = macro = dict()
+m = dict()
 
 # Macros can be strings, integers and floats.
 m["PREFIX"] = "'test'"
@@ -62,3 +44,6 @@ ATOMIC_POSITIONS {crystal}
 
 # Including a file as macro is also supported.
 m["KPT"] = include("kpt.inc")
+
+# Call main() to expand the macros
+main(m, "scf.tpl", "test.in")

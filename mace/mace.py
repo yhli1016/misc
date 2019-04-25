@@ -1,30 +1,14 @@
-#! /usr/bin/env python
-"""MACro Expansion program."""
+"""
+Library for generating files using MACro Expansion.
 
-import sys
-import argparse
+You need to call the main() function, which accepts the following arguments:
+  macro: dictionary, macro definitions
+  template: string, filename of the template
+  output: string, filename of the output file
 
-
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--pythonpath", type=str, action="store",
-                        help="search PYTHONPATH for macro definition")
-    parser.add_argument("template", type=str, action="store",
-                        help="template for generating file")
-    parser.add_argument("output", type=str, action="store",
-                        help="file generated from macro and template")
-    args = parser.parse_args()
-    return args
-
-
-def expand_content(macro, content_raw):
-    content_expanded = []
-    for line in content_raw:
-        flag = True
-        while flag is True:
-            line, flag = expand_line(macro, line)
-        content_expanded.append(line)
-    return content_expanded
+An auxiliary function include() is provided for including a file and defining
+a macro from it.
+"""
 
 
 def expand_line(macro, line):
@@ -37,30 +21,26 @@ def expand_line(macro, line):
     return line, flag
 
 
+def include(filename, nl0=None, nl1=None):
+    with open(filename, "r") as infile:
+        content = infile.readlines()
+    nl_start = nl0 if nl0 is not None else 1
+    nl_end   = nl1 if nl1 is not None else len(content)
+    longline = "".join(content[(nl_start-1):nl_end])
+    return longline
+
+
 def main(macro, template, output):
-    try:
-        with open(template, "r") as in_file:
-            content_raw = in_file.readlines()
-    except IOError:
-        print("ERROR: cannot read '%s'" % template)
-        sys.exit(-1)
-    content_expanded = expand_content(macro, content_raw)
-    try:
-        with open(output, "w") as out_file:
-            for line in content_expanded:
-                out_file.write(line)
-    except IOError:
-        print("ERROR: cannot write to '%s'" % output)
-        sys.exit(-1)
+    with open(template, "r") as in_file:
+        content_raw = in_file.readlines()
 
+    content_expanded = []
+    for line in content_raw:
+        flag = True
+        while flag is True:
+            line, flag = expand_line(macro, line)
+        content_expanded.append(line)
 
-if __name__ == "__main__":
-    args = parse_args()
-    try:
-        sys.path.append(args.pythonpath)
-        import defs
-    except ImportError:
-        print("ERROR: Cannot import defs.py")
-        sys.exit(-1)
-    else:
-        main(defs.macro, args.template, args.output)
+    with open(output, "w") as out_file:
+        for line in content_expanded:
+            out_file.write(line)

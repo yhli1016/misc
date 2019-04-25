@@ -1,23 +1,7 @@
 #! /usr/bin/env python
 """Script for generating input files for BerkeleyGW."""
-
-import sys
 import os
-import mace
-
-
-def include(filename, nl0=None, nl1=None):
-    try:
-        with open(filename, "r") as infile:
-            content = infile.readlines()
-    except IOError:
-        print("ERROR: cannot include '%s'" % filename)
-        sys.exit(-1)
-    else:
-        nl_start = nl0 if nl0 is not None else 1
-        nl_end   = nl1 if nl1 is not None else len(content)
-        longline = "".join(content[(nl_start-1):nl_end])
-        return longline
+from mace import main, include
 
 
 def run_kgrid():
@@ -49,11 +33,11 @@ def run_kgrid():
 
 def run_mace():
     os.system("cp *.UPF ../01-scf")
-    mace.main(macro, "../01-scf/scf.tpl", "../01-scf/scf.in")
+    main(macro, "../01-scf/scf.tpl", "../01-scf/scf.in")
     for prefix in ["02-wfn", "03-wfnq", "04-wfn_path", "05-wfn_fi"]:
         os.system("cp *.UPF ../%s" % prefix)
-        mace.main(macro, "../%s/bands.tpl" % prefix, "../%s/bands.in" % prefix)
-        mace.main(macro, "../%s/p2b.tpl" % prefix, "../%s/p2b.in" % prefix)
+        main(macro, "../%s/bands.tpl" % prefix, "../%s/bands.in" % prefix)
+        main(macro, "../%s/p2b.tpl" % prefix, "../%s/p2b.in" % prefix)
 
 
 ## kgrid.x
@@ -115,14 +99,13 @@ add your settings
 m["XC_MIN"] = 
 m["XC_MAX"] = 
 
-for i in range(3):
-    j = i + 1
-    m["NK%d" % j] = nk[i]
-    m["DK%d" % j] = dk[i] + nk[i] * dq[i]
-    m["NK%dQ" % j] = nkq[i]
-    m["DK%dQ" % j] = dkq[i] + nkq[i] * dqq[i]
-    m["NK%d_FI" % j] = nk_fi[i]
-    m["DK%d_FI" % j] = dk_fi[i] + nk_fi[i] * dq_fi[i]
+for i in [1, 2, 3]:
+    m["NK%d" % i] = nk[i]
+    m["DK%d" % i] = dk[i] + nk[i] * dq[i]
+    m["NK%dQ" % i] = nkq[i]
+    m["DK%dQ" % i] = dkq[i] + nkq[i] * dqq[i]
+    m["NK%d_FI" % i] = nk_fi[i]
+    m["DK%d_FI" % i] = dk_fi[i] + nk_fi[i] * dq_fi[i]
 
 
 ## Generate input files
