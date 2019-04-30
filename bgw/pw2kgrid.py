@@ -1,14 +1,14 @@
-#! /usr/bin/env python
 """
 This program generates input files for kgrid.x from the input of pw.x.
 
-Usage: pw2kgrid.py inp out nx ny nz dx dy dz qx qy qz gx gy gz
-    inp: input of pwscf
-    nx/ny/nz: dimension of the size of MP k-grid,
-    dx/dy/dz: shift of MP k-grid
-    qx/qy/qz: shift for epsilon and absorption calculation
-    gx/gy/gz: dimension of FFT grid determined from pwscf calculation or
-              gsphere.py
+Usage: main(inp, out, nk, dk, dq, ng)
+    inp: string, input of pwscf
+    out: string, output to be fed into kgrid.x
+    nk: array with 3 integers, dimension of the size of MP k-grid,
+    dk: array with 3 floats, shift of MP k-grid
+    dq: array with 3 floats, shift for epsilon and absorption calculation
+    ng: array with 3 integers, dimension of FFT grid determined from pwscf
+        calculation or gsphere.py
 
  Notes:
  (1) Only scf.in, nscf.in and bands.in are acceptable.
@@ -18,8 +18,6 @@ Usage: pw2kgrid.py inp out nx ny nz dx dy dz qx qy qz gx gy gz
  (4) Specifying FFT grid size is mandatory, otherwise the following GW/BSE
      calculations are likely to CRASH due to symmetry reasons.
 """
-
-import sys
 
 
 def read_inp(inp_name):
@@ -117,21 +115,12 @@ def frac2cart(frac_coord, vectors):
     return cart_coord
 
 
-def main():
-    argv = sys.argv
-    inp_name, out_name = argv[1], argv[2]
-    nx, ny, nz = int(argv[3]), int(argv[4]), int(argv[5])
-    dx, dy, dz = float(argv[6]), float(argv[7]), float(argv[8])
-    qx, qy, qz = float(argv[9]), float(argv[10]), float(argv[11])
-    gx, gy, gz = int(argv[12]), int(argv[13]), int(argv[14])
-
-    inp_content = read_inp(inp_name)
-
+def main(inp, out, nk, dk, dq, ng):
     # check PWSCF input
+    inp_content = read_inp(inp)
     if not check_fractional(inp_content):
         print("ERROR: Atomic positions are not fractional!")
         sys.exit(-1)
-
     if not check_ibrav(inp_content):
         print("ERROR: ibrav != 0")
         sys.exit(-1)
@@ -144,11 +133,11 @@ def main():
     cart_coord = frac2cart(frac_coord, vectors)
 
     # Output
-    with open(out_name, "w") as out_file:
+    with open(out, "w") as out_file:
         # write kgrid
-        out_file.write("%8d%8d%8d\n" % (nx, ny, nz))
-        out_file.write("%8.3f%8.3f%8.3f\n" % (dx, dy, dz))
-        out_file.write("%8.3f%8.3f%8.3f\n" % (qx, qy, qz))
+        out_file.write("%8d%8d%8d\n" % (nk[0], nk[1], nk[2]))
+        out_file.write("%8.3f%8.3f%8.3f\n" % (dk[0], dk[1], dk[2]))
+        out_file.write("%8.3f%8.3f%8.3f\n" % (dq[0], dq[1], dq[2]))
         out_file.write("\n")
 
         # write vectors
@@ -168,9 +157,5 @@ def main():
         out_file.write("\n")
 
         # write FFT grid and symmetry options
-        out_file.write("%4d%4d%4d\n" % (gx, gy, gz))
+        out_file.write("%4d%4d%4d\n" % (ng[0], ng[1], ng[2]))
         out_file.write("%8s\n%8s\n" % (".false.", ".false."))
-
-
-if __name__ == "__main__":
-   main()
