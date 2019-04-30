@@ -1,10 +1,10 @@
 """
 Library for generating files using MACro Expansion.
 
-You need to call the main() function, which accepts the following arguments:
-  macro: dictionary, macro definitions
-  template: string, filename of the template
-  output: string, filename of the output file
+Usage: main(macro, template, ouput)
+    macro: dictionary, macro definitions
+    template: string, filename of the template
+    output: string, filename of the output file
 
 An auxiliary function include() is provided for including a file and defining
 a macro from it.

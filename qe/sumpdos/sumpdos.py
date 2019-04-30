@@ -1,15 +1,14 @@
 """
 Library for summing up the PDOS on given atomic states.
 
-Most of the time you only need to call the main() function, which accepts the
-following arguments:
-  prefix      # string, prefix in pwscf calculations
-  atomid      # list of strings,  holding the indices of given atoms
-  atomsym     # string, atomic symbol
-  wfcid       # integer, index of atomic state in pseudo-potentials
-  lsym        # string, s/p/d/f
-  outfile     # string, file name of output file
-  efermi      # float, fermi energy in eV
+Usage: main(prefix, atomid, atomsym, wfcid, lsym, outfile, efermi)
+    prefix: string, prefix in pwscf calculations
+    atomid: list of strings,  holding the indices of given atoms
+    atomsym: string, atomic symbol
+    wfcid: integer, index of atomic state in pseudo-potentials
+    lsym: string, s/p/d/f
+    outfile: string, file name of output file
+    efermi: float, fermi energy in eV
  
 Two auxiliary functions extract_atomlist() and extract_atomid() are provided
 for setting up atomid.
