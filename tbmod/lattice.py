@@ -13,7 +13,7 @@ def gen_lattice_vectors(lattice_parameters):
     :return:
         lattice_vectors: a 3*3 array containing the lattice vectors
     """
-    assert lattice_parameters == 6
+    assert len(lattice_parameters) == 6
     a = lattice_parameters[0]
     b = lattice_parameters[1]
     c = lattice_parameters[2]
