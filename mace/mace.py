@@ -9,14 +9,20 @@ Usage: main(macro, template, ouput)
 An auxiliary function include() is provided for including a file and defining
 a macro from it.
 """
+import re
+
+
+pattern = re.compile(r"<[a-zA-Z0-9_]+>")
 
 
 def expand_line(macro, line):
     flag = False
-    for mac_name, mac_text in macro.items():
-        word = "<%s>" % mac_name
-        if line.find(word) is not -1:
-            line = line.replace(word, str(mac_text).lstrip("\n").rstrip("\n"))
+    match_result = re.search(pattern, line)
+    if match_result is not None:
+        mac_name = match_result.group()[1:-1]
+        if mac_name in macro.keys():
+            mac_text = str(macro[mac_name]).lstrip("\n").rstrip("\n")
+            line = re.sub(r"<%s>" % mac_name, mac_text, line)
             flag = True
     return line, flag
 
@@ -36,9 +42,10 @@ def main(macro, template, output):
 
     content_expanded = []
     for line in content_raw:
-        flag = True
-        while flag is True:
+        while True:
             line, flag = expand_line(macro, line)
+            if flag == False:
+                break
         content_expanded.append(line)
 
     with open(output, "w") as out_file:
