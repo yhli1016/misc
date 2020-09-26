@@ -1,7 +1,7 @@
 # Set up environment variables
-export MODMAN_ROOT=$HOME/proj/misc/modman
-export MODMAN_MOD=$MODMAN_ROOT/modules
-export MODMAN_LOADED_MODS=""
+export BMOD_ROOT=$HOME/proj/misc/bmod
+export BMOD_MOD=$BMOD_ROOT/modules
+export BMOD_LOADED_MODS=""
 
 # Function for setting environment variables
 set_env () {
@@ -75,30 +75,26 @@ set_mod () {
     done
 }
 
-# Useful aliases
-alias envadd="set_env add"
-alias envrm="set_env rm"
-alias modadd="set_mod add"
-alias modrm="set_mod rm"
-
-# Top-level 'module' command
-module () {
+# Top-level 'bmod' command
+bmod () {
     local cmd=$1
     local modname=""
     local script=""
     if [[ "$cmd" == "add" || "$cmd" == "rm" ]]; then
         shift 
         for modname in $*; do
-            if [ -f $MODMAN_MOD/$modname.sh ]; then
+            # Get the full name of script file
+            if [ -f $BMOD_MOD/$modname.sh ]; then
                 script=$modname.sh
             else
-                script=$(ls $MODMAN_MOD | egrep "^$modname[-/]+[0-9\.]+\.sh" | tail -1)
+                script=$(ls $BMOD_MOD | egrep "^$modname[-/]+[0-9\.]+\.sh" | tail -1)
             fi
-            if [ -f $MODMAN_MOD/$script ]; then
-                source $MODMAN_MOD/$script $cmd
+            # Source the script file and update BMOD_LOADED_MODS
+            if [ -f $BMOD_MOD/$script ]; then
+                source $BMOD_MOD/$script $cmd
                 if [[ $? == 0 ]]; then
                     modname=$(echo $script | awk -F '.sh' '{print $1}')
-                    set_env $cmd "MODMAN_LOADED_MODS" $modname
+                    set_env $cmd "BMOD_LOADED_MODS" $modname
                 fi
             else
                 echo "ERROR: Module '$modname' not found"
@@ -106,17 +102,17 @@ module () {
             fi
         done
      elif [[ "$cmd" == "ls" ]]; then
-        echo "-------- Loaded modules --------"
-        echo $MODMAN_LOADED_MODS | \
+        echo "Loaded modules:"
+        echo $BMOD_LOADED_MODS | \
             awk -F ':' '{for(i=1;i<=NF;i++) print $i}' | \
             sort | awk '{printf "%4i) %s\n", NR, $1}'
      elif [[ "$cmd" == "av" ]]; then
-        echo "-------- Available modules --------"
-        ls $MODMAN_MOD | awk -F '.sh' '{print $1}' | sort | \
+        echo "Available modules:"
+        ls $BMOD_MOD | awk -F '.sh' '{print $1}' | sort | \
             awk '{printf "%4i) %s\n", NR, $1}'
      else
         echo "ERROR: Illegal command '$cmd'"
      fi
 }
 
-complete -W "add rm ls av" module
+complete -W "add rm ls av" bmod
