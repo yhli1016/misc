@@ -1,0 +1,63 @@
+#
+# Input Template for Calculation scf
+#
+# Version: 1.0.0
+#
+# Notes:
+# 
+# (1) This file applies for periodic systems only.
+#
+# (2) The built-in Bravis lattice types are rather unconvenient.
+#     So we set ibrav to 0, celldm(1) to 1.8897, and specify the
+#     coordinates of lattice vectors in ANGSTROMS under card
+#     'CELL_PARAMETERS {alat}'.
+#
+&CONTROL
+    prefix           = 'test'
+    calculation      = 'scf'
+    restart_mode     = 'from_scratch'
+    pseudo_dir       = './'
+    outdir           = './'
+    wfcdir           = './'
+    verbosity        = 'high'
+    wf_collect       = .TRUE.
+    tefield          = .TRUE.
+    dipfield         = .TRUE.
+/
+&SYSTEM
+    ibrav            = 0
+    celldm(1)        = 1.889726125
+    ntyp             = 1
+    nat              = 4
+    ecutwfc          = 60.5
+    ecutrho          = 242.0
+    edir             = 3
+    emaxpos          = 0.90
+    eopreg           = 0.05
+    eamp             = 0.0
+/
+&ELECTRONS
+    electron_maxstep = 250
+    conv_thr         = 1.0d-10
+    mixing_mode      = 'plain'
+    mixing_beta      = 0.7
+    mixing_ndim      = 8
+    diagonalization  = 'david'
+    diago_david_ndim = 4
+    diago_full_acc   = .TRUE.
+/
+ATOMIC_SPECIES
+   P  30.97   P.pbe-mt_fhi.UPF
+CELL_PARAMETERS {alat}
+   3.343472076   0.000000000   0.000000000
+   0.000000000   4.675443939   0.000000000
+   0.000000000   0.000000000  20.000000000
+ATOMIC_POSITIONS {crystal}
+   P   0.800035018   0.092073099   0.567952767
+   P   0.800156942   0.258150821   0.460485652
+   P   0.300083492   0.575667132   0.474444252
+   P   0.299987230   0.775400398   0.576765798
+K_POINTS {automatic}
+ 8 6 1 0 0 0
+# TEST
+# TEST2

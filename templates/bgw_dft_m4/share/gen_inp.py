@@ -1,14 +1,14 @@
 #! /usr/bin/env python
 """Script for generating input files for BerkeleyGW."""
 import os
-import mace
-import pw2kgrid
+import m4tools as m4
+import pw2kgrid as p2k
 
 
 def run_kgrid():
-    pw2kgrid.main(qe_struct, "wfn.inp",    nk,    dk,    dq,    ng)
-    pw2kgrid.main(qe_struct, "wfnq.inp",   nkq,   dkq,   dqq,   ng)
-    pw2kgrid.main(qe_struct, "wfn_fi.inp", nk_fi, dk_fi, dq_fi, ng)
+    p2k.main(qe_struct, "wfn.inp",    nk,    dk,    dq,    ng)
+    p2k.main(qe_struct, "wfnq.inp",   nkq,   dkq,   dqq,   ng)
+    p2k.main(qe_struct, "wfn_fi.inp", nk_fi, dk_fi, dq_fi, ng)
     for prefix in ["wfn", "wfnq", "wfn_fi"]:
         os.system("kgrid.x %s.inp %s.out %s.log" % (prefix, prefix, prefix))
 
@@ -19,14 +19,16 @@ def link_upf():
         os.system("ln -sf ../share/*.UPF ../%s" % prefix)
 
 
-def run_mace():
+def run_m4():
+    m4.write_defs(m, outfile="defs.m4")
+    args = "-I../share"
     prefixes = ["01-scf", "02-wfn", "03-wfnq", "04-wfn_path", "05-wfn_fi"]
     for prefix in prefixes:
         if prefix == "01-scf":
-            mace.main(m, "../%s/scf.tpl" % prefix, "../%s/scf.in" % prefix)
+            m4.run_m4("../%s/scf.m4" % prefix, "../%s/scf.in" % prefix, args)
         else:
-            mace.main(m, "../%s/bands.tpl" % prefix, "../%s/bands.in" % prefix)
-            mace.main(m, "../%s/p2b.tpl" % prefix, "../%s/p2b.in" % prefix)
+            m4.run_m4("../%s/bands.m4" % prefix, "../%s/bands.in" % prefix, args)
+            m4.run_m4("../%s/p2b.m4" % prefix, "../%s/p2b.in" % prefix, args)
 
 
 ## kgrid.x
@@ -52,10 +54,6 @@ ng =
 # QE structure file
 qe_struct = 
 
-# Run kgrid.x
-run_kgrid()
-
-
 ## pw.x
 m = dict()
 
@@ -73,13 +71,10 @@ m["NBND_FI"] =
 m["NBND_PATH"] = 
 
 # ATOMIC_POSITIONS
-m["POS"] = mace.include(qe_struct, )
+m["POS"] = m4.include(qe_struct, )
 
 # K_POINTS
 m["KPT_SCF"] = 
-m["KPT"] = mace.include("wfn.out")
-m["KPTQ"] = mace.include("wfnq.out")
-m["KPT_FI"] = mace.include("wfn_fi.out")
 m["KPT_PATH"] = 
 
 ## pw2bgw.x
@@ -97,5 +92,6 @@ for i in range(3):
 
 
 ## Generate input files
+run_kgrid()
 link_upf()
-run_mace()
+run_m4()
