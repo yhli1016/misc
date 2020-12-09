@@ -1,8 +1,18 @@
 #! /bin/bash
 
 # Back up configuration
-itemlist=".bash_profile .bashrc .bash_logout \
-.dircolors .inputrc .vimrc .ssh"
+itemlist="\
+.alias \
+.bash_logout \
+.bashrc \
+.dircolors \
+.gitconfig \
+.inputrc \
+.profile \
+.ssh \
+.vim \
+.vimrc"
+
 
 mkdir rc_bak
 for item in $itemlist; do
