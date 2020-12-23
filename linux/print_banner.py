@@ -1,56 +1,50 @@
 #! /usr/bin/env python
 
 
-def print_banner_line(banner, width=80):
+def print_banner_line(banner=None, width=80, mark="-"):
     """
-    Print a banner like '# --------------- FOO ------------------' to stdout.
+    Print a banner like '#--------------- FOO ---------------' to stdout.
 
-    The number 4 in this piece of code counts for the two spaces wrapping the
-    central text and an '# ' ahead of the banner.
+    The magic number 3 accounts for a '#' ahead of the banner and two spaces
+    wrapping the banner text.
 
-    :param banner: the central text in the banner
-    :param width: total width of the banner
+    :param banner: string, central text in the banner
+    :param width: integer, total width of the banner
+    :param mark: character, marker
     :return: None
     """
-    num_marks_total = width - len(banner) - 4
-    num_marks_left = num_marks_total // 2 
+    num_marks_total = width - len(banner) - 3
+    num_marks_left = num_marks_total // 2
     num_marks_right = num_marks_total - num_marks_left
-    banner_with_marks = "# "
-    mark = "-"
-    for i in range(num_marks_left):
-        banner_with_marks += mark
+    banner_with_marks = "#" + "".join([mark for _ in range(num_marks_left)])
     banner_with_marks += " %s " % banner
-    for i in range(num_marks_right):
-        banner_with_marks += mark
+    banner_with_marks += "".join([mark for _ in range(num_marks_right)])
     print(banner_with_marks)
 
 
-def print_banner_block(banner, width=80):
+def print_banner_block(banner, width=80, mark="-"):
     """
-    Print a banner like 
-    #-----------------------------------
-    #               FOO 
-    #-----------------------------------
+    Print a banner like
+    #----------------------------------#
+    #               FOO                #
+    #----------------------------------#
     to stdout.
 
-
-    :param banner: the central text in the banner
-    :param width: total width of the banner
+    :param banner: string, central text in the banner
+    :param width: integer, total width of the banner
+    :param mark: character, marker
     :return: None
     """
-    num_marks_total = width - len(banner) - 1
-    num_marks_left = num_marks_total // 2 
-    banner_with_marks = "#"
-    mark = " "
-    for i in range(num_marks_left):
-        banner_with_marks += mark
-    banner_with_marks += banner
-    banner_border = "#"
-    for i in range(width-1):
-        banner_border += "-"
-    print(banner_border)
-    print(banner_with_marks)
-    print(banner_border)
+    num_spaces_total = width - len(banner) - 2
+    num_spaces_left = num_spaces_total // 2
+    num_spaces_right = num_spaces_total - num_spaces_left
+    banner_with_spaces = "#" + "".join([" " for _ in range(num_spaces_left)])
+    banner_with_spaces += banner
+    banner_with_spaces += "".join([" " for _ in range(num_spaces_right)]) + "#"
+    border = "#" + "".join([mark for _ in range(width-2)]) + "#"
+    print(border)
+    print(banner_with_spaces)
+    print(border)
 
 
 if __name__ == "__main__":
