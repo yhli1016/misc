@@ -17,5 +17,10 @@ def write_defs(macro, outfile="defs.m4"):
             m4_file.write("define([%s], [%s])dnl\n" % (key, macro[key]))
 
 
+def dict2args(macro):
+    args = "".join(["-D%s=%s " % (key, macro[key]) for key in macro.keys()])
+    return args
+
+
 def run_m4(infile, outfile, args=""):
     os.system("m4 %s %s | awk 'NF>0' > %s" % (args, infile, outfile))
