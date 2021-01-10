@@ -139,19 +139,19 @@ class SandBox(object):
         """
         Add aliases to be set to self.alias.
 
-        :param alias: list of tuples, similar to that of Module class.
+        :param alias: tuple of (alias, full_name)
         :return: None.
         """
-        self.alias.extend(alias)
+        self.alias.append(alias)
 
     def add_unalias(self, unalias):
         """
         Add unaliases to self.unalias.
 
-        :param unalias: list of tuples, similar to that of Module class.
+        :param unalias: tuple of (alias, full_name)
         :return: None
         """
-        self.unalias.extend(unalias)
+        self.unalias.append(unalias)
 
     def add_command(self, command):
         """
@@ -255,6 +255,18 @@ class SandBox(object):
             sys.exit(-1)
         if mod_name is not None:
             func("BMOD_LOADED_MODS", mod_name)
+
+    def set_alias(self, alias, full_name, cmd="auto"):
+        "Wrapper for self.add_alias and self.add_unalias."
+        if cmd == "auto":
+            cmd = sys.argv[1]
+        if cmd == "add":
+            self.add_alias((alias, full_name))
+        elif cmd == "rm":
+            self.add_unalias((alias, full_name))
+        else:
+            print_stderr("ERROR: unknown command '%s'" % cmd)
+            sys.exit(-1)
 
 
 if __name__ == "__main__":
