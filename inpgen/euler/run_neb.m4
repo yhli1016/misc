@@ -15,7 +15,7 @@ changecom("/*", "*/")dnl
 name=${LSB_JOBNAME}
 run=RUN
 
-scratchroot=/cluster/scratch/wenjzhang
+scratchroot=/cluster/scratch/zhangwenj
 scratch=${scratchroot}/${name}
 
 mkdir -p ${scratch}
