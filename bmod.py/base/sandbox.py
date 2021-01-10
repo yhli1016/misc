@@ -25,6 +25,11 @@ def print_stderr(message):
     sys.stderr.flush()
 
 
+def get_mod_name():
+    """Get module name from sys.argv"""
+    return sys.argv[0].split("/")[-1].split(".py")[0]
+
+
 class SandBox(object):
     """
     Class that records the settings of each module and outputs shell commands

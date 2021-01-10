@@ -5,7 +5,8 @@ import os
 def write_defs(macro, outfile="defs.m4"):
     with open(outfile, "w") as m4_file:
         m4_file.write("changequote([,])dnl\n")
-        for key in sorted(macro.keys()):
+        m4_file.write("changecom(\"/*\", \"*/\")dnl\n")
+        for key in macro.keys():
             m4_file.write("define([%s], [%s])dnl\n" % (key, macro[key]))
 
 
@@ -15,6 +16,9 @@ def run_m4(infile, outfile, args=""):
 
 
 def main():
+    print("*****************************************************************")
+    print("\n    NEVER FORGET TO UPDATE THE TEMPLATES AFTER INSTALLATION!\n")
+    print("*****************************************************************")
     # Get arguments from stdin
     macro = dict()
 
