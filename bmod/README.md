@@ -66,9 +66,9 @@ unset fftw_root
 当预定义类型为bin、lib、inc、py时，bmod不会自动搜索子目录，所以第三个参数必须具体到bin、lib64或include。上面fftw的例子若用bin、lib、inc等预定义类型改写，对应的命令为：
 
 ```bash
-set_mod bin $HOME/soft/lib/fftw-3.3.8/bin
-set_mod lib $HOME/soft/lib/fftw-3.3.8/lib64
-set_mod inc $HOME/soft/lib/fftw-3.3.8/include
+set_mod add bin $HOME/soft/lib/fftw-3.3.8/bin
+set_mod add lib $HOME/soft/lib/fftw-3.3.8/lib64
+set_mod add inc $HOME/soft/lib/fftw-3.3.8/include
 ```
 
 再看一个xcrysden的例子。程序安装在$HOME/soft/dft/xcrysden-1.6.2-bin-shared，可执行文件为xcrysden，还有一个动态链接库libTogl.so.2。为使这个程序正常运行，需将$HOME/soft/dft/xcrysden-1.6.2-bin-shared添加到环境变量PATH和LD_LIBRARY_PATH，对应操作为：
