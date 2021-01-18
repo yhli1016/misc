@@ -75,7 +75,7 @@ set_mod () {
             for path in lib lib64; do
                 if [[ -d $pattern/$path ]]; then
                     set_env $cmd "LIBRARY_PATH" $pattern/$path
-		            set_env $cmd "LD_RUN_PATH" $pattern/$path
+                    set_env $cmd "LD_RUN_PATH" $pattern/$path
                     set_env $cmd "LD_LIBRARY_PATH" $pattern/$path
                     test -d $pattern/$path/pkgconfig && \
                     set_env $cmd "PKG_CONFIG_PATH" $pattern/$path/pkgconfig
