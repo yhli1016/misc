@@ -44,6 +44,10 @@ set_env () {
     fi
 }
 
+set_alias () {
+    test "$1" = "add" && alias "$2"="$3" || unalias "$2"
+}
+
 # Wrapper for set_env with presets of environment variables
 set_mod () {
     local cmd=$1
