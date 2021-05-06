@@ -1,6 +1,6 @@
 include(common.m4)dnl
 
-ifdef([RESTART], [
+ifdef([RESTART], [dnl
 # for restarting
 cp CONTCAR POSCAR])
 cp POSCAR POSCAR_run${run}

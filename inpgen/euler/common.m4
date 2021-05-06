@@ -14,5 +14,5 @@ include(defs.m4)dnl
 name=${LSB_JOBNAME}
 run=RUN
 
-scratchroot=/cluster/scratch/yhli
+scratchroot=/cluster/scratch/zhangwenj
 scratch=${scratchroot}/${name}

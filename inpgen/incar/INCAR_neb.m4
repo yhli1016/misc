@@ -1,0 +1,14 @@
+include(common.m4)dnl
+
+# NEB
+ICHAIN = 0
+IMAGES = NIMAGE
+SPRING = -5.0
+LCLIMB = .TRUE.
+IBRION = 3
+POTIM  = 0
+IOPT   = 3
+EDIFF  = 1E-4
+EDIFFG = -0.05
+NELM   = 250
+NSW    = 100

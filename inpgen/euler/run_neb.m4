@@ -7,19 +7,16 @@ do
 cp ${i} ${scratch}
 done
 
-ifdef([RESTART], [
-# for restarting
 for i in DIR_TOT
 do
+ifdef([RESTART], [dnl
+# for restarting
 cp ${i}/CONTCAR ${i}/POSCAR
 cp ${i}/POSCAR ${i}/POSCAR_${run}
-cp ${i}/POSCAR ${scratch}/${i}/POSCAR
-done], [
+cp ${i}/POSCAR ${scratch}/${i}/POSCAR], [dnl
 # for the first run
-for i in DIR_TOT
-do
-cp -r ${i} ${scratch}
-done])
+cp -r ${i} ${scratch}])
+done
 
 for i in 00 NMAX
 do

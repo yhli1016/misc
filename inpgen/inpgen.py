@@ -12,46 +12,65 @@ def write_defs(macro, outfile="defs.m4"):
 
 def run_m4(infile, outfile, args=""):
     os.system("m4 %s %s > %s" % (args, infile, outfile))
-    os.system("rm defs.m4")
 
 
-def main():
-    print("*****************************************************************")
-    print("\n    NEVER FORGET TO UPDATE THE TEMPLATES AFTER INSTALLATION!\n")
-    print("*****************************************************************")
-    # Get arguments from stdin
+def get_input():
     macro = dict()
 
     # Get the type of job
     while True:
-        job = input("Please input type of job (opt/neb): ")
+        job = input("\nInput type of job (opt/neb): ")
         if job in ("opt", "neb"):
+            macro[".job"] = job
             break
 
     # Get specific job information
     if job == "neb":
-        num_image = int(input("Please input the number of transition states: "))
+        num_image = int(input("\nInput number of transition states: "))
+        macro["NIMAGE"] = num_image
         macro["DIR_TS"] = "".join(["%02d " % _ for _ in range(1, num_image + 1)])
         macro["DIR_TOT"] =  "".join(["%02d " % _ for _ in range(num_image + 2)])
         macro["NMAX"] = "%02d" % (num_image + 1)
 
     # Get general job information
-    macro["NAME"] = input("Please input name of the job: ")
-    macro["NCPU"] = input("Please input the number of cpu to use: ")
-    macro["TIME"] = input("Please input the time limit for the job (in hours): ")
+    macro["NAME"] = input("\nInput job name: ")
+    macro["NCPU"] = input("\nInput number of cpu to use: ")
+    macro["TIME"] = input("\nInput time limit (in hours): ")
     while True:
-        restart = input("Please input whether to restart (yes/no): ")
+        restart = input("\nInput whether to restart (yes/no): ")
         if restart in ("yes", "no"):
             break
     if restart == "yes":
         macro["RESTART"] = True
-    macro["RUN"] = input("Please input the number of run: ")
+    macro["RUN"] = input("\nInput number of run: ")
+    while True:
+        write_incar = input("\nInput whether to write incar (yes/no): ")
+        if write_incar in ("yes", "no"):
+            macro[".write_incar"] = write_incar
+            break
+    return macro
+
+
+def main():
+    # Location of template files
+    inpgen_dir = "%s/tmp/inpgen" % os.environ["HOME"]
+    script_dir = "%s/euler" % inpgen_dir
+    incar_dir = "%s/incar" % inpgen_dir
+
+    # Get arguments from stdin
+    macro = get_input()
 
     # Run m4 to generate input file
     write_defs(macro)
-    m4_dir = "%s/proj/misc/inpgen/euler" % os.environ["HOME"]
-    run_m4("%s/run_%s.m4" % (m4_dir, job), "run_%s.sh" % job, args="-I./ -I%s" % m4_dir)
-    print("Script written to '%s'" % "run_%s.sh" % job)
+    run_m4("%s/run_%s.m4" % (script_dir, macro[".job"]), "run_%s.sh" % macro[".job"], args="-I./ -I%s" % script_dir)
+    if macro[".write_incar"] == "yes":
+        run_m4("%s/INCAR_%s.m4" % (incar_dir, macro[".job"]), "INCAR", args="-I./ -I%s" % incar_dir)
+    os.system("rm defs.m4")
+
+    # Prompt the user
+    print("\nScript written to '%s'" % "run_%s.sh" % macro[".job"])
+    if macro[".write_incar"] == "yes":
+        print("\nInput written to 'INCAR'")
 
 
 if __name__ == "__main__":
