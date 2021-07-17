@@ -2,7 +2,8 @@ include(defs.m4)dnl
 System = NAME
 
 # Job control
-LCHARG = .FALSE.
+LCHARG = .TRUE.
+LAECHG = .TRUE.
 NPAR   = 4
 
 # Dipole correction
@@ -11,7 +12,7 @@ IDIPOL = 3
 DIPOL  = 3.94128 2.2755 7.19335
 
 # Electronic minimization
-PREC     = Normal 
+PREC     = Accurate
 GGA      = BF 
 LUSE_VDW = .TRUE. 
 Zab_VDW  = -1.8867
@@ -24,3 +25,10 @@ ISPIN    = 2
 # DOS related values
 ISMEAR = 0
 SIGMA  = 0.05
+
+# Ionic relaxation
+IBRION = 2
+EDIFF  = 1E-5
+EDIFFG = -0.01
+NELM   = 250
+NSW    = 0 

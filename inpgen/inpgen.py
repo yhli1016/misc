@@ -19,8 +19,8 @@ def get_input():
 
     # Get the type of job
     while True:
-        job = input("\nInput type of job (opt/neb): ")
-        if job in ("opt", "neb"):
+        job = input("\nInput type of job (opt/neb/bader): ")
+        if job in ("opt", "neb", "bader"):
             macro[".job"] = job
             break
 
@@ -53,7 +53,7 @@ def get_input():
 
 def main():
     # Location of template files
-    inpgen_dir = "%s/tmp/inpgen" % os.environ["HOME"]
+    inpgen_dir = "%s/soft/inpgen" % os.environ["HOME"]
     script_dir = "%s/euler" % inpgen_dir
     incar_dir = "%s/incar" % inpgen_dir
 
@@ -62,9 +62,9 @@ def main():
 
     # Run m4 to generate input file
     write_defs(macro)
-    run_m4("%s/run_%s.m4" % (script_dir, macro[".job"]), "run_%s.sh" % macro[".job"], args="-I./ -I%s" % script_dir)
+    run_m4("%s/run_%s.m4" % (script_dir, macro[".job"]), "run_%s.sh" % macro[".job"])
     if macro[".write_incar"] == "yes":
-        run_m4("%s/INCAR_%s.m4" % (incar_dir, macro[".job"]), "INCAR", args="-I./ -I%s" % incar_dir)
+        run_m4("%s/INCAR_%s.m4" % (incar_dir, macro[".job"]), "INCAR")
     os.system("rm defs.m4")
 
     # Prompt the user
