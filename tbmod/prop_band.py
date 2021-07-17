@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 import numpy as np
 import kpoints as kpt
 import hamiltonian as ham
@@ -22,23 +23,29 @@ kdist = kpt.gen_kdist(lattice, kpath)
 
 # Set up the Hamiltonian.
 t0 = time.time()
-tbmod = ham.TBModel(16)
+tbmod = ham.TBModel()
 tbmod.read_hr("hr.dat")
 t1 = time.time()
 print("Time elapsed in setting up Hamiltonian: %fs" % (t1 - t0))
 
 # Calculate projection-resolved band structure.
 t0 = time.time()
-energies, projection = tbmod.eval_energies(kpath, [10, 14])
+dt = 1.0
+nstep = 10000
+peaks_total = []
+for ik, kpt in enumerate(kpath):
+    print("Dealing with kpt #%s" % ik)
+    eng, dos, peaks = tbmod.propagate(kpt, dt, nstep)
+    peaks_total.append(peaks)
 t1 = time.time()
 print("Time elapsed in calculating band structure: %fs" % (t1 - t0))
 
 # Plot the band structure.
 t0 = time.time()
-energies_sorted = np.array([np.sort(row) for row in energies])
-for i in range(energies.shape[1]):
-    plt.scatter(kdist, energies[:, i], s=projection[:, i]*10, c="r")
-    plt.plot(kdist, energies_sorted[:, i], color="gray", linewidth=0.5)
-plt.savefig("fatband.png")
+for ik, klen in enumerate(kdist):
+    peaks = peaks_total[ik]
+    x = [klen for _ in range(peaks.shape[0])]
+    plt.scatter(x, peaks, s=2, c='r')
+plt.show()
 t1 = time.time()
 print("Time elapsed in ploting band structure: %fs" % (t1 - t0))
