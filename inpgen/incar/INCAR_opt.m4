@@ -1,5 +1,4 @@
-include(defs.m4)dnl
-System = NAME
+System = <NAME>
 
 # Job control
 LCHARG = .FALSE.

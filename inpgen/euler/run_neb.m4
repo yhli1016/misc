@@ -1,8 +1,7 @@
-include(defs.m4)dnl
 #!/bin/bash
-#BSUB -n NCPU
-#BSUB -W TIME:00
-#BSUB -J NAME
+#BSUB -n <NCPU>
+#BSUB -W <TIME>:00
+#BSUB -J <NAME>
 #BSUB -o log
 
 # 1) set the obname (BSUB -J)
@@ -13,7 +12,8 @@ include(defs.m4)dnl
 
 #------------------------------- Common header ---------------------------------
 name=${LSB_JOBNAME}
-run=RUN
+run=<RUN>
+restart=<RESTART>
 
 scratchroot=/cluster/scratch/zhangwenj
 scratch=${scratchroot}/${name}
@@ -31,19 +31,19 @@ done
 ## Structure (POSCAR/CONTCAR) for each image
 ## For the 1st run, copy directories 00-0N to scratch.
 ## If restarting, only update the POSCARs.
-for i in DIR_TOT
+for i in <DIR_TOT>
 do
-ifdef([RESTART], [dnl
-# for restarting
-cp ${i}/CONTCAR ${i}/POSCAR
-cp ${i}/POSCAR ${i}/POSCAR_${run}
-cp ${i}/POSCAR ${scratch}/${i}/POSCAR], [dnl
-# for the first run
-cp -r ${i} ${scratch}])
+if [ "$restart" -eq 0 ]; then
+    cp -r ${i} ${scratch}
+else
+    cp ${i}/CONTCAR ${i}/POSCAR
+    cp ${i}/POSCAR ${i}/POSCAR_${run}
+    cp ${i}/POSCAR ${scratch}/${i}/POSCAR
+fi
 done
 
 ## OUTCAR of initial and final states for reference
-for i in 00 NMAX
+for i in 00 <NMAX>
 do
 cp OUTCAR_$i $i/OUTCAR
 cp OUTCAR_$i ${scratch}/$i/OUTCAR
@@ -54,7 +54,7 @@ cd ${scratch}
 mpirun vasp-54 > ${LS_SUBCWD}/out_run${run}
 
 # Copy results back
-for i in DIR_TS
+for i in <DIR_TS>
 do
 cp ${scratch}/${i}/OUTCAR ${LS_SUBCWD}/${i}/OUTCAR
 cp ${scratch}/${i}/CONTCAR ${LS_SUBCWD}/${i}/CONTCAR

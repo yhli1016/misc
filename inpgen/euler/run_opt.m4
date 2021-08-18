@@ -1,8 +1,7 @@
-include(defs.m4)dnl
 #!/bin/bash
-#BSUB -n NCPU
-#BSUB -W TIME:00
-#BSUB -J NAME
+#BSUB -n <NCPU>
+#BSUB -W <TIME>:00
+#BSUB -J <NAME>
 #BSUB -o log
 
 # 1) set the obname (BSUB -J)
@@ -13,7 +12,8 @@ include(defs.m4)dnl
 
 #------------------------------- Common header ---------------------------------
 name=${LSB_JOBNAME}
-run=RUN
+run=<RUN>
+restart=<RESTART>
 
 scratchroot=/cluster/scratch/zhangwenj
 scratch=${scratchroot}/${name}
@@ -22,9 +22,9 @@ mkdir -p ${scratch}
 
 #--------------------------- Task-dependent scripts ----------------------------
 # Copy files to scratch
-ifdef([RESTART], [dnl
-# for restarting
-cp CONTCAR POSCAR])
+if [ "$restart" -eq 1 ]; then
+    cp CONTCAR POSCAR
+fi
 cp POSCAR POSCAR_run${run}
 
 for i in INCAR POSCAR KPOINTS POTCAR vdw_kernel.bindat

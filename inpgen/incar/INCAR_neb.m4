@@ -1,5 +1,4 @@
-include(defs.m4)dnl
-System = NAME
+System = <NAME>
 
 # Job control
 LCHARG = .FALSE.
@@ -27,7 +26,7 @@ SIGMA  = 0.05
 
 # NEB
 ICHAIN = 0
-IMAGES = NIMAGE
+IMAGES = <NIMAGE>
 SPRING = -5.0
 LCLIMB = .TRUE.
 IBRION = 3
