@@ -126,9 +126,9 @@ def get_input():
     restart = get_option("\nInput whether to restart (yes/no): ",
                          ("yes", "no"))
     if restart == "yes":
-        macro["RESTART"] = 1
+        macro["ISTART"] = 1
     else:
-        macro["RESTART"] = 0
+        macro["ISTART"] = 0
     macro["RUN"] = input("\nInput number of run: ")
     macro[".incar"] = get_option("\nInput whether to write incar (yes/no): ",
                                  ("yes", "no"))

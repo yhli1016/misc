@@ -13,7 +13,7 @@
 #------------------------------- Common header ---------------------------------
 name=${LSB_JOBNAME}
 run=<RUN>
-restart=<RESTART>
+istart=<ISTART>
 
 scratchroot=/cluster/scratch/zhangwenj
 scratch=${scratchroot}/${name}
@@ -33,7 +33,7 @@ done
 ## If restarting, only update the POSCARs.
 for i in <DIR_TOT>
 do
-if [ "$restart" -eq 0 ]; then
+if [ "$istart" -eq 0 ]; then
     cp -r ${i} ${scratch}
 else
     cp ${i}/CONTCAR ${i}/POSCAR

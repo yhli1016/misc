@@ -13,7 +13,7 @@
 #------------------------------- Common header ---------------------------------
 name=${LSB_JOBNAME}
 run=<RUN>
-restart=<RESTART>
+istart=<ISTART>
 
 scratchroot=/cluster/scratch/zhangwenj
 scratch=${scratchroot}/${name}
@@ -22,7 +22,7 @@ mkdir -p ${scratch}
 
 #--------------------------- Task-dependent scripts ----------------------------
 # Copy files to scratch
-if [ "$restart" -eq 1 ]; then
+if [ "$istart" -ne 0 ]; then
     cp CONTCAR POSCAR
 fi
 cp POSCAR POSCAR_run${run}
