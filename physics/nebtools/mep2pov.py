@@ -65,6 +65,7 @@ def main():
     # TODO: implement 'center_image'
     correct_pbc = True
     align_image = True
+    rotate = False
     style = "pale"  # ase2 ase3 glass simple pale intermediate vmd jmol
     figure_width = 800
 
@@ -91,12 +92,10 @@ def main():
 
     # Render images
     for i, image in enumerate(images):
-        for view in ("xy", "xz"):
-            if view == "xz":
-                proj_set['rotation'] = "-90x"
-            else:
-                proj_set['rotation'] = ""
-            render(f"{i}.{view}", image, figure_width, proj_set, pov_set)
+        if rotate:
+            # proj_set['rotation'] = "-90x"
+            image.rotate(-90, "x", rotate_cell=True)
+        render(f"{i}", image, figure_width, proj_set, pov_set)
 
 
 if __name__ == "__main__":
