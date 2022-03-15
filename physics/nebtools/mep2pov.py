@@ -66,11 +66,16 @@ def main():
     correct_pbc = True
     align_image = True
     rotate = False
+    selected_images = "all"
     style = "pale"  # ase2 ase3 glass simple pale intermediate vmd jmol
     figure_width = 800
 
+    # Load and select images
     images = read("mep.traj", index=":")
     ref_image = images[0]
+    if selected_images == "all":
+        selected_images = range(len(images))
+    images = [images[_] for _ in selected_images]
 
     # Documentation of the parameters:
     # https://wiki.fysik.dtu.dk/ase/ase/io/io.html?highlight=pov
@@ -95,7 +100,7 @@ def main():
         if rotate:
             # proj_set['rotation'] = "-90x"
             image.rotate(-90, "x", rotate_cell=True)
-        render(f"{i}", image, figure_width, proj_set, pov_set)
+        render(f"{selected_images[i]}", image, figure_width, proj_set, pov_set)
 
 
 if __name__ == "__main__":
