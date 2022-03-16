@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Calculate energy differences along reaction paths."""
+"""Calculate energy profile of reaction paths."""
 
 # Physical constants
 EV2KJMOL = 96.4916
@@ -13,7 +13,7 @@ H2O = -12.80802156  # Energy of H2O molecule
 
 class Path:
     """
-    Common class for evaluating energy differences along a reaction path.
+    Class for evaluating the energy profile of a single reaction path.
 
     Attributes
     ----------
@@ -28,7 +28,7 @@ class Path:
 
     def add_eng(self, label, energy):
         """
-        Add a state in the reaction path.
+        Add an energy level in the reaction path.
 
         :param string label: label for the state
         :param float energy: energy of the state
@@ -38,25 +38,60 @@ class Path:
             self.label.append(label)
             self.energy.append(energy)
 
-    def eval_ediff(self, unit="eV"):
+    def eval_eng(self, unit="eV"):
         """
-        Evaluate difference of energies along the reaction path.
+        Print energy levels and differences of the reaction path.
 
         :param string unit: unit of energies for output
         :return: None
         """
-        num_eng = len(self.energy)
-        for i in range(num_eng-1):
-            msg = "%16s -> %-16s" % (self.label[i], self.label[i+1])
-            delta_eng = self.energy[i+1] - self.energy[i]
+        for i, label in enumerate(self.label):
+            eng = self.energy[i]
+            eng_align = eng - self.energy[0]
+            eng_delta = eng - self.energy[i-1] if i > 0 else 0
             if unit == "kjm":
-                delta_eng *= EV2KJMOL
-            print("%s : %8.2f" % (msg, delta_eng))
+                eng_align *= EV2KJMOL
+                eng_delta *= EV2KJMOL
+            if i > 0:
+                print("%16s : %8.2f%8.2f" % (label, eng_align, eng_delta))
+            else:
+                print("%16s : %8.2f%8s" % (label, eng_align, "[+-]"))
 
 
-class RWGSPath:
-    """Specific class for evaluating energy differences of RWGS reaction."""
+class MultiPath:
+    """
+    Base class for evaluating the energy profile of multiple reaction paths.
+
+    Attributes
+    ----------
+    paths: List[Path]
+        list of single reaction paths
+    """
     def __init__(self) -> None:
+        self.paths = []
+
+    def gen_paths(self):
+        """To be implemented in derived classes."""
+        pass
+
+    def eval_eng(self, unit="eV"):
+        """
+        Print energy levels and differences of the reaction paths.
+
+        :param string unit: unit of energies for output
+        :return: None
+        """
+        self.gen_paths()
+        for path in self.paths:
+            path.eval_eng(unit=unit)
+            print()
+
+
+class RWGS(MultiPath):
+    """Class for evaluating the energy profile of RWGS reaction."""
+    def __init__(self) -> None:
+        super().__init__()
+
         # Energy of substrate
         self.sub = None
     
@@ -75,36 +110,32 @@ class RWGSPath:
         self.h2o_form2_ts = None  # Transition state of migration of 2nd H atom
         self.h2o_sub = None       # H2O-*
 
-    def eval_ediff(self, unit="kjm"):
-        # CO formation
-        path = Path()
-        path.add_eng('co2 + sub', CO2+self.sub)
-        path.add_eng('co2_fe_linear', self.co2_fe_linear)
-        path.add_eng('co2_l2b_ts', self.co2_l2b_ts)
-        path.add_eng('co2_fe_bend', self.co2_fe_bend)
-        path.add_eng('co_form_ts', self.co_form_ts)
-        path.add_eng('co_fe_o_sub', self.co_fe_o_sub)
-        path.add_eng('co + o_sub', CO+self.o_sub)
-        path.eval_ediff(unit)
-        print()
+    def gen_paths(self):
+        co_path = Path()
+        co_path.add_eng('co2 + sub', CO2+self.sub)
+        co_path.add_eng('co2_fe_linear', self.co2_fe_linear)
+        co_path.add_eng('co2_l2b_ts', self.co2_l2b_ts)
+        co_path.add_eng('co2_fe_bend', self.co2_fe_bend)
+        co_path.add_eng('co_form_ts', self.co_form_ts)
+        co_path.add_eng('co_fe_o_sub', self.co_fe_o_sub)
+        co_path.add_eng('co + o_sub', CO+self.o_sub)
+        self.paths = [co_path]
 
-        # H2O formation
-        path = Path()
-        path.add_eng('h2 + o_sub', H2+self.o_sub)
-        path.add_eng('h2_fe', self.h2_fe)
-        path.add_eng('h2o_form1_ts', self.h2o_form1_ts)
-        path.add_eng('h_fe_h_o', self.h_fe_h_o)
-        path.add_eng('h2o_form2_ts', self.h2o_form2_ts)
-        path.add_eng('h2o_sub', self.h2o_sub)
-        path.add_eng('h2o + sub', H2O+self.sub)
-        path.eval_ediff(unit)
-        print()
+        h2o_path = Path()
+        h2o_path.add_eng('h2 + o_sub', H2+self.o_sub)
+        h2o_path.add_eng('h2_fe', self.h2_fe)
+        h2o_path.add_eng('h2o_form1_ts', self.h2o_form1_ts)
+        h2o_path.add_eng('h_fe_h_o', self.h_fe_h_o)
+        h2o_path.add_eng('h2o_form2_ts', self.h2o_form2_ts)
+        h2o_path.add_eng('h2o_sub', self.h2o_sub)
+        h2o_path.add_eng('h2o + sub', H2O+self.sub)
+        self.paths.append(h2o_path)
 
 
 def main():
     # 0 coverage
     print("Reaction Energies of RWGS on Fe@Mo2C with 0 coverage")
-    path = RWGSPath()
+    path = RWGS()
     path.sub = -198.12728341
     path.co2_fe_bend = -217.79137763
     path.co_form_ts = -217.401000
@@ -115,11 +146,11 @@ def main():
     path.h_fe_h_o = -212.31001109
     path.h2o_form2_ts = -211.133700
     path.h2o_sub = -211.62499841
-    path.eval_ediff()
+    path.eval_eng()
 
     # 0.33 coverage
     print("Reaction Energies of RWGS on Fe@Mo2C with 0.33 coverage")
-    path = RWGSPath()
+    path = RWGS()
     path.sub = -218.87184700
     path.co2_fe_bend = -238.67602257
     path.co_form_ts = -237.759400
@@ -129,11 +160,13 @@ def main():
     path.h2o_form1_ts = -232.698800
     path.h_fe_h_o = -233.61507818
     path.h2o_sub = -232.48088446
-    path.eval_ediff()
+    path.h2o_form2_ts = -231.723
+    path.h2o_sub = -232.48088446
+    path.eval_eng()
 
     # 0.78
     print("Reaction Energies of RWGS on Fe@Mo2C with 0.78 coverage")
-    path = RWGSPath()
+    path = RWGS()
     path.sub = -245.94153180
     path.co2_fe_bend = -265.30342210
     path.co_form_ts = -264.997200
@@ -144,7 +177,7 @@ def main():
     path.h_fe_h_o = -259.86970027
     path.h2o_form2_ts = -259.021500
     path.h2o_sub = -259.72247630
-    path.eval_ediff()
+    path.eval_eng()
 
 
 if __name__ == "__main__":

@@ -198,55 +198,55 @@ def main():
     # Allowed line styles are "-", "--", "-.", ":"
 
     # for 0 coverage
-    path = Profile(axes, default_label_color="k")
-    path.add_de(0.0)    # co2 + sub
-    path.add_de(-1.26)  # co2_fe_bend
-    path.add_de(0.39)   # co_form_ts
-    path.add_de(-1.23)  # co_fe_o_sub
-    path.add_de(1.56)   # co + o_sub
-    path.add_de(-0.24)  # h2_fe
-    path.add_de(0.41)   # h2o_from1_ts
-    path.add_de(-0.31)  # h_fe_h_o
-    path.add_de(1.18)   # h2o_form2_ts
-    path.add_de(-0.49)  # h2o_sub
-    path.add_de(0.69)   # h2o + sub
+    profile = Profile(axes, default_label_color="k")
+    profile.add_de(0.0)    # co2 + sub
+    profile.add_de(-1.26)  # co2_fe_bend
+    profile.add_de(0.39)   # co_form_ts
+    profile.add_de(-1.23)  # co_fe_o_sub
+    profile.add_de(1.56)   # co + o_sub
+    profile.add_de(-0.24)  # h2_fe
+    profile.add_de(0.41)   # h2o_from1_ts
+    profile.add_de(-0.31)  # h_fe_h_o
+    profile.add_de(1.18)   # h2o_form2_ts
+    profile.add_de(-0.49)  # h2o_sub
+    profile.add_de(0.69)   # h2o + sub
     plot_args = {"color": "k", "linestyle": "--", "label": "0 coverage"}
-    path.plot(**plot_args)
-    path.print()
+    profile.plot(**plot_args)
+    profile.print()
 
     # for 0.3 coverage
-    path = Profile(axes, default_label_color="r")
-    path.add_de(0.0)    # co2 + sub
-    path.add_de(-1.40)  # co2_fe_bend
-    path.add_de(0.92)   # co_form_ts
-    path.add_de(-1.57)  # co_fe_o_sub
-    path.add_de(1.76)   # co + o_sub
-    path.add_de(-0.59)  # h2_fe
-    path.add_de(0.56)   # h2o_from1_ts
-    path.add_de(-0.92)  # h_fe_h_o
+    profile = Profile(axes, default_label_color="r")
+    profile.add_de(0.0)    # co2 + sub
+    profile.add_de(-1.40)  # co2_fe_bend
+    profile.add_de(0.92)   # co_form_ts
+    profile.add_de(-1.57)  # co_fe_o_sub
+    profile.add_de(1.76)   # co + o_sub
+    profile.add_de(-0.59)  # h2_fe
+    profile.add_de(0.56)   # h2o_from1_ts
+    profile.add_de(-0.92)  # h_fe_h_o
     # path.add_dE()  # h2o_form2_ts
-    path.add_de(dx=2, de=1.13)  # h2o_sub
-    path.add_de(0.81)  # h2o + sub
+    profile.add_de(dx=2, de=1.13)  # h2o_sub
+    profile.add_de(0.81)  # h2o + sub
     plot_args = {"color": "r", "linestyle": "--", "label": "33% coverage"}
-    path.plot(**plot_args)
-    path.print()
+    profile.plot(**plot_args)
+    profile.print()
 
     # for 0.78 coverage
-    path = Profile(axes, default_label_color="b")
-    path.add_de(0.0)    # co2 + sub
-    path.add_de(-0.96)  # co2_fe_bend
-    path.add_de(0.31)   # co_form_ts
-    path.add_de(-1.03)  # co_fe_o_sub
-    path.add_de(1.28)   # co + o_sub
-    path.add_de(-0.26)  # h2_fe
-    path.add_de(0.61)   # h2o_from1_ts
-    path.add_de(-0.37)  # h_fe_h_o
-    path.add_de(0.85)   # h2o_form2_ts
-    path.add_de(-0.70)  # h2o_sub
-    path.add_de(0.97)   # h2o + sub
+    profile = Profile(axes, default_label_color="b")
+    profile.add_de(0.0)    # co2 + sub
+    profile.add_de(-0.96)  # co2_fe_bend
+    profile.add_de(0.31)   # co_form_ts
+    profile.add_de(-1.03)  # co_fe_o_sub
+    profile.add_de(1.28)   # co + o_sub
+    profile.add_de(-0.26)  # h2_fe
+    profile.add_de(0.61)   # h2o_from1_ts
+    profile.add_de(-0.37)  # h_fe_h_o
+    profile.add_de(0.85)   # h2o_form2_ts
+    profile.add_de(-0.70)  # h2o_sub
+    profile.add_de(0.97)   # h2o + sub
     plot_args = {"color": "b", "linestyle": "--", "label": "78% coverage"}
-    path.plot(**plot_args)
-    path.print()
+    profile.plot(**plot_args)
+    profile.print()
 
     # Fine adjustments
 
