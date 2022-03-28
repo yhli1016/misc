@@ -24,11 +24,11 @@ kdist = kpt.gen_kdist(lattice, kpath)
 # Set up the Hamiltonian.
 t0 = time.time()
 tbmod = ham.TBModel()
-tbmod.read_hr("hr.dat")
+tbmod.read_hr("wannier/inse_hr.dat")
 t1 = time.time()
 print("Time elapsed in setting up Hamiltonian: %fs" % (t1 - t0))
 
-# Calculate projection-resolved band structure.
+# Calculate band structure by time propagation.
 t0 = time.time()
 dt = 1.0
 nstep = 10000

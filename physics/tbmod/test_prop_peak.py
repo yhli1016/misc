@@ -6,7 +6,7 @@ import hamiltonian as ham
 
 
 tbmod = ham.TBModel()
-tbmod.read_hr("hr.dat")
+tbmod.read_hr("wannier/inse_hr.dat")
 
 eng1, vec = tbmod.eval_energies(np.array([[0.5, 0.0, 0.0]]))
 eng2, dos, peaks = tbmod.propagate(np.array([0.5, 0.0, 0.0]), 0.5, 1000000)

@@ -24,7 +24,7 @@ kdist = kpt.gen_kdist(lattice, kpath)
 # Set up the Hamiltonian.
 t0 = time.time()
 tbmod = ham.TBModel()
-tbmod.read_hr("inse_hr.dat", 0.0)
+tbmod.read_hr("wannier/inse_hr.dat", 0.0)
 t1 = time.time()
 print("Time elapsed in setting up Hamiltonian: %fs" % (t1 - t0))
 

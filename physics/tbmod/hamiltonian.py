@@ -108,8 +108,13 @@ class TBModel(object):
         # Propagate
         rho = propagate.cheb(self.ham, dt, nstep)
 
+        # Add rho of -t
+        rho_mt = np.conj(rho[1:][::-1])
+        rho = np.hstack((rho_mt, rho))
+
         # Assemble dos
         dos = np.abs(np.fft.ifft(rho))
+        nstep = len(dos)
         dos_1, dos_2 = dos[:nstep//2], dos[nstep//2:]
         dos = np.hstack((dos_2, dos_1))
         eng = 2 * np.pi / (dt * nstep) * \
