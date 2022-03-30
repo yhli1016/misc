@@ -108,9 +108,9 @@ class TBModel(object):
         # Propagate
         rho = propagate.cheb(self.ham, dt, nstep)
 
-        # Add rho of -t
-        rho_mt = np.conj(rho[1:][::-1])
-        rho = np.hstack((rho_mt, rho))
+        # # Add rho of -t
+        # rho_mt = np.conj(rho[1:][::-1])
+        # rho = np.hstack((rho_mt, rho))
 
         # Assemble dos
         dos = np.abs(np.fft.ifft(rho))
