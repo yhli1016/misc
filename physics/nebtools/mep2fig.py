@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Plot mep to figures via POV-Ray."""
+"""Plot mep to figures."""
 
 import os
 from configparser import ConfigParser
@@ -9,9 +9,9 @@ from ase.io import read, write
 import idpp
 
 
-def adjust_ini(prefix, figure_width=800):
+def adjust_pov_ini(prefix, figure_width=800):
     """
-    Adjust settings in ini file.
+    Adjust POV-Ray settings in ini file.
 
     :param str prefix: prefix of ini file
     :param int figure_width: width of figure
@@ -37,9 +37,9 @@ def adjust_ini(prefix, figure_width=800):
         config.write(ini_file)
 
 
-def render(prefix, image, image_width, proj_set, pov_set):
+def render_pov(prefix, image, image_width, proj_set, pov_set):
     """
-    Render atoms.
+    Render atoms via POV-Ray.
 
     :param str prefix: prefix prepended to output files
     :param ase.Atoms image: image to render
@@ -50,7 +50,7 @@ def render(prefix, image, image_width, proj_set, pov_set):
     """
     # Write ini and pov file
     write(f"{prefix}.pov", image, **proj_set, povray_settings=pov_set)
-    adjust_ini(prefix, image_width)
+    adjust_pov_ini(prefix, image_width)
 
     # Run POV-Ray
     # os.system(f"pvengine64 /exit {prefix}[default]")
@@ -62,11 +62,16 @@ def render(prefix, image, image_width, proj_set, pov_set):
 
 
 def main():
-    # TODO: implement 'center_image'
+    # Normalization parameters
     correct_pbc = True
     align_image = True
+    center_image = False
     rotate = False
+    center_z = 0.2
+
+    # Plotting parameters
     selected_images = "all"
+    fig_format = "png"
     style = "pale"  # ase2 ase3 glass simple pale intermediate vmd jmol
     figure_width = 800
 
@@ -89,18 +94,23 @@ def main():
     }
 
     # Correct pbc and align images
-    for image in images[1:]:
-        if correct_pbc:
-            idpp.correct_pbc(ref_image, image, selected_atoms="all")
-        if align_image:
-            idpp.align_image(ref_image, image, selected_atoms="all")
+    for i, image in enumerate(images):
+        if correct_pbc and i > 0:
+            idpp.correct_pbc(ref_image, image)
+        if align_image and i > 0:
+            idpp.align_image(ref_image, image)
+        if center_image:
+            idpp.center_image(image, center_z)
 
     # Render images
     for i, image in enumerate(images):
         if rotate:
-            # proj_set['rotation'] = "-90x"
             image.rotate(-90, "x", rotate_cell=True)
-        render(f"{selected_images[i]}", image, figure_width, proj_set, pov_set)
+        if fig_format == "png":
+            write(f"{selected_images[i]}.png", image)
+        else:
+            render_pov(f"{selected_images[i]}", image, figure_width,
+                       proj_set, pov_set)
 
 
 if __name__ == "__main__":
