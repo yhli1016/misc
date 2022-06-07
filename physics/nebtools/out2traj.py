@@ -8,6 +8,7 @@ from check_conv import get_int
 
 def main():
     num_image = get_int("INCAR", "IMAGES")
+    last_run = get_int("run_neb.sh", "run")
     images = []
     for i in range(num_image+2):
         try:
@@ -16,7 +17,7 @@ def main():
             image = read("%02d/POSCAR"%i, index=-1)
         finally:
             images.append(image)
-    write("mep.traj", images)
+    write(f"mep_{last_run}.traj", images)
 
 
 if __name__ == "__main__":
