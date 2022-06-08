@@ -15,7 +15,7 @@ PREC     = Normal
 ENCUT    = 500
 VOSKOWN  = 1
 EDIFF    = 1E-5   (opt. requires better convergence)
-NELMIN   = 8      (opt. requires better forces)
+NELMIN   = 4      (opt. requires better forces)
 NELM     = 60     (change ALGO if convergence is difficult)
 ALGO     = Fast   (Davidson+RMM-DIIS)
 

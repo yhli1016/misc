@@ -37,7 +37,7 @@ cd ${scratch}
 mpirun vasp-54 > ${LS_SUBCWD}/out_run${run}
 
 # Copy results back
-for i in OUTCAR CONTCAR
+for i in OUTCAR CONTCAR OSZICAR
 do
 cp ${scratch}/${i} ${LS_SUBCWD}/
 done

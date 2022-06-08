@@ -58,5 +58,6 @@ for i in <DIR_TS>
 do
 cp ${scratch}/${i}/OUTCAR ${LS_SUBCWD}/${i}/OUTCAR
 cp ${scratch}/${i}/CONTCAR ${LS_SUBCWD}/${i}/CONTCAR
+cp ${scratch}/${i}/OSZICAR ${LS_SUBCWD}/${i}/OSZICAR
 done
 cp ${scratch}/vasprun.xml ${LS_SUBCWD}/vasprun_${run}.xml
