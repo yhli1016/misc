@@ -18,6 +18,9 @@ istart=<ISTART>
 scratchroot=/cluster/scratch/zhangwenj
 scratch=${scratchroot}/${name}
 
+if [ "$istart" -eq 0 ]; then
+    rm -r ${scratch}
+fi
 mkdir -p ${scratch}
 
 #--------------------------- Task-dependent scripts ----------------------------
@@ -29,7 +32,7 @@ cp POSCAR POSCAR_run${run}
 
 for i in INCAR POSCAR KPOINTS POTCAR vdw_kernel.bindat
 do
-cp ${i} ${scratch}
+    cp ${i} ${scratch}
 done
 
 # Run vasp
@@ -39,6 +42,6 @@ mpirun vasp-54 > ${LS_SUBCWD}/out_run${run}
 # Copy results back
 for i in OUTCAR CONTCAR OSZICAR
 do
-cp ${scratch}/${i} ${LS_SUBCWD}/
+    cp ${scratch}/${i} ${LS_SUBCWD}/
 done
 cp ${scratch}/vasprun.xml ${LS_SUBCWD}/vasprun_${run}.xml
