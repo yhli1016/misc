@@ -186,7 +186,7 @@ def main():
             dir_name = "%02d" % i
             os.mkdir(dir_name)
             write("%s/POSCAR" % dir_name, image, format="vasp", **vasp_args)
-    write("mep.traj", mep)
+    write("mep_0.traj", mep)
 
 
 if __name__ == "__main__":
