@@ -5,8 +5,8 @@ import shutil
 
 from ase.io import read, write
 
-from check_conv import get_int
-from out2traj import main as back_up
+from nebtools.check_conv import get_int
+from nebtools.out2traj import main as back_up
 
 
 def resume_from_traj():

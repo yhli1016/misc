@@ -5,7 +5,7 @@ import sys
 
 from ase.io import read
 
-from idpp import norm, align_image
+from nebtools.idpp import norm, align_image
 
 
 def diff_image(ref_image, chk_image):

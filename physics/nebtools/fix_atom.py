@@ -3,7 +3,8 @@
 
 from ase.io import read, write
 from ase.constraints import FixAtoms
-import idpp
+
+from nebtools import idpp
 
 
 def main():

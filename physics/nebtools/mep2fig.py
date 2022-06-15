@@ -6,7 +6,7 @@ from configparser import ConfigParser
 
 from ase.io import read, write
 
-import idpp
+from nebtools import idpp
 
 
 def adjust_pov_ini(prefix, figure_width=800):

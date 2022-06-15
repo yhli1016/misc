@@ -5,7 +5,7 @@ import numpy as np
 from ase.io import write
 from ase.io.vasp import read_vasp_out
 
-from idpp import norm
+from nebtools.idpp import norm
 
 images = read_vasp_out("OUTCAR", index=":")
 

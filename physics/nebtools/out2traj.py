@@ -3,7 +3,7 @@
 
 from ase.io import read, write
 
-from check_conv import get_int
+from nebtools.check_conv import get_int
 
 
 def main():

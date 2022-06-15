@@ -3,7 +3,7 @@
 
 import shutil
 
-from check_conv import get_int
+from nebtools.check_conv import get_int
 
 
 def get_option(prompt, options):
