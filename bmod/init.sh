@@ -35,8 +35,8 @@ set_env () {
     elif [[ "$cmd" == "rm" ]]; then
         if [[ ! -z "$envval" ]]; then
             newval=$(echo $envval | awk -F ':' \
-                     '{for(i=1;i<=NF;i++) if($i!="'$pattern'") printf "%s ", $i}' | \
-                     awk '{for(i=1;i<NF;i++) printf "%s:", $i; print $NF}')
+                     '{for(i=1;i<=NF;i++) if($i!="'$pattern'") printf "%s:", $i}' | \
+                     sed 's/.$//g')
             test "$newval" != "$envval" && export $envname=$newval
         fi
     else
