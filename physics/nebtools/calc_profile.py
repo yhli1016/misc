@@ -1,8 +1,7 @@
 #! /usr/bin/env python
 """Calculate energy profile of reaction paths."""
 
-# Physical constants
-EV2KJMOL = 96.4916
+import numpy as np
 
 # Energies of shared reactants and products
 CO2 = -18.40232529  # Energy of CO2 molecule
@@ -21,10 +20,33 @@ class Path:
         labels for reactants and products
     energy: list of floats
         energies of reactants and products
+    unit: string
+        unit of energy
     """
-    def __init__(self) -> None:
+    def __init__(self, unit="ev") -> None:
         self.label = []
         self.energy = []
+        if unit not in ("kjm", "ev"):
+            raise ValueError(f"Illegal unit: {unit}")
+        self.unit = unit
+
+    def scale_energy(self, unit="ev"):
+        """Get scaled energy in given unit."""
+        ev2kjm = 96.4916
+        if unit not in ("kjm", "ev"):
+            raise ValueError(f"Illegal unit: {unit}")
+        if unit == "kjm":
+            if self.unit == "kjm":
+                scale_factor = 1.0
+            else:
+                scale_factor = ev2kjm
+        else:
+            if self.unit == "ev":
+                scale_factor = 1.0
+            else:
+                scale_factor = 1.0 / ev2kjm
+        energy = np.array(self.energy) * scale_factor
+        return energy
 
     def add_eng(self, label, energy):
         """
@@ -45,17 +67,15 @@ class Path:
         :param string unit: unit of energies for output
         :return: None
         """
+        energy = self.scale_energy(unit=unit)
         for i, label in enumerate(self.label):
-            eng = self.energy[i]
-            eng_align = eng - self.energy[0]
-            eng_delta = eng - self.energy[i-1] if i > 0 else 0
-            if unit == "kjm":
-                eng_align *= EV2KJMOL
-                eng_delta *= EV2KJMOL
+            eng = energy[i]
+            eng_align = eng - energy[0]
+            eng_delta = eng - energy[i-1] if i > 0 else 0
             if i > 0:
                 print("%16s : %8.2f%8.2f" % (label, eng_align, eng_delta))
             else:
-                print("%16s : %8.2f%8s" % (label, eng_align, "[+-]"))
+                print("%16s : %8.2f%8s" % (label, eng_align, "diff"))
 
 
 class MultiPath:
@@ -74,7 +94,7 @@ class MultiPath:
         """To be implemented in derived classes."""
         pass
 
-    def eval_eng(self, unit="eV"):
+    def eval_eng(self, unit="ev"):
         """
         Print energy levels and differences of the reaction paths.
 

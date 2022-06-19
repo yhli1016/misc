@@ -6,10 +6,6 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 
 
-# Physical constants
-EV2KJMOL = 96.4916
-
-
 class Profile:
     """
     Class for representing the energy profile of a reaction path.
@@ -27,8 +23,8 @@ class Profile:
         length of labels of energy levels
     label_width: float
         width of labels of energy levels
-    line_width: float
-        width of lines connecting labels
+    unit: string
+        unit of energy
     react_coord: List[int]
         x-coordinates of labels
     energy: List[float]
@@ -39,17 +35,27 @@ class Profile:
         order of polynomial for connecting each label and the next label
     """
     def __init__(self, axes, default_label_color="k", default_connector=1,
-                 label_length=0.6, label_width=1.8, line_width=0.75) -> None:
+                 label_length=0.6, label_width=1.8, unit="ev") -> None:
         self.axes = axes
         self.default_label_color = default_label_color
         self.default_connector = default_connector
         self.label_length = label_length
         self.label_width = label_width
-        self.line_width = line_width
+        if unit not in ("kjm", "ev"):
+            raise ValueError(f"Illegal unit: {unit}")
+        self.unit = unit
         self.react_coord = []
         self.energy = []
         self.label_color = []
         self.connector = []
+
+    @property
+    def curr_x(self):
+        """Get the reaction coordinate of last energy level."""
+        if len(self.react_coord) == 0:
+            return -1
+        else:
+            return self.react_coord[-1]
 
     def add_eng(self, react_coord, energy, label_color=None, connector=None):
         """
@@ -86,14 +92,6 @@ class Profile:
             energy = self.energy[-1] + de
         self.add_eng(react_coord, energy, **kwargs)
 
-    @property
-    def curr_x(self):
-        """Get the reaction coordinate of last energy level."""
-        if len(self.react_coord) == 0:
-            return 0.0
-        else:
-            return self.react_coord[-1]
-
     def linear_fit(self, xco, yco):
         """Linear connector."""
         x0 = xco[0] + 0.5 * self.label_length
@@ -119,7 +117,25 @@ class Profile:
         yfi = np.polyval(c, xfi)
         return xfi, yfi
 
-    def plot(self, unit="kjm", **kwargs):
+    def scale_energy(self, unit="ev"):
+        """Get scaled energy in given unit."""
+        ev2kjm = 96.4916
+        if unit not in ("kjm", "ev"):
+            raise ValueError(f"Illegal unit: {unit}")
+        if unit == "kjm":
+            if self.unit == "kjm":
+                scale_factor = 1.0
+            else:
+                scale_factor = ev2kjm
+        else:
+            if self.unit == "ev":
+                scale_factor = 1.0
+            else:
+                scale_factor = 1.0 / ev2kjm
+        energy = np.array(self.energy) * scale_factor
+        return energy
+
+    def plot(self, unit="ev", **kwargs):
         """
         Plot energy profile onto axes.
 
@@ -129,10 +145,7 @@ class Profile:
         """
         # Prepare data
         react_coord = np.array(self.react_coord)
-        if unit == "kjm":
-            energy = np.array(self.energy) * EV2KJMOL
-        else:
-            energy = np.array(self.energy)
+        energy = self.scale_energy(unit=unit)
 
         # Draw the connectors
         react_coord_fi = np.array([])
@@ -145,8 +158,7 @@ class Profile:
             xfi, yfi = fit_func(react_coord[i:i+2], energy[i:i+2])
             react_coord_fi = np.append(react_coord_fi, xfi)
             energy_fi = np.append(energy_fi, yfi)
-        self.axes.plot(react_coord_fi, energy_fi, linewidth=self.line_width,
-                       **kwargs)
+        self.axes.plot(react_coord_fi, energy_fi, **kwargs)
 
         # Add energy levels
         levels = []
@@ -158,19 +170,16 @@ class Profile:
                                 linewidth=self.label_width)
         self.axes.add_collection(levels)
 
-    def print(self, unit="kjm"):
+    def print(self, unit="ev"):
         """
         Print absolute energy levels of the profile.
 
         :param str unit: unit for the energy levels
         :return: None
         """
-        if unit == "kjm":
-            for data in zip(self.react_coord, self.energy):
-                print("%2d%8.2f" % (data[0], data[1]*EV2KJMOL))
-        else:
-            for data in zip(self.react_coord, self.energy):
-                print("%2d%8.2f" % (data[0], data[1]))
+        energy = self.scale_energy(unit=unit)
+        for data in zip(self.react_coord, energy):
+            print("%2d%8.2f" % (data[0], data[1]))
 
 
 def main():
@@ -190,6 +199,9 @@ def main():
     axes_width = 1.5
     spines_width = 1.5
 
+    # Line settings
+    line_width = 0.75
+
     # Change global settings and create the figure
     plt.rc("font", size=font_size, family=font_family, weight=font_weight)
     fig, axes = plt.subplots(figsize=figure_size)
@@ -197,56 +209,39 @@ def main():
     # Names for colors: (b)lue, (r)ed, (g)reen, (c)yan, (m)agenta, blac(k), (w)hite
     # Allowed line styles are "-", "--", "-.", ":"
 
-    # for 0 coverage
-    profile = Profile(axes, default_label_color="k")
-    profile.add_de(0.0)    # co2 + sub
-    profile.add_de(-1.26)  # co2_fe_bend
-    profile.add_de(0.39)   # co_form_ts
-    profile.add_de(-1.23)  # co_fe_o_sub
-    profile.add_de(1.56)   # co + o_sub
-    profile.add_de(-0.24)  # h2_fe
-    profile.add_de(0.41)   # h2o_from1_ts
-    profile.add_de(-0.31)  # h_fe_h_o
-    profile.add_de(1.18)   # h2o_form2_ts
-    profile.add_de(-0.49)  # h2o_sub
-    profile.add_de(0.69)   # h2o + sub
-    plot_args = {"color": "k", "linestyle": "--", "label": "0 coverage"}
-    profile.plot(**plot_args)
-    profile.print()
+    # for Fe
+    path = Profile(axes, default_label_color="k", unit="ev")
+    path.add_de(0.0)    # co2 + sub
+    path.add_de(-1.26)  # co2_fe_bend
+    path.add_de(0.39)   # co_form_ts
+    path.add_de(-1.23)  # co_fe_o_sub
+    path.add_de(1.56)   # co + o_sub
+    path.add_de(-0.24)  # h2_fe
+    path.add_de(0.41)   # h2o_from1_ts
+    path.add_de(-0.31)  # h_fe_h_o
+    path.add_de(1.18)   # h2o_form2_ts
+    path.add_de(-0.49)  # h2o_sub
+    path.add_de(0.69)   # h2o + sub
+    plot_args = {"linewidth": line_width, "linestyle": "--", "color": "k",
+                 "label": "Fe"}
+    path.plot(unit="kjm", **plot_args)
 
-    # for 0.3 coverage
-    profile = Profile(axes, default_label_color="r")
-    profile.add_de(0.0)    # co2 + sub
-    profile.add_de(-1.40)  # co2_fe_bend
-    profile.add_de(0.92)   # co_form_ts
-    profile.add_de(-1.57)  # co_fe_o_sub
-    profile.add_de(1.76)   # co + o_sub
-    profile.add_de(-0.59)  # h2_fe
-    profile.add_de(0.56)   # h2o_from1_ts
-    profile.add_de(-0.92)  # h_fe_h_o
-    # path.add_dE()  # h2o_form2_ts
-    profile.add_de(dx=2, de=1.13)  # h2o_sub
-    profile.add_de(0.81)  # h2o + sub
-    plot_args = {"color": "r", "linestyle": "--", "label": "33% coverage"}
-    profile.plot(**plot_args)
-    profile.print()
-
-    # for 0.78 coverage
-    profile = Profile(axes, default_label_color="b")
-    profile.add_de(0.0)    # co2 + sub
-    profile.add_de(-0.96)  # co2_fe_bend
-    profile.add_de(0.31)   # co_form_ts
-    profile.add_de(-1.03)  # co_fe_o_sub
-    profile.add_de(1.28)   # co + o_sub
-    profile.add_de(-0.26)  # h2_fe
-    profile.add_de(0.61)   # h2o_from1_ts
-    profile.add_de(-0.37)  # h_fe_h_o
-    profile.add_de(0.85)   # h2o_form2_ts
-    profile.add_de(-0.70)  # h2o_sub
-    profile.add_de(0.97)   # h2o + sub
-    plot_args = {"color": "b", "linestyle": "--", "label": "78% coverage"}
-    profile.plot(**plot_args)
-    profile.print()
+    # for Cu
+    path = Profile(axes, default_label_color="r", unit="kjm")
+    path.add_eng(0, 0.0)    # co2 + sub
+    path.add_eng(1, -121.87)  # co2_fe_bend
+    path.add_eng(2, -16.10)   # co_form_ts
+    path.add_eng(3, -130.97)  # co_fe_o_sub
+    path.add_eng(4, -60.06)   # co + o_sub
+    path.add_eng(5, -63.77)  # h2_fe
+    path.add_eng(6, 19.42)   # h2o_from1_ts
+    path.add_eng(7, -76.62)  # h_fe_h_o
+    path.add_eng(8, 64.73)   # h2o_form2_ts
+    path.add_eng(9, 1.21)  # h2o_sub
+    path.add_eng(10, 68.01)   # h2o + sub
+    plot_args = {"linewidth": line_width, "linestyle": "--", "color": "r",
+                 "label": "Cu"}
+    path.plot(unit="kjm", **plot_args)
 
     # Fine adjustments
 
