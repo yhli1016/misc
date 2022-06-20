@@ -137,6 +137,21 @@ def interpolate(initial_image, final_image, num_inter_images, **kwargs):
     return images
 
 
+def mep2pos(mep):
+    """
+    Write mep to POSCAR.
+
+    :param List[ase.Atoms] mep: mep to save
+    :return: None
+    """
+    vasp_args = {"vasp5": True, "direct": True}
+    os.system("rm -rf 0*")
+    for i, image in enumerate(mep):
+        dir_name = "%02d" % i
+        os.mkdir(dir_name)
+        write("%s/POSCAR" % dir_name, image, format="vasp", **vasp_args)
+
+
 def main():
     # File names and number of intermediate states
     poscar_ini = "POSCAR_ini"
@@ -180,12 +195,7 @@ def main():
 
     # Output
     if not debug:
-        vasp_args = {"vasp5": True, "direct": True}
-        os.system("rm -rf 0*")
-        for i, image in enumerate(mep):
-            dir_name = "%02d" % i
-            os.mkdir(dir_name)
-            write("%s/POSCAR" % dir_name, image, format="vasp", **vasp_args)
+        mep2pos(mep)
     write("mep_0.traj", mep)
 
 
