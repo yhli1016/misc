@@ -37,7 +37,7 @@ done
 
 # Run vasp
 cd ${scratch}
-mpirun vasp-54 > ${LS_SUBCWD}/out_run${run}
+mpirun vasp_std > ${LS_SUBCWD}/out_run${run}
 
 # Copy results back
 for i in OUTCAR CONTCAR CHGCAR AECCAR0 AECCAR2 OSZICAR
