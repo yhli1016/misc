@@ -169,6 +169,7 @@ def main():
     # Interpolation parameters
     method = "idpp"
     mic = True
+    apply_constraint = True
 
     # Debugging flags
     debug = False
@@ -184,14 +185,14 @@ def main():
     if _align_image:
         align_image(image_ini, image_fin, **select_args)
 
-    # Center initial and final images
-    if _center_image:
-        center_image(image_ini, center_z, **select_args)
-        center_image(image_fin, center_z, **select_args)
-
     # Interpolate
     mep = interpolate(image_ini, image_fin, num_inter_images,
-                      method=method, mic=mic)
+                      method=method, mic=mic, apply_constraint=apply_constraint)
+
+    # Center images
+    if _center_image:
+        for image in mep:
+            center_image(image, center_z, **select_args)
 
     # Output
     if not debug:
