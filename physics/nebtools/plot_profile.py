@@ -32,7 +32,7 @@ def main():
     # Names for colors: (b)lue, (r)ed, (g)reen, (c)yan, (m)agenta, blac(k), (w)hite
     # Allowed line styles are "-", "--", "-.", ":"
 
-    # for Fe
+    # for X
     path = Profile(axes, default_label_color="b", unit="ev")
     path.add_de(0.0)    # co2 + sub
     path.add_de(-1.26)  # co2_fe_bend
@@ -46,28 +46,9 @@ def main():
     path.add_de(-0.49)  # h2o_sub
     path.add_de(0.69)   # h2o + sub
     plot_args = {"linewidth": line_width, "linestyle": "--", "color": "b",
-                 "label": "Fe"}
+                 "label": "X"}
     path.plot(unit="kjm", **plot_args)
     print("Fe:")
-    path.print(unit="ev")
-
-    # for Cu
-    path = Profile(axes, default_label_color="r", unit="kjm")
-    path.add_eng(0, 0.0)    # co2 + sub
-    path.add_eng(1, -121.87)  # co2_fe_bend
-    path.add_eng(2, -16.10)   # co_form_ts
-    path.add_eng(3, -130.97)  # co_fe_o_sub
-    path.add_eng(4, -60.06)   # co + o_sub
-    path.add_eng(5, -63.77)  # h2_fe
-    path.add_eng(6, 19.42)   # h2o_from1_ts
-    path.add_eng(7, -76.62)  # h_fe_h_o
-    path.add_eng(8, 64.73)   # h2o_form2_ts
-    path.add_eng(9, 1.21)  # h2o_sub
-    path.add_eng(10, 68.01)   # h2o + sub
-    plot_args = {"linewidth": line_width, "linestyle": "--", "color": "r",
-                 "label": "Cu"}
-    path.plot(unit="kjm", **plot_args)
-    print("Cu:")
     path.print(unit="ev")
 
     # Fine adjustments

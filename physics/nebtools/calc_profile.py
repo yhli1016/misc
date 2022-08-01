@@ -56,8 +56,6 @@ class RWGS(MultiPath):
 
 
 def main():
-    # 0 coverage
-    print("Reaction Energies of RWGS on Fe@Mo2C with 0 coverage")
     path = RWGS()
     path.sub = -198.12728341
     path.co2_fe_bend = -217.79137763
@@ -69,37 +67,6 @@ def main():
     path.h_fe_h_o = -212.31001109
     path.h2o_form2_ts = -211.133700
     path.h2o_sub = -211.62499841
-    path.eval_eng()
-
-    # 0.33 coverage
-    print("Reaction Energies of RWGS on Fe@Mo2C with 0.33 coverage")
-    path = RWGS()
-    path.sub = -218.87184700
-    path.co2_fe_bend = -238.67602257
-    path.co_form_ts = -237.759400
-    path.co_fe_o_sub = -239.33374512
-    path.o_sub = -225.50533791
-    path.h2_fe = -233.25968018
-    path.h2o_form1_ts = -232.698800
-    path.h_fe_h_o = -233.61507818
-    path.h2o_sub = -232.48088446
-    path.h2o_form2_ts = -231.723
-    path.h2o_sub = -232.48088446
-    path.eval_eng()
-
-    # 0.78
-    print("Reaction Energies of RWGS on Fe@Mo2C with 0.78 coverage")
-    path = RWGS()
-    path.sub = -245.94153180
-    path.co2_fe_bend = -265.30342210
-    path.co_form_ts = -264.997200
-    path.co_fe_o_sub = -266.0301423
-    path.o_sub = -252.68471571
-    path.h2_fe = -260.11341903
-    path.h2o_form1_ts = -259.498800
-    path.h_fe_h_o = -259.86970027
-    path.h2o_form2_ts = -259.021500
-    path.h2o_sub = -259.72247630
     path.eval_eng()
 
 
