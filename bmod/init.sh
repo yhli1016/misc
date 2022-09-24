@@ -1,5 +1,5 @@
 # Set up environment variables used by bmod
-export BMOD_ROOT=$HOME/soft/bmod
+export BMOD_ROOT=$(dirname $BASH_SOURCE)
 export BMOD_MOD=$BMOD_ROOT/modules
 export BMOD_LOADED_MODS=""
 
