@@ -123,6 +123,7 @@ def get_input():
     macro["NAME"] = input("\nInput job name: ")
     macro["NCPU"] = input("\nInput number of cpu to use: ")
     macro["TIME"] = input("\nInput time limit (in hours): ")
+    macro["MEM"] = 2048  # maximum memory, temporarily fixed to 2048 MB
     restart = get_option("\nInput whether to restart (yes/no): ",
                          ("yes", "no"))
     if restart == "yes":
