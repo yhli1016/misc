@@ -75,9 +75,9 @@ set_mod add lib $HOME/soft/dft/xcrysden-1.6.2-bin-shared
 
 #### 3.1.2 使用自定义的环境变量
 
-预定义的环境变量可以满足大多数情形。若待修改的环境变量没有预定义，可以用`set_env`和`reset_env`命令修改。
+预定义的环境变量可以满足大多数情形。若待修改的环境变量没有预定义，可以用`set_env`、`reset_env`和`stash_env`命令修改。
 
-假设我们要把`$HOME/soft/lib/abc/def`添加到环境变量`TEST`中，对应操作为`set_env add TEST $HOME/soft/lib/abc/def`，删除时为`set_env rm TEST $HOME/soft/lib/abc/def`。如果我们希望把环境变量重设为一个新的值，而不是把新的值追加到变量中，可以用`reset_env`命令。例如，`reset_env add OMP_NUM_THREADS 4`将OpenMP线程数设置为4，`reset_env rm OMP_NUM_THREADS`将其恢复默认值。
+假设我们要把`$HOME/soft/lib/abc/def`添加到环境变量`TEST`中，对应操作为`set_env add TEST $HOME/soft/lib/abc/def`，删除时为`set_env rm TEST $HOME/soft/lib/abc/def`。如果我们希望把环境变量重设为一个新的值，而不是把新的值追加到变量中，可以用`reset_env`命令。例如，`reset_env add OMP_NUM_THREADS 4`将OpenMP线程数设置为4，`reset_env rm OMP_NUM_THREADS`将其恢复默认值。`stash_env`命令与`reset_env`类似，区别在于`add`时会保存环境变量原有值，并在`rm`时将其恢复。
 
 ### 3.2 通过脚本添加和移除设置
 
@@ -261,3 +261,5 @@ Currently loaded modules:
 ```
 
 当执行第一条命令`bmod add qe`时，bmod加载了与qe相关的设置。一般来说，这需要卸载冲突库和加载依赖库。当执行第二条命令`bmod add fleurMaXR3.1`时，bmod同样会执行类似操作。但是，如果fleur依赖的某个库恰巧与qe冲突，或者与fleur有冲突的某个库恰巧是qe的依赖库，那么执行完第二句后，qe的环境变量就被破坏了。也就是说，bmod目前只能“狗熊掰玉米”，保证最后一个加载的程序可用。要解决这个问题，需要复杂的依赖和冲突关系分析。这已经超出了bmod的设计初衷，如有这方面的需求，可以选择功能更强大的Environment Modules系统，或本人开发的Pmod。
+
+此外，bmod目前还不能处理带空格的环境变量（如PS1）。

@@ -17,6 +17,28 @@ reset_env () {
     fi
 }
 
+stash_env () {
+    local cmd=$1
+    local envname=$2
+    local pattern=$3
+    local envval=""
+    if [[ "$cmd" == "add" ]]; then
+        # Back up and update
+        # DO NOT CHANGE THE ORDER!
+        envval=$(eval echo '$'"$envname")
+        export BMOD_BAK_$envname=$envval
+        export $envname=$pattern
+    elif [[ "$cmd" == "rm" ]]; then
+        # Clear backup and restore
+        # DO NOT CHANGE THE ORDER!
+        envval=$(eval echo '$'"BMOD_BAK_$envname")
+        unset BMOD_BAK_$envname
+        export $envname=$envval
+    else
+        echo "ERROR: Illegal command '$cmd'"
+    fi
+}
+
 set_env () {
     local cmd=$1
     local envname=$2
