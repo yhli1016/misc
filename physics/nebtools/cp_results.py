@@ -32,8 +32,12 @@ def get_job_name(script_name):
     with open(script_name, "r") as script_file:
         script = script_file.readlines()
         for line in script:
-            if line.find("#BSUB -J") != -1:
+            if line.find("#BSUB -J") != -1 or line.find("#SBATCH -J") != -1:
                 job_name = line.split()[2].rstrip("\n")
+            elif line.find("#SBATCH --job-name") != -1:
+                job_name = line.split('=')[1].rstrip("\n")
+            else:
+                pass
     if job_name is None:
         raise RuntimeError("Job name not found")
     return job_name
