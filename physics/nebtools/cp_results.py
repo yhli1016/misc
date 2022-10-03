@@ -53,6 +53,7 @@ def main():
         for r in results:
             shutil.copy(f"{scratch}/{r}", r)
     elif job_type == "neb":
+        results.append("OUTCAR.gz")
         num_image = get_int("INCAR", "IMAGES")
         for i in range(1, num_image+1):
             prefix = "%02d" % i
