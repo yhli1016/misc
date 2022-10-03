@@ -57,7 +57,10 @@ def main():
         for i in range(1, num_image+1):
             prefix = "%02d" % i
             for r in results:
-                shutil.copy(f"{scratch}/{prefix}/{r}", f"{prefix}/{r}")
+                try:
+                    shutil.copy(f"{scratch}/{prefix}/{r}", f"{prefix}/{r}")
+                except FileNotFoundError:
+                    print(f"Warning: {r} not found!")
     else:
         raise ValueError(f"Unknown job type: {job_type}")
 
