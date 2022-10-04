@@ -53,15 +53,20 @@ def main():
         for r in results:
             shutil.copy(f"{scratch}/{r}", r)
     elif job_type == "neb":
-        results.append("OUTCAR.gz")
         num_image = get_int("INCAR", "IMAGES")
         for i in range(1, num_image+1):
             prefix = "%02d" % i
             for r in results:
                 try:
                     shutil.copy(f"{scratch}/{prefix}/{r}", f"{prefix}/{r}")
-                except FileNotFoundError:
-                    print(f"Warning: {r} not found!")
+                except FileNotFoundError as err:
+                    if r == "OUTCAR":
+                        print(f"WARNING: {scratch}/{prefix}/OUTCAR not found."
+                              f" Copying OUTCAR.gz instead.")
+                        shutil.copy(f"{scratch}/{prefix}/OUTCAR.gz",
+                                    f"{prefix}/OUTCAR.gz")
+                    else:
+                        raise err
     else:
         raise ValueError(f"Unknown job type: {job_type}")
 
