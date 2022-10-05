@@ -20,10 +20,18 @@ run=<RUN>
 istart=<ISTART>
 
 scratchroot=/cluster/scratch/zhangwenj
-scratch=${scratchroot}/${SLURM_JOBNAME}
+scratch=${scratchroot}/${SLURM_JOB_NAME}
 
-if [ "$istart" -eq 0 ]; then
-    rm -r ${scratch}
+# Remove existing scratch directory if istart == 0
+# We must check $scratchroot carefully to avoid removing important files and
+# directories by accident.
+if [ "$scratchroot" == "$scratch" ]; then
+    echo "ERROR: empty job name"
+    exit 1
+else
+    if [ "$istart" -eq 0 ]; then
+        rm -r ${scratch}
+    fi
 fi
 mkdir -p ${scratch}
 
