@@ -18,7 +18,10 @@ import pickle
 from typing import List, Callable
 
 
-# Patterns for detecting use/module and call/subroutine statements
+# Patterns for detecting the symbols defined and referenced in the source file.
+# The precise pattern for 'func' should be r"^\s*(pure\s+)?\s*function\s+(\w+)"
+# but that makes the 'parse_source' method of 'SourceTree' class complicated
+# when extracting the symbol. So we have to make a compromise.
 PATTERNS = {
     'mod': re.compile(r"^\s*module\s+(\w+)", re.IGNORECASE),
     'sub': re.compile(r"^\s*subroutine\s+(\w+)", re.IGNORECASE),
@@ -28,7 +31,7 @@ PATTERNS = {
                                re.IGNORECASE),
     'use': re.compile(r"^\s*use\s+(\w+)", re.IGNORECASE),
     'call': re.compile(r"^\s*call\s+(\w+)", re.IGNORECASE),
-    'call_func': re.compile(r"^\s*\w+\s*=\s*(\w+)\(", re.IGNORECASE),
+    'call_func': re.compile(r"^\s*\w+\s*=\s*(\w+)\(.*\)", re.IGNORECASE),
     'call_op': re.compile(r"^\s*[^!].+(\.\w+\.)", re.IGNORECASE)
 }
 KEYS_DEF = ('mod', 'sub', 'func', 'interface', 'interface_op')
@@ -120,11 +123,13 @@ class SourceTree:
         :param dir_name: name of the directory
         :return: None. The 'sources' attribute is updated.
         """
-        pattern = re.compile(r"^(\S+)\.([fF]+(90)?)", re.IGNORECASE)
-        f90_files = glob.glob(f"{dir_name}/*.f90")
-        for f90 in f90_files:
-            src_name = re.search(pattern, f90).group(1)
-            self.sources[src_name] = self.parse_source(f90)
+        pattern = re.compile(r"^(\S+)\.([fF]+\d*)", re.IGNORECASE)
+        all_files = glob.glob(f"{dir_name}/*")
+        for file in all_files:
+            result = re.search(pattern, file)
+            if result is not None:
+                src_name = result.group(1)
+                self.sources[src_name] = self.parse_source(file)
 
     def resolve_dependencies(self) -> None:
         """
