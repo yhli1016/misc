@@ -1,8 +1,9 @@
 #! /usr/bin/env python
-"""Script for generating the dependency digraph."""
+"""Script for generating the dependency digraph using Graphviz."""
 
 import re
 import argparse
+import os
 
 from fortlint import SourceTree
 
@@ -22,12 +23,14 @@ def main():
     parser.add_argument("-f", "--file-name", type=str, action="store",
                         default="sources.pkl")
     parser.add_argument("-o", "--output", type=str, action="store",
-                        default="dep.dot")
+                        default="dep.svg")
     args = parser.parse_args()
 
     sources = SourceTree()
     sources.load_cache(file_name=args.file_name)
-    sources.write_dot(dot_name=args.output, color_func=color_func)
+    dot_name = args.output.split(".")[0] + ".dot"
+    sources.write_dot(dot_name=dot_name, color_func=color_func)
+    os.system(f"dot -Tsvg -o{args.output} {dot_name}")
 
 
 if __name__ == "__main__":
