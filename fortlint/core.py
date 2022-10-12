@@ -4,6 +4,7 @@ Core module of the package
 CONSTANTS
 ---------
     PATTERNS: dictionary for parsing the source files
+    KEYS_DEF: dictionary for extracting definitions from source file
 
 Classes
 -------
@@ -22,10 +23,15 @@ PATTERNS = {
     'mod': re.compile(r"^\s*module\s+(\w+)", re.IGNORECASE),
     'sub': re.compile(r"^\s*subroutine\s+(\w+)", re.IGNORECASE),
     'func': re.compile(r"^\s*[pure]?\s*function\s+(\w+)", re.IGNORECASE),
+    'interface': re.compile(r"^\s*interface\s+(\w+)", re.IGNORECASE),
+    'interface_op': re.compile(r"^\s*interface operator\s*\((\s*\.\w+\.\s*)\)",
+                               re.IGNORECASE),
     'use': re.compile(r"^\s*use\s+(\w+)", re.IGNORECASE),
     'call': re.compile(r"^\s*call\s+(\w+)", re.IGNORECASE),
-    'call_func': re.compile(r"^\s*\w+\s*=\s*(\w+)\(", re.IGNORECASE)
+    'call_func': re.compile(r"^\s*\w+\s*=\s*(\w+)\(", re.IGNORECASE),
+    'call_op': re.compile(r"^\s*[^!].+(\.\w+\.)", re.IGNORECASE)
 }
+KEYS_DEF = ('mod', 'sub', 'func', 'interface', 'interface_op')
 
 
 class Source:
@@ -101,7 +107,7 @@ class SourceTree:
                 result = re.search(val, line)
                 if result is not None:
                     pattern = result.group(1).lstrip().rstrip().lower()
-                    if key in ('mod', 'sub', 'func'):
+                    if key in KEYS_DEF:
                         source.add_symbol(pattern)
                     else:
                         source.add_reference(pattern)
@@ -160,8 +166,7 @@ class SourceTree:
                     if dep not in dep_tree:
                         dep_tree.append(dep)
             if src_name in dep_tree:
-                print(f"WARNING: cyclic dependency detected"
-                      f" {src_name} <-> {src_name}")
+                print(f"WARNING: cyclic dependency detected for {src_name}")
 
     def save_cache(self, file_name: str = "sources.pkl") -> None:
         """
@@ -227,6 +232,7 @@ class SourceTree:
             of the symbol
         """
         candidates = []
+        symbol = symbol.lower()
         if kind == "def":
             for src_name, src_obj in self.sources.items():
                 if symbol in src_obj.symbols:
