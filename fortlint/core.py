@@ -97,7 +97,10 @@ class SourceTree:
     @staticmethod
     def parse_source(source_name: str) -> Source:
         """
-        Parse a FORTRAN source file
+        Parse a FORTRAN source file.
+
+        NOTE: all the symbols and references in the source file will be
+        converted to lower case. See also the 'find_symbol' method.
 
         :param source_name: name of the source file
         :return: the source object created from the file
@@ -119,6 +122,9 @@ class SourceTree:
     def parse_source_tree(self, dir_name: str = "*") -> None:
         """
         Parse all the source files under given directory.
+
+        NOTE: the source name WILL NOT be converted to lower case, unlike the
+        'parse_source' method.
 
         :param dir_name: name of the directory
         :return: None. The 'sources' attribute is updated.
@@ -245,5 +251,26 @@ class SourceTree:
         else:
             for src_name, src_obj in self.sources.items():
                 if symbol in src_obj.references:
+                    candidates.append(src_name)
+        return candidates
+
+    def find_relevant_nodes(self, node: str, direction="in") -> List[str]:
+        """
+        Find the relevant nodes of given node in the dependency digraph.
+
+        :param node: name of the given node
+        :param direction: 'in' for nodes on which the given node depends
+            and 'out' for nodes which depend on the given node
+        :return: list of names of relevant nodes
+        """
+        candidates = []
+        if direction == "in":
+            try:
+                candidates = list(self.sources[node].dependencies)
+            except KeyError:
+                print(f"ERROR: undefined node '{node}'")
+        else:
+            for src_name, src_obj in self.sources.items():
+                if node in src_obj.dependencies:
                     candidates.append(src_name)
         return candidates
