@@ -131,7 +131,7 @@ class SourceTree:
         :param dir_name: name of the directory
         :return: None. The 'sources' attribute is updated.
         """
-        pattern = re.compile(r"^(\S+)\.([fF]+\d*)", re.IGNORECASE)
+        pattern = re.compile(r"^(\S+)\.([fF]+\d*)$", re.IGNORECASE)
         all_files = glob.glob(f"{dir_name}/*")
         for file in all_files:
             result = re.search(pattern, file)
