@@ -25,12 +25,12 @@ def main():
     node = args.node
     if args.out:
         candidates = sources.find_relevant_nodes(node, 'out')
-        print(f"'{node}' -> nodes:")
+        print(f"'{node}' -> {len(candidates)} nodes:")
         for item in candidates:
             print(f"{'':4s}{item}")
     else:
-        candidates = sources.find_symbol(node, 'in')
-        print(f"nodes -> '{node}':")
+        candidates = sources.find_relevant_nodes(node, 'in')
+        print(f"{len(candidates)} nodes -> '{node}':")
         for item in candidates:
             print(f"{'':4s}{item}")
 
