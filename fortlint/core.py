@@ -15,7 +15,7 @@ Classes
 import re
 import glob
 import pickle
-from typing import List, Callable
+from typing import Set, Callable
 
 
 # Patterns for detecting the symbols defined and referenced in the source file.
@@ -233,44 +233,46 @@ class SourceTree:
                 for dep in src_obj.dependencies:
                     make.write(f"{src_name}.o: {dep}.o\n")
 
-    def find_symbol(self, symbol: str, kind: str = "def") -> List[str]:
+    def find_symbol(self, symbol: str, kind: str = "def") -> Set[str]:
         """
         Find the definitions or references of given symbol in sources.
 
         :param symbol: the symbol to search
         :param kind: definition of reference to search
-        :return: list of the file names which contain definitions or reference
+        :return: set of the file names which contain definitions or reference
             of the symbol
         """
-        candidates = []
+        candidates = set()
         symbol = symbol.lower()
         if kind == "def":
             for src_name, src_obj in self.sources.items():
                 if symbol in src_obj.symbols:
-                    candidates.append(src_name)
+                    candidates.add(src_name)
         else:
             for src_name, src_obj in self.sources.items():
                 if symbol in src_obj.references:
-                    candidates.append(src_name)
+                    candidates.add(src_name)
         return candidates
 
-    def find_relevant_nodes(self, node: str, direction="in") -> List[str]:
+    def find_relevant_nodes(self, node: str, direction="in") -> Set[str]:
         """
         Find the relevant nodes of given node in the dependency digraph.
 
         :param node: name of the given node
         :param direction: 'in' for nodes on which the given node depends
             and 'out' for nodes which depend on the given node
-        :return: list of names of relevant nodes
+        :return: set of names of relevant nodes
         """
-        candidates = []
+        candidates = set()
+        pattern = re.compile(f"^{node}$", re.IGNORECASE)
         if direction == "in":
-            try:
-                candidates = list(self.sources[node].dependencies)
-            except KeyError:
-                print(f"ERROR: undefined node '{node}'")
+            for src_name, src_obj in self.sources.items():
+                if re.search(pattern, src_name) is not None:
+                    candidates = src_obj.dependencies
         else:
             for src_name, src_obj in self.sources.items():
-                if node in src_obj.dependencies:
-                    candidates.append(src_name)
+                for dep in src_obj.dependencies:
+                    if re.search(pattern, dep) is not None:
+                        candidates.add(src_name)
+                        break
         return candidates
