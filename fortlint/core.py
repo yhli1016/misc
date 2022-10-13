@@ -100,7 +100,8 @@ class SourceTree:
         Parse a FORTRAN source file.
 
         NOTE: all the symbols and references in the source file will be
-        converted to lower case. See also the 'find_symbol' method.
+        converted to lower case. See also the 'find_symbol' method. This
+        is because identifiers in FORTRAN are case-insensitive.
 
         :param source_name: name of the source file
         :return: the source object created from the file
@@ -123,8 +124,9 @@ class SourceTree:
         """
         Parse all the source files under given directory.
 
-        NOTE: the source name WILL NOT be converted to lower case, unlike the
-        'parse_source' method.
+        NOTE: the source name WILL NOT be converted to lower case, unlike
+        the 'parse_source' method. This is because file names in UNIX are
+        case-sensitive.
 
         :param dir_name: name of the directory
         :return: None. The 'sources' attribute is updated.
