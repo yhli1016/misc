@@ -4,6 +4,7 @@ Script for finding the relevant nodes of given node in the dependency digraph.
 """
 
 import argparse
+import re
 
 from fortlint import SourceTree
 
@@ -21,8 +22,20 @@ def main():
     sources = SourceTree()
     sources.load_cache(file_name=args.file_name)
 
-    # Search for the symbol and echo
+    # Remove leading "./" and trailing '.' if any
     node = args.node
+    if node[:2] == "./":
+        node = node[2:]
+    while node[-1] == ".":
+        node = node[:-1]
+
+    # Remove suffix if any
+    pattern = re.compile(r"^(\S+)\.\w+$", re.IGNORECASE)
+    result = re.search(pattern, node)
+    if result is not None:
+        node = result.group(1)
+
+    # Search for the nodes and echo
     if args.out:
         candidates = sources.find_relevant_nodes(node, 'out')
         print(f"'{node}' -> {len(candidates)} nodes:")
