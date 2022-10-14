@@ -4,7 +4,11 @@ Core module of the package
 CONSTANTS
 ---------
     PATTERNS: dictionary for parsing the source files
-    KEYS_DEF: dictionary for extracting definitions from source file
+    KEYS_DEF: tuple for extracting definitions from source file
+
+Functions
+--------
+    extract_symbol: extracting symbol from the matched regular expression
 
 Classes
 -------
@@ -19,13 +23,10 @@ from typing import Set, Callable
 
 
 # Patterns for detecting the symbols defined and referenced in the source file.
-# The precise pattern for 'func' should be r"^\s*(pure\s+)?\s*function\s+(\w+)"
-# but that makes the 'parse_source' method of 'SourceTree' class complicated
-# when extracting the symbol. So we have to make a compromise.
 PATTERNS = {
     'mod': re.compile(r"^\s*module\s+(\w+)", re.IGNORECASE),
-    'sub': re.compile(r"^\s*subroutine\s+(\w+)", re.IGNORECASE),
-    'func': re.compile(r"^\s*[pure]?\s*function\s+(\w+)", re.IGNORECASE),
+    'sub': re.compile(r"^\s*(pure)?\s*subroutine\s+(\w+)", re.IGNORECASE),
+    'func': re.compile(r"^\s*(pure)?\s*function\s+(\w+)", re.IGNORECASE),
     'interface': re.compile(r"^\s*interface\s+(\w+)", re.IGNORECASE),
     'interface_op': re.compile(r"^\s*interface operator\s*\((\s*\.\w+\.\s*)\)",
                                re.IGNORECASE),
@@ -35,6 +36,22 @@ PATTERNS = {
     'call_op': re.compile(r"^\s*[^!].+(\.\w+\.)", re.IGNORECASE)
 }
 KEYS_DEF = ('mod', 'sub', 'func', 'interface', 'interface_op')
+
+
+def extract_symbol(result: re.Match, key: str) -> str:
+    """
+    Extract the symbol from the matched regular expression.
+
+    :param result: matched regular expression
+    :param key: key defined in PATTERNS
+    :return: extracted symbol
+    """
+    if key in ('sub', 'func'):
+        idx = 2
+    else:
+        idx = 1
+    symbol = result.group(idx).lstrip().rstrip().lower()
+    return symbol
 
 
 class Source:
@@ -110,14 +127,14 @@ class SourceTree:
         with open(source_name, "r") as in_file:
             content = in_file.readlines()
         for line in content:
-            for key, val in PATTERNS.items():
-                result = re.search(val, line)
+            for key, pattern in PATTERNS.items():
+                result = re.search(pattern, line)
                 if result is not None:
-                    pattern = result.group(1).lstrip().rstrip().lower()
+                    symbol = extract_symbol(result, key)
                     if key in KEYS_DEF:
-                        source.add_symbol(pattern)
+                        source.add_symbol(symbol)
                     else:
-                        source.add_reference(pattern)
+                        source.add_reference(symbol)
         return source
 
     def parse_source_tree(self, dir_name: str = "*") -> None:
