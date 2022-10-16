@@ -1,57 +1,75 @@
-"""
-Core module of the package
-
-CONSTANTS
----------
-    PATTERNS: dictionary for parsing the source files
-    KEYS_DEF: tuple for extracting definitions from source file
-
-Functions
---------
-    extract_symbol: extracting symbol from the matched regular expression
-
-Classes
--------
-    Source: developer class for representing a source file
-    SourceTree: user class for representing a tree of sources files
-"""
+"""Core module of the package."""
 
 import re
 import glob
 import pickle
-from typing import Set, Callable
+from typing import Tuple, Union, Set, Callable
 
 
-# Patterns for detecting the symbols defined and referenced in the source file.
-PATTERNS = {
-    'mod': re.compile(r"^\s*module\s+(\w+)", re.IGNORECASE),
-    'sub': re.compile(r"^\s*(pure)?\s*subroutine\s+(\w+)", re.IGNORECASE),
-    'func': re.compile(r"^\s*(pure)?\s*function\s+(\w+)", re.IGNORECASE),
-    'interface': re.compile(r"^\s*interface\s+(\w+)", re.IGNORECASE),
-    'interface_op': re.compile(r"^\s*interface operator\s*\((\s*\.\w+\.\s*)\)",
-                               re.IGNORECASE),
-    'use': re.compile(r"^\s*use\s+(\w+)", re.IGNORECASE),
-    'call': re.compile(r"^\s*call\s+(\w+)", re.IGNORECASE),
-    'call_func': re.compile(r"^\s*\w+\s*=\s*(\w+)\(.*\)", re.IGNORECASE),
-    'call_op': re.compile(r"^\s*[^!].+(\.\w+\.)", re.IGNORECASE)
-}
-KEYS_DEF = ('mod', 'sub', 'func', 'interface', 'interface_op')
-
-
-def extract_symbol(result: re.Match, key: str) -> str:
+class SymbolRules:
     """
-    Extract the symbol from the matched regular expression.
+    Class for extracting definitions and references of symbols from lines
+    of FORTRAN source code.
 
-    :param result: matched regular expression
-    :param key: key defined in PATTERNS
-    :return: extracted symbol
+    Attributes
+    ----------
+    rules: List[Tuple[re.Pattern, int, bool]], rules for analyzing the
+        source code
     """
-    if key in ('sub', 'func'):
-        idx = 2
-    else:
-        idx = 1
-    symbol = result.group(idx).lstrip().rstrip().lower()
-    return symbol
+    def __init__(self) -> None:
+        self.rules = []
+
+    def add_rule(self, pattern: str, idx: int = 1,
+                 is_def: bool = False) -> None:
+        """
+        Add a rule to the rules.
+
+        :param pattern: regular expression of the rule
+        :param idx: index to extract the symbol from the matched result
+        :param is_def: whether the matched result contains a definition
+        :return: None. The 'rules' attribute is updated.
+        """
+        pattern = re.compile(pattern, re.IGNORECASE)
+        self.rules.append((pattern, idx, is_def))
+
+    def match(self, line: str) -> Tuple[Union[str, None], bool]:
+        """
+        Loop over the rules to match given line of FORTRAN source code.
+
+        :param line: line of FORTRAN source code
+        :return: the extracted symbol (None if not matched) and if the
+            matched result contains a definition
+        """
+        symbol, is_def = None, False
+        for rule in self.rules:
+            result = re.search(rule[0], line)
+            if result is not None:
+                symbol = result.group(rule[1]).lstrip().rstrip().lower()
+                is_def = rule[2]
+                break
+        return symbol, is_def
+
+
+# Predefined matching rules
+RULES = SymbolRules()
+# module definition
+RULES.add_rule(r"^\s*module\s+(\w+)", is_def=True)
+# subroutine definition
+RULES.add_rule(r"^\s*(pure)?\s*subroutine\s+(\w+)", idx=2, is_def=True)
+# function definition
+RULES.add_rule(r"^\s*(pure)?\s*function\s+(\w+)", idx=2, is_def=True)
+# interface to subroutines and functions
+RULES.add_rule(r"^\s*interface\s+(\w+)", is_def=True)
+# interface to operators
+RULES.add_rule(r"^\s*interface operator\s*\((\s*\.\w+\.\s*)\)", is_def=True)
+# module usage
+RULES.add_rule(r"^\s*use\s+(\w+)")
+# subroutine call
+RULES.add_rule(r"^\s*call\s+(\w+)")
+# function call
+RULES.add_rule(r"^\s*\w+\s*=\s*(\w+)\(.*\)")
+# operator call
+RULES.add_rule(r"^\s*[^!].+(\.\w+\.)")
 
 
 class Source:
@@ -60,42 +78,40 @@ class Source:
 
     Attributes
     ----------
-    symbols: set of strings, containing the modules and subroutines defined
-        in the source file
-    references: set of strings, containing the modules in 'use' and subroutines
-        in 'call' statements
-    dependencies: set of strings, containing the names of files where
-        the dependent modules and subroutines are defined
+    definitions: set of strings, containing the definitions in this file
+    references: set of strings, containing the references to the definitions
+    dependencies: set of strings, containing the file names where the
+        definitions referenced within this file can be found
     """
     def __init__(self) -> None:
-        self.symbols = set()
+        self.definitions = set()
         self.references = set()
         self.dependencies = set()
 
-    def add_symbol(self, symbol: str):
+    def add_definition(self, definition: str) -> None:
         """
-        Add a symbol to the set of symbols.
+        Add a definition to the definitions.
 
-        :param symbol: the symbol
+        :param definition: the definition
         :return: None.
         """
-        self.symbols.add(symbol)
+        self.definitions.add(definition)
 
-    def add_reference(self, reference: str):
+    def add_reference(self, reference: str) -> None:
         """
-        Add a reference to the set of references.
+        Add a reference to the references.
 
         :param reference: the reference
         :return: None.
         """
         self.references.add(reference)
 
-    def add_dependency(self, dependency: str):
+    def add_dependency(self, dependency: str) -> None:
         """
-        Add a dependent source file to the set of dependencies.
+        Add a dependent source file to the dependencies.
 
         :param dependency: name of the source file
-        :return:
+        :return: None.
         """
         self.dependencies.add(dependency)
 
@@ -112,29 +128,27 @@ class SourceTree:
         self.sources = dict()
 
     @staticmethod
-    def parse_source(source_name: str) -> Source:
+    def parse_source(src_name: str) -> Source:
         """
         Parse a FORTRAN source file.
 
-        NOTE: all the symbols and references in the source file will be
-        converted to lower case. See also the 'find_symbol' method. This
-        is because identifiers in FORTRAN are case-insensitive.
+        NOTE: all the definitions and references in the source file will be
+        converted to lower case. See also the 'find_symbol' method. This is
+        because identifiers in FORTRAN are case-insensitive.
 
-        :param source_name: name of the source file
+        :param src_name: name of the source file
         :return: the source object created from the file
         """
         source = Source()
-        with open(source_name, "r") as in_file:
+        with open(src_name, "r") as in_file:
             content = in_file.readlines()
         for line in content:
-            for key, pattern in PATTERNS.items():
-                result = re.search(pattern, line)
-                if result is not None:
-                    symbol = extract_symbol(result, key)
-                    if key in KEYS_DEF:
-                        source.add_symbol(symbol)
-                    else:
-                        source.add_reference(symbol)
+            symbol, is_def = RULES.match(line)
+            if symbol is not None:
+                if is_def:
+                    source.add_definition(symbol)
+                else:
+                    source.add_reference(symbol)
         return source
 
     def parse_source_tree(self, dir_name: str = "*") -> None:
@@ -149,7 +163,7 @@ class SourceTree:
         :return: None. The 'sources' attribute is updated.
         """
         pattern = re.compile(r"^(\S+)\.([fF]+\d*)$", re.IGNORECASE)
-        all_files = glob.glob(f"{dir_name}/*")
+        all_files = sorted(glob.glob(f"{dir_name}/*"))
         for file in all_files:
             result = re.search(pattern, file)
             if result is not None:
@@ -163,28 +177,28 @@ class SourceTree:
         :return: None. The 'Source' instances in 'sources' attribute
             are updated.
         """
-        # Build the symbol tables
-        # key: the symbols
-        # value: list of sources where the symbols are defined
-        symbol_table = dict()
+        # Build the definition tables
+        # key: the definitions
+        # value: list of sources where the definitions can be found
+        def_table = dict()
         for src_name, src_obj in self.sources.items():
-            for symbol in src_obj.symbols:
+            for item in src_obj.definitions:
                 try:
-                    symbol_table[symbol].add(src_name)
+                    def_table[item].add(src_name)
                 except KeyError:
-                    symbol_table[symbol] = {src_name}
+                    def_table[item] = {src_name}
 
         # Build dependencies
         for src_name, src_obj in self.sources.items():
-            for symbol in src_obj.references:
+            for item in src_obj.references:
                 try:
-                    candidates = symbol_table[symbol]
+                    candidates = def_table[item]
                     if src_name not in candidates:  # Skip self-dependence.
                         if len(candidates) == 1:
                             src_obj.add_dependency(list(candidates)[0])
                         else:  # In the face of ambiguity, refuse the temptation to guess.
                             print(f"WARNING: skipping multiple definition for"
-                                  f" {symbol} in {src_name}:\n\t{candidates}")
+                                  f" {item} in {src_name}:\n\t{candidates}")
                 except KeyError:
                     pass
 
@@ -257,7 +271,7 @@ class SourceTree:
         Find the definitions or references of given symbol in sources.
 
         :param symbol: the symbol to search
-        :param kind: definition of reference to search
+        :param kind: definition or reference to search
         :return: set of the file names which contain definitions or reference
             of the symbol
         """
@@ -265,7 +279,7 @@ class SourceTree:
         symbol = symbol.lower()
         if kind == "def":
             for src_name, src_obj in self.sources.items():
-                if symbol in src_obj.symbols:
+                if symbol in src_obj.definitions:
                     candidates.add(src_name)
         else:
             for src_name, src_obj in self.sources.items():
