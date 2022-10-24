@@ -15,8 +15,8 @@ def main():
     args = parser.parse_args()
 
     # Set default directory list
-    directory_list = ["*"]
-    # directory_list = ["*", "../futile-1.8/*", "../futile-1.8/wrappers/*"]
+    directory_list = [".", "*"]
+    # directory_list = [".", "*", "../futile-1.8/*", "../futile-1.8/wrappers/*"]
     directory_list.extend(args.paths)
 
     # Build the source tree

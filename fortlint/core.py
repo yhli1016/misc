@@ -151,7 +151,7 @@ class SourceTree:
                     source.add_reference(symbol)
         return source
 
-    def parse_source_tree(self, dir_name: str = "*") -> None:
+    def parse_source_tree(self, dir_name: str = ".") -> None:
         """
         Parse all the source files under given directory.
 
@@ -163,7 +163,11 @@ class SourceTree:
         :return: None. The 'sources' attribute is updated.
         """
         pattern = re.compile(r"^(\S+)\.([fF]+\d*)$", re.IGNORECASE)
-        all_files = sorted(glob.glob(f"{dir_name}/*"))
+        # Omit the directory name for pwd. Keep it otherwise.
+        if dir_name in (".", "./"):
+            all_files = sorted(glob.glob("*"))
+        else:
+            all_files = sorted(glob.glob(f"{dir_name}/*"))
         for file in all_files:
             result = re.search(pattern, file)
             if result is not None:
