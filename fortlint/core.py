@@ -163,7 +163,7 @@ class SourceTree:
         :return: None. The 'sources' attribute is updated.
         """
         pattern = re.compile(r"^(\S+)\.([fF]+\d*)$", re.IGNORECASE)
-        # Omit the directory name for pwd. Keep it otherwise.
+        # Omit the directory name for pwd. Keep it in other cases.
         if dir_name in (".", "./"):
             all_files = sorted(glob.glob("*"))
         else:
