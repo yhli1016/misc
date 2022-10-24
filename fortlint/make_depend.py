@@ -20,6 +20,5 @@ def main():
     sources.write_make(args.output)
 
 
-
 if __name__ == "__main__":
     main()
