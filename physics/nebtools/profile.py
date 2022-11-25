@@ -1,5 +1,7 @@
 """Class for evaluating and plotting energy profiles."""
 
+from abc import ABC, abstractmethod
+
 import numpy as np
 from matplotlib.collections import LineCollection
 
@@ -82,7 +84,7 @@ class Path:
                 print("%16s : %8.2f%8s" % (label, eng_align, "diff"))
 
 
-class MultiPath:
+class MultiPath(ABC):
     """
     Base class for evaluating the energy profile of multiple reaction paths.
 
@@ -94,6 +96,7 @@ class MultiPath:
     def __init__(self) -> None:
         self.paths = []
 
+    @abstractmethod
     def gen_paths(self):
         """To be implemented in derived classes."""
         pass
