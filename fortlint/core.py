@@ -3,34 +3,47 @@
 import re
 import glob
 import pickle
+from collections import OrderedDict
 from typing import Tuple, Union, Set, Callable
 
 
-class SymbolRules:
+class RuleCollection:
     """
-    Class for extracting definitions and references of symbols from lines
-    of FORTRAN source code.
+    Class for extracting definitions and references of symbols from lines of
+FORTRAN source code according to user-defined rules in regular expressions.
 
     Attributes
     ----------
-    rules: List[Tuple[re.Pattern, int, bool]], rules for analyzing the
-        source code
+    def_rules: List[Tuple[re.Pattern, int]]
+        rules for extracting definitions
+    ref_rules: List[Tuple[re.Pattern, int]]
+        rules for extracting references
     """
     def __init__(self) -> None:
-        self.rules = []
+        self.def_rules = []
+        self.ref_rules = []
 
-    def add_rule(self, pattern: str, idx: int = 1,
-                 is_def: bool = False) -> None:
+    def add_def(self, pattern: str, idx: int = 1) -> None:
         """
-        Add a rule to the rules.
+        Add a definition rule.
 
         :param pattern: regular expression of the rule
         :param idx: index to extract the symbol from the matched result
-        :param is_def: whether the matched result contains a definition
-        :return: None. The 'rules' attribute is updated.
+        :return: None. The 'def_rules' attribute is updated.
         """
         pattern = re.compile(pattern, re.IGNORECASE)
-        self.rules.append((pattern, idx, is_def))
+        self.def_rules.append((pattern, idx))
+
+    def add_ref(self, pattern: str, idx: int = 1) -> None:
+        """
+        Add a reference rule.
+
+        :param pattern: regular expression of the rule
+        :param idx: index to extract the symbol from the matched result
+        :return: None. The 'ref_rules' attribute is updated.
+        """
+        pattern = re.compile(pattern, re.IGNORECASE)
+        self.ref_rules.append((pattern, idx))
 
     def match(self, line: str) -> Tuple[Union[str, None], bool]:
         """
@@ -38,38 +51,52 @@ class SymbolRules:
 
         :param line: line of FORTRAN source code
         :return: the extracted symbol (None if not matched) and if the
-            matched result contains a definition
+            matched result is a definition
         """
         symbol, is_def = None, False
-        for rule in self.rules:
-            result = re.search(rule[0], line)
+
+        # Check for definitions
+        for rule in self.def_rules:
+            pattern, idx = rule
+            result = re.search(pattern, line)
             if result is not None:
-                symbol = result.group(rule[1]).lstrip().rstrip().lower()
-                is_def = rule[2]
+                symbol = result.group(idx).lstrip().rstrip().lower()
+                is_def = True
                 break
+
+        # Check for references
+        if symbol is None:
+            for rule in self.ref_rules:
+                pattern, idx = rule
+                result = re.search(pattern, line)
+                if result is not None:
+                    symbol = result.group(idx).lstrip().rstrip().lower()
+                    break
+
         return symbol, is_def
 
 
 # Predefined matching rules
-RULES = SymbolRules()
+# TODO: type definition and usage
+RULES = RuleCollection()
 # module definition
-RULES.add_rule(r"^\s*module\s+(\w+)", is_def=True)
+RULES.add_def(r"^\s*module\s+(\w+)")
 # subroutine definition
-RULES.add_rule(r"^\s*(pure)?\s*subroutine\s+(\w+)", idx=2, is_def=True)
+RULES.add_def(r"^\s*(pure)?\s*subroutine\s+(\w+)", idx=2)
 # function definition
-RULES.add_rule(r"^\s*(pure)?\s*function\s+(\w+)", idx=2, is_def=True)
+RULES.add_def(r"^\s*(pure)?\s*function\s+(\w+)", idx=2)
 # interface to subroutines and functions
-RULES.add_rule(r"^\s*interface\s+(\w+)", is_def=True)
+RULES.add_def(r"^\s*interface\s+(\w+)")
 # interface to operators
-RULES.add_rule(r"^\s*interface operator\s*\((\s*\.\w+\.\s*)\)", is_def=True)
+RULES.add_def(r"^\s*interface operator\s*\((\s*\.\w+\.\s*)\)")
 # module usage
-RULES.add_rule(r"^\s*use\s+(\w+)")
+RULES.add_ref(r"^\s*use\s+(\w+)")
 # subroutine call
-RULES.add_rule(r"^\s*call\s+(\w+)")
+RULES.add_ref(r"^\s*call\s+(\w+)")
 # function call
-RULES.add_rule(r"^\s*\w+\s*=\s*(\w+)\(.*\)")
+RULES.add_ref(r"^\s*\w+\s*=\s*(\w+)\(.*\)")
 # operator call
-RULES.add_rule(r"^\s*[^!].+(\.\w+\.)")
+RULES.add_ref(r"^\s*[^!].+(\.\w+\.)")
 
 
 class Source:
@@ -78,10 +105,12 @@ class Source:
 
     Attributes
     ----------
-    definitions: set of strings, containing the definitions in this file
-    references: set of strings, containing the references to the definitions
-    dependencies: set of strings, containing the file names where the
-        definitions referenced within this file can be found
+    definitions: Set[str]
+        symbols defined in this file
+    references: Set[str]
+        symbols referenced in this file
+    dependencies: Set[str]
+        file names where the referenced symbols are defined
     """
     def __init__(self) -> None:
         self.definitions = set()
@@ -122,10 +151,12 @@ class SourceTree:
 
     Attributes
     ----------
-    sources: Dict[str, Source], collection instances of 'Source' class
+    sources: OrderedDict[str, Source]
+        collection of instances of the 'Source' class,
+        keys: file names, values: instances
     """
-    def __init__(self):
-        self.sources = dict()
+    def __init__(self) -> None:
+        self.sources = OrderedDict()
 
     @staticmethod
     def parse_source(src_name: str) -> Source:
@@ -162,12 +193,15 @@ class SourceTree:
         :param dir_name: name of the directory
         :return: None. The 'sources' attribute is updated.
         """
-        pattern = re.compile(r"^(\S+)\.([fF]+\d*)$", re.IGNORECASE)
+        # Get the file list under the directory
         # Omit the directory name for pwd. Keep it in other cases.
         if dir_name in (".", "./"):
             all_files = sorted(glob.glob("*"))
         else:
             all_files = sorted(glob.glob(f"{dir_name}/*"))
+
+        # Parse FORTRAN source files
+        pattern = re.compile(r"^(\S+)\.([fF]+\d*)$", re.IGNORECASE)
         for file in all_files:
             result = re.search(pattern, file)
             if result is not None:
@@ -254,7 +288,7 @@ class SourceTree:
                     color = color_func(src_name)
                     dot.write(f"\"{src_name}\""
                               f" [color={color},fontcolor={color}]\n")
-                for dep in src_obj.dependencies:
+                for dep in sorted(src_obj.dependencies):
                     dot.write(f"\"{dep}\" -> \"{src_name}\"\n")
             dot.write("}\n")
 
@@ -267,7 +301,7 @@ class SourceTree:
         """
         with open(make_name, "w") as make:
             for src_name, src_obj in self.sources.items():
-                for dep in src_obj.dependencies:
+                for dep in sorted(src_obj.dependencies):
                     make.write(f"{src_name}.o: {dep}.o\n")
 
     def find_symbol(self, symbol: str, kind: str = "def") -> Set[str]:
