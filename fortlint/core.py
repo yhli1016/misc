@@ -10,7 +10,7 @@ from typing import Tuple, Union, Set, Callable
 class RuleCollection:
     """
     Class for extracting definitions and references of symbols from lines of
-FORTRAN source code according to user-defined rules in regular expressions.
+    FORTRAN source code according to user-defined rules in regular expressions.
 
     Attributes
     ----------
