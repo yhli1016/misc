@@ -283,6 +283,44 @@ class Profile:
                                 linewidth=self.label_width)
         self.axes.add_collection(levels)
 
+    def add_barrier(self, i=1, unit="ev", ref_args=None,
+                    arrow_dx=0.0, arrow_args=None,
+                    text_dx=0.0, text_dy=0.0, text_args=None):
+        """
+        Add a barrier notation to the energy profile.
+
+        :param int i: index of energy level for which the notation will
+            be added with respect to the previous energy level
+        :param str unit: unit for energy levels
+        :param dict ref_args: settings of the reference line
+        :param float arrow_dx: shift of arrow from x1
+        :param dict arrow_args: settings of the arrow
+        :param float text_dx: shift of text from the center of arrow along x
+        :param float text_dy: shift of text from the center of arrow along y
+        :param dict text_args: settings of the text
+        :return: None
+        """
+        # Prepare data
+        react_coord = np.array(self.react_coord)
+        energy = self.scale_energy(unit=unit)
+
+        # Draw the horizontal reference line
+        x0, x1 = react_coord[i-1], react_coord[i]
+        y0, y1 = energy[i-1], energy[i]
+        p0 = x0 + 0.5 * self.label_length
+        p1 = x1 + 0.5 * self.label_length
+        self.axes.plot((p0, p1), (y0, y0), **ref_args)
+
+        # Draw the vertical arrow
+        ax, ay = x1 + arrow_dx, y0
+        dx, dy = 0, y1 - y0
+        self.axes.arrow(ax, ay, dx, dy, **arrow_args)
+
+        # Add the text
+        tx = ax + text_dx
+        ty = y0 + dy * 0.5 + text_dy
+        self.axes.text(tx, ty, f"{dy:.2f}", **text_args)
+
     def print(self, unit="ev"):
         """
         Print absolute energy levels and energy differences of the profile.

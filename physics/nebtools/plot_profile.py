@@ -29,11 +29,17 @@ def main():
     plt.rc("font", size=font_size, family=font_family, weight=font_weight)
     fig, axes = plt.subplots(figsize=figure_size)
 
+    # Predefined plotting styles
     # Names for colors: (b)lue, (r)ed, (g)reen, (c)yan, (m)agenta, blac(k), (w)hite
     # Allowed line styles are "-", "--", "-.", ":"
+    plot_args = {"linewidth": line_width, "linestyle": "--", "color": "k"}
+    ref_args = {"linewidth": line_width, "linestyle": ":", "color": "k"}
+    arrow_args = {"width": 0.001, "head_width": 0.05, "head_length": 5,
+                  "length_includes_head": True, "color": "k"}
+    text_args = {"color": "k", "size": "x-small"}
 
     # for X
-    path = Profile(axes, default_label_color="b", unit="ev")
+    path = Profile(axes, default_label_color="k", unit="ev")
     path.add_de(0.0)    # co2 + sub
     path.add_de(-1.26)  # co2_fe_bend
     path.add_de(0.39)   # co_form_ts
@@ -45,9 +51,16 @@ def main():
     path.add_de(1.18)   # h2o_form2_ts
     path.add_de(-0.49)  # h2o_sub
     path.add_de(0.69)   # h2o + sub
-    plot_args = {"linewidth": line_width, "linestyle": "--", "color": "b",
-                 "label": "X"}
+    plot_args["label"] = "X"
     path.plot(unit="kjm", **plot_args)
+    path.add_barrier(2, unit="kjm", ref_args=ref_args, arrow_args=arrow_args,
+                     text_args=text_args, text_dx=0.1, text_dy=-10)
+    path.add_barrier(3, unit="kjm", ref_args=ref_args, arrow_args=arrow_args,
+                     text_args=text_args, text_dx=0.1, text_dy=-10)
+    path.add_barrier(6, unit="kjm", ref_args=ref_args, arrow_args=arrow_args,
+                     text_args=text_args, text_dx=0.1, text_dy=-10)
+    path.add_barrier(8, unit="kjm", ref_args=ref_args, arrow_args=arrow_args,
+                     text_args=text_args, text_dx=0.1, text_dy=-10)
     print("Fe:")
     path.print(unit="ev")
 
