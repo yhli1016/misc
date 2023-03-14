@@ -70,6 +70,22 @@ set_alias () {
     test "$1" = "add" && alias "$2"="$3" || unalias "$2"
 }
 
+set_ps () {
+    local style=$1
+    local cu="\033[$2;1m"
+    local ch="\033[$3;1m"
+    local cw="\033[$4;1m"
+    local c0="\033[0m"
+    case $style in
+    *suse*)
+        export PS1="$cu\u$ch@\h:$cw\w$cu>$c0 "
+        ;;
+    *)
+        export PS1="$cu[\u$ch@\h $cw\W$cu]\$$c0 "
+        ;;
+    esac
+}
+
 # Wrapper for set_env with presets of environment variables
 set_mod () {
     local cmd=$1
