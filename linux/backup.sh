@@ -11,7 +11,8 @@ itemlist="\
 .profile \
 .ssh \
 .vim \
-.vimrc"
+.vimrc \
+soft/bmod"
 
 
 mkdir rc_bak
