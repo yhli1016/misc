@@ -4,6 +4,7 @@
 itemlist="\
 .alias \
 .bash_logout \
+.bash_profile \
 .bashrc \
 .dircolors \
 .gitconfig \
