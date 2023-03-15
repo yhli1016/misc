@@ -3,13 +3,14 @@
 # Back up configuration
 itemlist="\
 .alias \
-.bash_logout \
 .bash_profile \
+.bash_login \
+.profile \
 .bashrc \
+.bash_logout \
 .dircolors \
 .gitconfig \
 .inputrc \
-.profile \
 .ssh \
 .vim \
 .vimrc \
