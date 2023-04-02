@@ -224,11 +224,10 @@ class TwoBody:
         self.indices = (i, j)
 
     def eval(self, bra: FockState, ket: FockState) -> int:
-        bra_c = deepcopy(bra)
         ket_c = deepcopy(ket)
-        bra_c.destroy(self.indices[0])
-        ket_c.destroy(self.indices[1])
-        return bra_c.inner_prod(ket_c)
+        ket_c.destroy(self.indices[0])
+        ket_c.create(self.indices[1])
+        return bra.inner_prod(ket_c)
 
 
 class OnSite(TwoBody):
@@ -243,13 +242,12 @@ class FourBody:
         self.indices = (i, j, m, n)
 
     def eval(self, bra: FockState, ket: FockState) -> int:
-        bra_c = deepcopy(bra)
         ket_c = deepcopy(ket)
-        bra_c.destroy(self.indices[0])
-        bra_c.create(self.indices[1])
         ket_c.destroy(self.indices[3])
         ket_c.create(self.indices[2])
-        return bra_c.inner_prod(ket_c)
+        ket_c.destroy(self.indices[1])
+        ket_c.create(self.indices[0])
+        return bra.inner_prod(ket_c)
 
 
 class Hubbard(FourBody):
