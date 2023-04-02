@@ -1,10 +1,10 @@
 from copy import deepcopy
 from itertools import permutations, combinations
 from abc import ABC, abstractmethod
-from typing import List, Any
+from typing import List, Any, Iterable
 
 
-class ReferenceStates:
+class RefStates:
     """
     Container for holding single-particle reference states.
 
@@ -43,23 +43,21 @@ class FockState(ABC):
 
     Attributes
     ----------
-    num_ref: int
-        number of reference single particle states
     is_null: boolean
         whether the state is a null state
     sign: int
         sign of the state, effective when evaluating inner products
-    occupations: List[int]
+        For Bosons it should always be 1, while for Fermions it can be
+        either -1 or 1. For the null state, we set it to 0 for safety.
+    occupations: Dict[int, int]
         occupation numbers on the single particle states
     """
-    def __init__(self, num_ref: int = 1,
-                 occupied_states: List[int] = None) -> None:
-        self.num_ref = num_ref
+    def __init__(self, occupied_states: Iterable[int] = None) -> None:
         self.is_null = False
         self.sign = 1
-        self.occupations = [0 for _ in range(self.num_ref)]
+        self.occupations = dict()
         for idx in occupied_states:
-            self.occupations[idx] += 1
+            self.occupations[idx] = self.get_occ(idx) + 1
 
     def __eq__(self, other) -> bool:
         """
@@ -78,18 +76,31 @@ class FockState(ABC):
         #  For other states (vacuum and common), equality is determined
         #  from the occupation numbers.
         else:
+            self.purge()
+            other.purge()
             is_equal = self.occupations == other.occupations
         return is_equal
 
-    def nullify(self) -> None:
-        """
-        Set the state to null state.
+    def get_occ(self, idx: int) -> int:
+        """Safe wrapper to extract occupation number."""
+        try:
+            occ = self.occupations[idx]
+        except KeyError:
+            occ = 0
+        return occ
 
-        :return: None.
-        """
+    def nullify(self) -> None:
+        """Set the state to the null state."""
         self.is_null = True
         self.sign = 0
-        self.occupations = [0 for _ in range(self.num_ref)]
+        self.occupations = dict()
+
+    def purge(self) -> None:
+        """Remove states with zero occupation."""
+        new_occ = {idx2: occ
+                   for idx2, occ in self.occupations.items()
+                   if occ > 0}
+        self.occupations = new_occ
 
     @abstractmethod
     def destroy(self, idx: int) -> None:
@@ -128,7 +139,7 @@ class FockState(ABC):
         return not self.is_null and self.is_empty
 
 
-class BosonState(FockState):
+class Boson(FockState):
     def destroy(self, idx: int) -> None:
         """
         Destroy a particle on given single particle state.
@@ -140,10 +151,11 @@ class BosonState(FockState):
         if self.is_null:
             pass
         else:
-            if self.occupations[idx] <= 0:
+            occ = self.get_occ(idx)
+            if occ <= 0:
                 self.nullify()
             else:
-                self.occupations[idx] -= 1
+                self.occupations[idx] = occ - 1
 
     def create(self, idx: int) -> None:
         """
@@ -156,17 +168,12 @@ class BosonState(FockState):
         if self.is_null:
             pass
         else:
-            self.occupations[idx] += 1
+            self.occupations[idx] = self.get_occ(idx) + 1
 
 
-class FermionState(FockState):
-    def __init__(self, num_ref: int,
-                 occupied_states: List[int] = None) -> None:
-        super().__init__(num_ref, occupied_states)
-        for i in self.occupations:
-            if i not in (0, 1):
-                raise ValueError(f"Occupation numbers of Fermions should be"
-                                 f" either 0 or 1")
+class Fermion(FockState):
+    def __init__(self, occupied_states: Iterable[int] = None) -> None:
+        super().__init__(set(occupied_states))
 
     def destroy(self, idx: int) -> None:
         """
@@ -179,10 +186,11 @@ class FermionState(FockState):
         if self.is_null:
             pass
         else:
-            if self.occupations[idx] <= 0:
+            occ = self.get_occ(idx)
+            if occ <= 0:
                 self.nullify()
             else:
-                self.occupations[idx] -= 1
+                self.occupations[idx] = occ - 1
                 self.sign *= self.sign_factor(idx)
 
     def create(self, idx: int) -> None:
@@ -196,10 +204,11 @@ class FermionState(FockState):
         if self.is_null:
             pass
         else:
-            if self.occupations[idx] >= 1:
+            occ = self.get_occ(idx)
+            if occ >= 1:
                 self.nullify()
             else:
-                self.occupations[idx] += 1
+                self.occupations[idx] = occ + 1
                 self.sign *= self.sign_factor(idx)
 
     def sign_factor(self, idx: int) -> int:
@@ -211,46 +220,46 @@ class FermionState(FockState):
         :return: sign factor
         """
         power = 0
-        for j in self.occupations[:idx]:
-            if j > 0:
+        for idx2, occ in self.occupations.items():
+            if idx2 < idx and occ > 0:
                 power += 1
         factor = (-1)**power
         return factor
 
 
 class TwoBody:
-    """Matrix element of c_{i+} c_j."""
+    """Operator of c_{i+} c_j."""
     def __init__(self, i: int, j: int) -> None:
         self.indices = (i, j)
 
     def eval(self, bra: FockState, ket: FockState) -> int:
         ket_c = deepcopy(ket)
-        ket_c.destroy(self.indices[0])
-        ket_c.create(self.indices[1])
-        return bra.inner_prod(ket_c)
-
-
-class OnSite(TwoBody):
-    """Matrix element of c_{i+} c_i."""
-    def __init__(self, i: int) -> None:
-        super().__init__(i, i)
-
-
-class FourBody:
-    """Matrix element of c_{i+} c_j c_{k+} c_l."""
-    def __init__(self, i: int, j: int, m: int, n: int):
-        self.indices = (i, j, m, n)
-
-    def eval(self, bra: FockState, ket: FockState) -> int:
-        ket_c = deepcopy(ket)
-        ket_c.destroy(self.indices[3])
-        ket_c.create(self.indices[2])
         ket_c.destroy(self.indices[1])
         ket_c.create(self.indices[0])
         return bra.inner_prod(ket_c)
 
 
+class OnSite(TwoBody):
+    """Operator of c_{i+} c_i."""
+    def __init__(self, i: int) -> None:
+        super().__init__(i, i)
+
+
+class FourBody:
+    """Operator of c_{i+} c_{j+} c_n c_m."""
+    def __init__(self, i: int, j: int, n: int, m: int):
+        self.indices = (i, j, n, m)
+
+    def eval(self, bra: FockState, ket: FockState) -> int:
+        ket_c = deepcopy(ket)
+        ket_c.destroy(self.indices[3])
+        ket_c.destroy(self.indices[2])
+        ket_c.create(self.indices[1])
+        ket_c.create(self.indices[0])
+        return bra.inner_prod(ket_c)
+
+
 class Hubbard(FourBody):
-    """Matrix element of c_{i+} c_i c_{j+} c_j."""
+    """Operator of c_{i+} c_i c_{j+} c_j."""
     def __init__(self, i: int, j: int):
-        super().__init__(i, i, j, j)
+        super().__init__(i, j, j, i)
