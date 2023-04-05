@@ -6,6 +6,15 @@ import scipy.linalg.lapack as lapack
 from sq import RefStates, Fermion, TwoBody, Hubbard
 
 
+def eval_matrix_elements(operators, basis):
+    for ib, bra in enumerate(basis):
+        for ik, ket in enumerate(basis):
+            for operator in operators:
+                prod = operator.eval(bra, ket)
+                if prod != 0:
+                    print(ib, ik, operator.indices, prod)
+
+
 def test_u():
     # Define reference states
     ref_states = RefStates()
@@ -13,47 +22,36 @@ def test_u():
     ref_states.add_state('1-')
     ref_states.add_state('2+')
     ref_states.add_state('2-')
+    idx = ref_states.index
 
     # Define Fock states
-    def f(i):
-        return ref_states.index(i)
     basis = [
-            Fermion([f('1+'), f('2+')]),
-            Fermion([f('1-'), f('2-')]),
-            Fermion([f('1+'), f('2-')]),
-            Fermion([f('1-'), f('2+')]),
-            Fermion([f('2+'), f('2-')]),
-            Fermion([f('1+'), f('1-')]),
+            Fermion([idx['1+'], idx['2+']]),
+            Fermion([idx['1-'], idx['2-']]),
+            Fermion([idx['1+'], idx['2-']]),
+            Fermion([idx['1-'], idx['2+']]),
+            Fermion([idx['2+'], idx['2-']]),
+            Fermion([idx['1+'], idx['1-']]),
         ]
 
     # Define operators
     hop_terms = [
-        TwoBody(f('1+'), f('2+')),
-        TwoBody(f('1-'), f('2-')),
-        TwoBody(f('2+'), f('1+')),
-        TwoBody(f('2-'), f('1-')),
+        TwoBody(idx['1+'], idx['2+']),
+        TwoBody(idx['1-'], idx['2-']),
+        TwoBody(idx['2+'], idx['1+']),
+        TwoBody(idx['2-'], idx['1-']),
     ]
     u_terms = [
-        Hubbard(f('1+'), f('1-')),
-        Hubbard(f('2+'), f('2-')),
+        Hubbard(idx['1+'], idx['1-']),
+        Hubbard(idx['2+'], idx['2-']),
     ]
 
     # Evaluate matrix elements
     print("Hopping terms:")
-    for ib, bra in enumerate(basis):
-        for ik, ket in enumerate(basis):
-            for operator in hop_terms:
-                prod = operator.eval(bra, ket)
-                if prod != 0:
-                    print(ib, ik, operator.indices, prod)
+    eval_matrix_elements(hop_terms, basis)
 
     print("Hubbard terms:")
-    for ib, bra in enumerate(basis):
-        for ik, ket in enumerate(basis):
-            for operator in u_terms:
-                prod = operator.eval(bra, ket)
-                if prod != 0:
-                    print(ib, ik, operator.indices, prod)
+    eval_matrix_elements(u_terms, basis)
 
 
 def test_eig():
@@ -67,33 +65,32 @@ def test_eig():
     ref_states.add_state('3-')
     ref_states.add_state('4+')
     ref_states.add_state('4-')
+    idx = ref_states.index
 
     # Define Fock states
-    def f(i):
-        return ref_states.index(i)
     num_particle = 2
     basis = [Fermion(_) for _ in ref_states.combinations(num_particle)]
 
     # Define operators
     hop_terms = [
-        TwoBody(f('1+'), f('2+')),
-        TwoBody(f('2+'), f('1+')),
-        TwoBody(f('2+'), f('3+')),
-        TwoBody(f('3+'), f('2+')),
-        TwoBody(f('3+'), f('4+')),
-        TwoBody(f('4+'), f('3+')),
-        TwoBody(f('1-'), f('2-')),
-        TwoBody(f('2-'), f('1-')),
-        TwoBody(f('2-'), f('3-')),
-        TwoBody(f('3-'), f('2-')),
-        TwoBody(f('3-'), f('4-')),
-        TwoBody(f('4-'), f('3-')),
+        TwoBody(idx['1+'], idx['2+']),
+        TwoBody(idx['2+'], idx['1+']),
+        TwoBody(idx['2+'], idx['3+']),
+        TwoBody(idx['3+'], idx['2+']),
+        TwoBody(idx['3+'], idx['4+']),
+        TwoBody(idx['4+'], idx['3+']),
+        TwoBody(idx['1-'], idx['2-']),
+        TwoBody(idx['2-'], idx['1-']),
+        TwoBody(idx['2-'], idx['3-']),
+        TwoBody(idx['3-'], idx['2-']),
+        TwoBody(idx['3-'], idx['4-']),
+        TwoBody(idx['4-'], idx['3-']),
     ]
     u_terms = [
-        Hubbard(f('1+'), f('1-')),
-        Hubbard(f('2+'), f('2-')),
-        Hubbard(f('3+'), f('3-')),
-        Hubbard(f('4+'), f('4-')),
+        Hubbard(idx['1+'], idx['1-']),
+        Hubbard(idx['2+'], idx['2-']),
+        Hubbard(idx['3+'], idx['3-']),
+        Hubbard(idx['4+'], idx['4-']),
     ]
 
     # Get eigenvalues and eigenstates

@@ -1,7 +1,7 @@
 from copy import deepcopy
 from itertools import permutations, combinations
 from abc import ABC, abstractmethod
-from typing import List, Any, Iterable
+from typing import List, Dict, Hashable, Iterable
 
 
 class RefStates:
@@ -10,31 +10,49 @@ class RefStates:
 
     Attributes
     ----------
-    states: List[Any]
+    states: List[Hashable]
         identifiers of single particle states
     """
     def __init__(self) -> None:
         self.states = []
 
-    def add_state(self, state: Any) -> None:
+    def add_state(self, state: Hashable) -> None:
+        """
+        Append a new state to the list of states.
+
+        :param state: identifier of the new state
+        :return: None
+        """
         if state not in self.states:
             self.states.append(state)
 
-    def get_state(self, idx: int) -> Any:
-        return self.states[idx]
-
-    def index(self, state: Any) -> int:
-        return self.states.index(state)
-
     def permutations(self, num_states: int = 1) -> permutations:
+        """
+        Get the permutations of state indices, for constructing operators.
+
+        :param num_states: number of selected states
+        :return: all possible permutations
+        """
         return permutations(range(self.size), num_states)
 
     def combinations(self, num_states: int = 1) -> combinations:
+        """
+        Get the combinations of state indices, for constructing Fock states.
+
+        :param num_states: number of selected states
+        :return: all possible combinations
+        """
         return combinations(range(self.size), num_states)
 
     @property
     def size(self) -> int:
+        """Get the number of reference states."""
         return len(self.states)
+
+    @property
+    def index(self) -> Dict[Hashable, int]:
+        """Get the dictionary for indexing reference states."""
+        return {state: idx for idx, state in enumerate(self.states)}
 
 
 class FockState(ABC):
