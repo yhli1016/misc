@@ -1,8 +1,8 @@
 #! /usr/bin/env python
-import m4tools as m4
+from mace import include, write_defs, run_m4
 
 
-m = dict()
+m = {}
 
 # Macros can be strings, integers and floats.
 m["PREFIX"] = "'test'"
@@ -43,8 +43,8 @@ ATOMIC_POSITIONS {crystal}
 """
 
 # Including a file as macro is also supported.
-m["KPT"] = m4.include("kpt.inc")
+m["KPT"] = include("kpt.inc")
 
 # Generate input from template
-m4.write_defs(m)
-m4.run_m4("scf.m4", "test.in")
+write_defs(m)
+run_m4("scf.m4", "test.in")
