@@ -1,12 +1,15 @@
-class TagSet(object):
+from collections import OrderedDict
+from typing import List, Any
+
+
+class TagSet:
     """
-    Class for holding "key = value" pairs, for generating input files or printing calculation
-    parameters to stdout.
+    Class for holding "key = value" pairs, for generating input files or
+    printing calculation parameters to stdout.
 
-    self.style is the pre-defined style of input file, currently supports qe, cp2k, vasp, siesta,
-    and other programs that follow a similar input file syntax.
+    The input file consists of several nodes, each being in the following
+    format:
 
-    The input file consists of several nodes, each being in the following format:
     [comment]
     [head]
     key1 [=] value1
@@ -21,196 +24,191 @@ class TagSet(object):
     calculation = 'scf'            <- key2, value2
     /                              <- tail
 
-    Format for cp2k
+    Format for CP2K
     ! Input for SCF calculation    <- comment
     &CONTROL                       <- head
     prefix = 'si'                  <- key1, value1
     calculation = 'scf'            <- key2, value2
     /END CONTROL                   <- tail
 
-    Format for vasp
+    Format for VASP
     # Input for SCF calculation    <- comment
     prefix = 'si'                  <- key1, value1
     calculation = 'scf'            <- key2, value2
                                    <- tail
 
-    Siesta is similar to vasp, but with '=' omitted.
+    SIESTA is similar to VASP, but with '=' omitted.
 
-    Tag set can have its own subsets (children), which can have different styles than their parent. Particularly,
-    QE and CP2K may have subsets in VASP/SIESTA style. So we provided two pre-defined styles, namely qe_plain and
-    p2k_plain, for QE and CP2K respectively. These styles are similar to VASP/SIESTA, but with comments starting
-    with '!' instead of '#'.
+    Attributes
+    ----------
+    _style: str
+        pre-defined tag style
+    _comment: str
+        comment line for the tag-set
+    _head: str
+        headline for the tag-set
+    _tail: str
+        tail line for the tag-set
+    _assign_marker: str
+        marker for assignment
+    _tags: OrderedDict[str, Any]
+        names and values of tags
+    _subsets: List[TagSet]
+        child tag-sets
     """
-    def __init__(self, style="qe", comment=None, name=None):
+    def __init__(self, style: str = "qe",
+                 comment: str = None,
+                 name: str = None) -> None:
         """
-        :param style: string, pre-defined style for programs
-        :param comment: string, comment
-        :param name: string, name of the tag set, for generating self.head and self.tail
+        :param style: pre-defined style for programs
+        :param comment: comment line
+        :param name: name of the tag set, for generating head and tail
         """
         # Set default value for all attributes.
-        self.style = style
-        self.comment, self.head, self.tail = None, None, None
-        self.assign_marker = "="
-        self.tags = []
-        self.subsets = []
+        self._style = style
+        self._comment, self._head, self._tail = None, None, None
+        self._assign_marker = "="
+        self._tags = OrderedDict()
+        self._subsets = []
 
         # Update attributes according to style.
         if style in ("qe", "cp2k"):
-            # QE and CP2K uses name list, which has strict rules.
+            # QE and CP2K use FORTRAN name lists
             if comment is not None:
-                self.comment = "! %s" % comment
+                self._comment = f"! {comment}"
             if name is not None:
-                self.head = "&%s" % name
-                self.tail = "/" if style == "qe" else "/END %s\n" % name
+                self._head = f"&{name}"
+                self._tail = "/" if style == "qe" else f"/END {name}\n"
             else:
-                raise RuntimeError("Name is required for '%s' style tag sets." % style)
+                raise RuntimeError(f"Name required for {style} style tag sets")
             if style == "cp2k":
-                self.assign_marker = ""
+                self._assign_marker = ""
 
-        # QE_PLAIN and CP2K_PLAIN are aimed to present VASP style subsets in input of
-        # QE and CP2K, so this piece of code is similar to that of VASP/SIESTA. The only
-        # difference is that we use '!' instead of '#'.
-        elif style in ("qe_plain", "cp2k_plain"):
+        # QE_SUB and CP2K_SUB for representing subsets in FORTRAN name lists
+        elif style in ("qe_sub", "cp2k_sub"):
             if comment is not None:
-                self.comment = "! %s" % comment
+                self._comment = f"! {comment}"
             if name is not None:
-                self.head, self.tail = "! %s" % name, ""
-            if style == "cp2k_plain":
-                self.assign_marker = ""
+                self._head = f"! {name}"
+                self._tail = ""
+            if style == "cp2k_sub":
+                self._assign_marker = ""
 
-        # VASP and SIESTA have rather free input format. The different between the codes is
-        # that SIESTA does not require an '='.
+        # VASP and SIESTA have rather free input format.
         elif style in ("vasp", "siesta"):
             if comment is not None:
-                self.comment = "# %s" % comment
+                self._comment = f"# {comment}"
             if name is not None:
-                self.head, self.tail = "# %s" % name, ""
+                self._head = f"# {name}"
+                self._tail = ""
             if style == "siesta":
-                self.assign_marker = ""
-
-        # Style for reporting calculation details, in which we use no '#' or '!'.
-        elif style in ("report",):
-            if comment is not None:
-                self.comment = comment
-            if name is not None:
-                self.head, self.tail = name, ""
-            self.assign_marker = ":"
-
+                self._assign_marker = ""
         else:
-            raise NotImplementedError("Style '%s' not implemented yet." % style)
+            raise NotImplementedError(f"Style {style} not implemented" % style)
 
-    def add_tag(self, tag_name, tag_val=""):
-        """
-        Add an tag to self.tags.
+    def __setitem__(self, key: str, value: Any) -> None:
+        self._tags[key] = value
 
-        :param tag_name: string, tag name
-        :param tag_val: any data_kind that can be converted to string, tag value
-        """
-        self.tags.append([tag_name, tag_val])
+    def __getitem__(self, key: str) -> Any:
+        return self._tags[key]
 
-    def add_subset(self, subset):
-        """
-        Add existing tag set to self.subsets.
+    def add_subset(self, subset: Any) -> None:
+        self._subsets.append(subset)
 
-        :param subset: instance of TagSet class, sunset
-        :return: None
-        """
-        self.subsets.append(subset)
-
-    def get_max_tag_length(self, include_subsets=True):
+    def get_max_tag_length(self, with_subsets: bool = True) -> int:
         """
         Get the maximum length of tags.
 
-        :param include_subsets: boolean, whether to take the tags of subsets in consideration
-        :return: integer, maximum length of tags
+        :param with_subsets: whether to consider the tags of subsets
+        :return: maximum length of tags
         """
-        tag_length = [len(tag[0]) for tag in self.tags]
-        if include_subsets:
-            for subset in self.subsets:
-                tag_length.append(subset.get_max_tag_length(include_subsets))
+        tag_length = [len(_) for _ in self._tags.keys()]
+        if with_subsets:
+            for subset in self._subsets:
+                tag_length.append(subset.get_max_tag_length(with_subsets))
         return max(tag_length)
 
-    @staticmethod
-    def write_indent(out_file, indent):
+    def write(self, out_file,
+              indent_level: int = 0,
+              align_tags: bool = True,
+              align_subsets: bool = True,
+              tag_length: int = -1) -> None:
         """
-        Write indent to file.
+        Write tags to file.
 
-        :param out_file: file object or stdout, destination of writing
-        :param indent: integer, number of spaces
-        :return:
-        """
-        for i in range(indent):
-            out_file.write(" ")
-
-    def write_tags(self, out_file, indent_level=0, align_tags=True, align_to_subsets=True,
-                   max_tag_length="auto"):
-        """
-        Write tags to file or stdout.
-
-        :param out_file: file object or stdout, destination of writing
-        :param indent_level: integer, indent level
-        :param align_tags: boolean, whether to align tags for better appearance
-        :param align_to_subsets: boolean, whether to consider subsets in the alignment
-        :param max_tag_length: integer, maximum tag length
+        :param out_file: output file of stdout
+        :param indent_level: indent level
+        :param align_tags: whether to align tags for better appearance
+        :param align_subsets: whether to consider subsets in the alignment
+        :param tag_length: length of tags, 0 for automatic detection
         :return: None
         """
-        # Calculate indents
-        # Comment and head use indent_head, while (key, tag) pairs uses indent_tag.
-        space_indent = 4
-        # QE and QE_PLAIN use fixed indent
-        if self.style == "qe":
-            indent_head, indent_tag = 0, space_indent
-        elif self.style == "qe_plain":
-            indent_head = indent_tag = space_indent
+        # Determine indents
+        # Comment and head use indent_head, while (key, tag) pairs uses
+        # indent_tag.
+        num_space = 4
 
-        # CP2K and CP2K_PLAIN use incremental indent
-        elif self.style == "cp2k":
-            indent_head, indent_tag = indent_level * space_indent, (indent_level + 1) * space_indent
-        elif self.style == "cp2k_plain":
-            indent_head = indent_tag = indent_level * space_indent
-
+        # QE and QE_SUB use fixed indent
+        if self._style == "qe":
+            indent_head = 0
+            indent_tag = num_space
+        elif self._style == "qe_sub":
+            indent_head = num_space
+            indent_tag = num_space
+        # CP2K and CP2K_SUB use incremental indent
+        elif self._style == "cp2k":
+            indent_head = indent_level * num_space
+            indent_tag = indent_head + num_space
+        elif self._style == "cp2k_sub":
+            indent_head = indent_level * num_space
+            indent_tag = indent_head
         # VASP/SIESTA use no indent
-        elif self.style in ("vasp", "siesta"):
-            indent_head = indent_tag = 0
-
-        # Report use similar style as QE
-        elif self.style == "report":
-            indent_head, indent_tag = 0, space_indent
-
         else:
-            raise NotImplementedError("Style '%s' not implemented yet." % self.style)
-
-        # Determine tag format.
-        if align_tags:
-            # If no max_tag_length is given, compute the max tag length of self.
-            # Otherwise, keep it as given in kwargs.
-            if max_tag_length == "auto":
-                max_tag_length = self.get_max_tag_length(align_to_subsets)
-            format_tag = "%%-%ds %s %%s\n" % (max_tag_length, self.assign_marker)
-        else:
-            format_tag = "%%s %s %%s\n" % self.assign_marker
+            indent_head = 0
+            indent_tag = 0
 
         # Write comment, head and tags to out file.
-        if self.comment is not None:
-            self.write_indent(out_file, indent_head)
-            out_file.write("%s\n" % self.comment)
-        if self.head is not None:
-            self.write_indent(out_file, indent_head)
-            out_file.write("%s\n" % self.head)
-        for tag in self.tags:
-            self.write_indent(out_file, indent_tag)
-            out_file.write(format_tag % (tag[0], tag[1]))
+        if self._comment is not None:
+            out_file.write(" " * indent_head)
+            out_file.write(f"{self._comment}\n")
+        if self._head is not None:
+            out_file.write(" " * indent_head)
+            out_file.write(f"{self._head}\n")
+        if align_tags and tag_length == -1:
+            tag_length = self.get_max_tag_length(align_subsets)
+        for key, value in self._tags.items():
+            out_file.write(" " * indent_tag)
+            if align_tags:
+                line = f"{key:<{tag_length}s} {self._assign_marker} {value}\n"
+            else:
+                line = f"{key} {self._assign_marker} {value}\n"
+            out_file.write(line)
 
-        # Write subsets to file.
-        for subset in self.subsets:
-            indent_level_subset = indent_level + 1
-            if not align_to_subsets:
-                max_tag_length = "auto"
-            #out_file.write("\n")
-            subset.write_tags(out_file, indent_level=indent_level_subset, align_tags=align_tags,
-                              align_to_subsets=align_to_subsets, max_tag_length=max_tag_length)
+        # Write subsets
+        for subset in self._subsets:
+            subset.write(out_file,
+                         indent_level=indent_level+1,
+                         align_tags=align_tags,
+                         align_subsets=align_subsets,
+                         tag_length=tag_length)
 
         # Write tail
-        if self.tail is not None:
-            self.write_indent(out_file, indent_head)
-            out_file.write("%s\n" % self.tail)
+        if self._tail is not None:
+            out_file.write(" " * indent_head)
+            out_file.write(f"{self._tail}\n")
+
+
+def main():
+    import sys
+    ts = TagSet(style="cp2k", name="CONTROL")
+    ts["a"] = 10
+    ts["b"] = 11
+    ts2 = TagSet(style="cp2k", name="subset")
+    ts2["xx"] = 1
+    ts2["abc"] = 3
+    ts.add_subset(ts2)
+    ts.write(sys.stdout, align_subsets=True)
+
+
+if __name__ == "__main__":
+    main()
