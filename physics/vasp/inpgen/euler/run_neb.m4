@@ -19,41 +19,38 @@
 run=<RUN>
 istart=<ISTART>
 
-scratchroot=/cluster/scratch/zhangwenj
-scratch=${scratchroot}/${SLURM_JOB_NAME}
+scratch_dir=${SCRATCH}/${SLURM_JOB_NAME}
 
-# Remove existing scratch directory if istart == 0
-# We must check $scratchroot carefully to avoid removing important files and
-# directories by accident.
-if [ "$scratchroot" == "$scratch" ]; then
+# Remove existing scratch_dir directory if istart == 0
+if [ "$SCRATCH" == "$scratch_dir" ]; then
     echo "ERROR: empty job name"
     exit 1
 else
     if [ "$istart" -eq 0 ]; then
-        rm -r ${scratch}
+        rm -r ${scratch_dir}
     fi
 fi
-mkdir -p ${scratch}
+mkdir -p ${scratch_dir}
 
 ############################# Task-dependent part ##############################
-# Copy files to scratch
+# Copy files to scratch_dir
 ## Shared input for all the images
 for i in INCAR KPOINTS POTCAR vdw_kernel.bindat
 do
-    cp ${i} ${scratch}
+    cp ${i} ${scratch_dir}
 done
 
 ## Structure (POSCAR/CONTCAR) for each image
-## For the 1st run, copy directories 00-0N to scratch.
+## For the 1st run, copy directories 00-0N to scratch_dir.
 ## If restarting, only update the POSCARs.
 for i in <DIR_TOT>
 do
     if [ "$istart" -eq 0 ]; then
-        cp -r ${i} ${scratch}
+        cp -r ${i} ${scratch_dir}
     else
         cp ${i}/CONTCAR ${i}/POSCAR
         cp ${i}/POSCAR ${i}/POSCAR_${run}
-        cp ${i}/POSCAR ${scratch}/${i}/POSCAR
+        cp ${i}/POSCAR ${scratch_dir}/${i}/POSCAR
     fi
 done
 
@@ -61,18 +58,18 @@ done
 for i in 00 <NMAX>
 do
     cp OUTCAR_$i $i/OUTCAR
-    cp OUTCAR_$i ${scratch}/$i/OUTCAR
+    cp OUTCAR_$i ${scratch_dir}/$i/OUTCAR
 done
 
 # Run vasp
-cd ${scratch}
+cd ${scratch_dir}
 mpirun vasp_std > ${SLURM_SUBMIT_DIR}/out_run${run}
 
 # Copy results back
 for i in <DIR_TS>
 do
-    cp ${scratch}/${i}/OUTCAR ${SLURM_SUBMIT_DIR}/${i}/OUTCAR
-    cp ${scratch}/${i}/CONTCAR ${SLURM_SUBMIT_DIR}/${i}/CONTCAR
-    cp ${scratch}/${i}/OSZICAR ${SLURM_SUBMIT_DIR}/${i}/OSZICAR
+    cp ${scratch_dir}/${i}/OUTCAR ${SLURM_SUBMIT_DIR}/${i}/OUTCAR
+    cp ${scratch_dir}/${i}/CONTCAR ${SLURM_SUBMIT_DIR}/${i}/CONTCAR
+    cp ${scratch_dir}/${i}/OSZICAR ${SLURM_SUBMIT_DIR}/${i}/OSZICAR
 done
-cp ${scratch}/vasprun.xml ${SLURM_SUBMIT_DIR}/vasprun_${run}.xml
+cp ${scratch_dir}/vasprun.xml ${SLURM_SUBMIT_DIR}/vasprun_${run}.xml

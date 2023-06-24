@@ -19,24 +19,21 @@
 run=<RUN>
 istart=<ISTART>
 
-scratchroot=/cluster/scratch/zhangwenj
-scratch=${scratchroot}/${SLURM_JOB_NAME}
+scratch_dir=${SCRATCH}/${SLURM_JOB_NAME}
 
-# Remove existing scratch directory if istart == 0
-# We must check $scratchroot carefully to avoid removing important files and
-# directories by accident.
-if [ "$scratchroot" == "$scratch" ]; then
+# Remove existing scratch_dir directory if istart == 0
+if [ "$SCRATCH" == "$scratch_dir" ]; then
     echo "ERROR: empty job name"
     exit 1
 else
     if [ "$istart" -eq 0 ]; then
-        rm -r ${scratch}
+        rm -r ${scratch_dir}
     fi
 fi
-mkdir -p ${scratch}
+mkdir -p ${scratch_dir}
 
 ############################# Task-dependent part ##############################
-# Copy files to scratch
+# Copy files to scratch_dir
 if [ "$istart" -ne 0 ]; then
     cp CONTCAR POSCAR
 fi
@@ -44,16 +41,16 @@ cp POSCAR POSCAR_run${run}
 
 for i in INCAR POSCAR KPOINTS POTCAR vdw_kernel.bindat
 do
-    cp ${i} ${scratch}
+    cp ${i} ${scratch_dir}
 done
 
 # Run vasp
-cd ${scratch}
+cd ${scratch_dir}
 mpirun vasp_std > ${SLURM_SUBMIT_DIR}/out_run${run}
 
 # Copy results back
 for i in OUTCAR CONTCAR CHGCAR AECCAR0 AECCAR2 OSZICAR
 do
-    cp ${scratch}/${i} ${SLURM_SUBMIT_DIR}/
+    cp ${scratch_dir}/${i} ${SLURM_SUBMIT_DIR}/
 done
-cp ${scratch}/vasprun.xml ${SLURM_SUBMIT_DIR}/vasprun_${run}.xml
+cp ${scratch_dir}/vasprun.xml ${SLURM_SUBMIT_DIR}/vasprun_${run}.xml
