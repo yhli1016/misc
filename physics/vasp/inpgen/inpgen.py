@@ -2,7 +2,17 @@
 import os
 from typing import Iterable, Dict
 
-from mace import expand_file
+from mace import expand_file, include
+
+
+def get_input(prompt: str) -> str:
+    """
+    Get input from stdin.
+
+    :param prompt: prompt to the user
+    :return: input arguments
+    """
+    return input(f"\n{prompt}: ")
 
 
 def get_option(prompt: str, options: Iterable[str]) -> str:
@@ -14,15 +24,15 @@ def get_option(prompt: str, options: Iterable[str]) -> str:
     :return: chosen option
     """
     while True:
-        option = input(prompt)
+        option = get_input(prompt)
         if option in options:
             break
     return option
 
 
-def get_input() -> Dict[str, str]:
+def get_macro() -> Dict[str, str]:
     """
-    Get input parameters as a macro.
+    Get arguments as a macro.
 
     NOTE: keys in lowercase and starting with '.' are reserved for
     special purposes. DO NOT use them as macro names in templates.
@@ -32,31 +42,31 @@ def get_input() -> Dict[str, str]:
     macro = dict()
 
     # Get the type of job
-    macro[".job"] = get_option("\nInput type of job (opt/neb/bader): ",
-                               ("opt", "neb", "bader"))
+    macro[".job"] = get_option("Input type of job (opt/neb/bader)",
+                               options=("opt", "neb", "bader"))
 
     # Get specific job information
     if macro[".job"] == "neb":
-        num_image = int(input("\nInput number of transition states: "))
+        num_image = int(get_input("Input number of transition states"))
         macro["NIMAGE"] = num_image
         macro["DIR_TS"] = f"$(seq -f %02g 1 {num_image})"
         macro["DIR_TOT"] = f"$(seq -f %02g 0 {num_image + 1})"
         macro["NMAX"] = f"{num_image+1:02d}"
 
     # Get general job information
-    macro["NAME"] = input("\nInput job name: ")
-    macro["NCPU"] = input("\nInput number of cpu to use: ")
-    macro["TIME"] = input("\nInput time limit (in hours): ")
+    macro["NAME"] = get_input("Input job name")
+    macro["NCPU"] = get_input("Input number of cpu to use")
+    macro["TIME"] = get_input("Input time limit (in hours)")
     macro["MEM"] = 2048  # maximum memory, temporarily fixed to 2048 MB
-    restart = get_option("\nInput whether to restart (yes/no): ",
-                         ("yes", "no"))
+    restart = get_option("Input whether to restart (yes/no)",
+                         options=("yes", "no"))
     if restart == "yes":
         macro["ISTART"] = 1
     else:
         macro["ISTART"] = 0
-    macro["RUN"] = input("\nInput number of run: ")
-    macro[".incar"] = get_option("\nInput whether to write incar (yes/no): ",
-                                 ("yes", "no"))
+    macro["RUN"] = get_input("Input number of run")
+    macro[".incar"] = get_option("Input whether to write INCAR (yes/no)",
+                                 options=("yes", "no"))
     return macro
 
 
@@ -68,13 +78,14 @@ def main():
     incar_dir = f"{root_dir}/incar"
 
     # Get arguments
-    macro = get_input()
+    macro = get_macro()
+    macro["HEAD"] = include(f"{script_dir}/header.sh")
 
     # Generate input file
     job = macro[".job"]
-    expand_file(macro, f"{script_dir}/run_{job}.m4", f"run_{job}.sh")
+    expand_file(macro, f"{script_dir}/run_{job}.sh", f"run_{job}.sh")
     if macro[".incar"] == "yes":
-        expand_file(macro, f"{incar_dir}/INCAR_{job}.m4", "INCAR")
+        expand_file(macro, f"{incar_dir}/INCAR_{job}", "INCAR")
 
     # Notify the user
     print(f"\nScript written to 'run_{job}.sh'")
