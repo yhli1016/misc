@@ -3,7 +3,7 @@ import time
 import numpy as np
 import scipy.linalg.lapack as lapack
 
-from sq import RefStates, Fermion, TwoBody, Hubbard
+from sq import SPStates, Fermion, TwoBody, Hubbard
 
 
 def eval_matrix_elements(operators, basis):
@@ -16,13 +16,13 @@ def eval_matrix_elements(operators, basis):
 
 
 def test_u():
-    # Define reference states
-    ref_states = RefStates()
-    ref_states.add_state('1+')
-    ref_states.add_state('1-')
-    ref_states.add_state('2+')
-    ref_states.add_state('2-')
-    idx = ref_states.index
+    # Define single-particle states
+    sp_states = SPStates()
+    sp_states.append('1+')
+    sp_states.append('1-')
+    sp_states.append('2+')
+    sp_states.append('2-')
+    idx = sp_states.index
 
     # Define Fock states
     basis = [
@@ -55,21 +55,21 @@ def test_u():
 
 
 def test_eig():
-    # Define reference states
-    ref_states = RefStates()
-    ref_states.add_state('1+')
-    ref_states.add_state('1-')
-    ref_states.add_state('2+')
-    ref_states.add_state('2-')
-    ref_states.add_state('3+')
-    ref_states.add_state('3-')
-    ref_states.add_state('4+')
-    ref_states.add_state('4-')
-    idx = ref_states.index
+    # Define single particle states
+    sp_states = SPStates()
+    sp_states.append('1+')
+    sp_states.append('1-')
+    sp_states.append('2+')
+    sp_states.append('2-')
+    sp_states.append('3+')
+    sp_states.append('3-')
+    sp_states.append('4+')
+    sp_states.append('4-')
+    idx = sp_states.index
 
     # Define Fock states
     num_particle = 2
-    basis = [Fermion(_) for _ in ref_states.combinations(num_particle)]
+    basis = [Fermion(_) for _ in sp_states.combinations(num_particle)]
 
     # Define operators
     hop_terms = [
@@ -113,17 +113,17 @@ def test_eig():
 
 
 def test_speed():
-    # Define reference states
-    ref_states = RefStates()
+    # Define single particle states
+    sp_states = SPStates()
     for i in range(10):
-        ref_states.add_state(i)
+        sp_states.append(i)
 
     # Define Fock states
     num_particle = 2
-    basis = [Fermion(_) for _ in ref_states.combinations(num_particle)]
+    basis = [Fermion(_) for _ in sp_states.combinations(num_particle)]
 
     # Define operators
-    hop_terms = [TwoBody(i, j) for i, j in ref_states.permutations(2)]
+    hop_terms = [TwoBody(i, j) for i, j in sp_states.permutations(2)]
 
     # Benchmark
     t0 = time.time()
@@ -136,4 +136,6 @@ def test_speed():
 
 
 if __name__ == "__main__":
+    test_u()
+    test_eig()
     test_speed()
