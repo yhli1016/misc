@@ -75,10 +75,10 @@ set_ps () {
     psc=([k]=30 [r]=31 [g]=32 [y]=33 [b]=34 [m]=35 [c]=36 [w]=37)
     local style=$1
     local color=$2
-    local cp="\033[${psc[${color:0:1}]};1m"
-    local cu="\033[${psc[${color:1:1}]};1m"
-    local ch="\033[${psc[${color:2:1}]};1m"
-    local cw="\033[${psc[${color:3:1}]};1m"
+    local cu="\033[${psc[${color:0:1}]};1m"
+    local ch="\033[${psc[${color:1:1}]};1m"
+    local cw="\033[${psc[${color:2:1}]};1m"
+    local cp="\033[${psc[${color:3:1}]};1m"
     local c0="\033[0m"
     case $style in
     *suse*)
