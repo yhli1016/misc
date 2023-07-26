@@ -1,11 +1,11 @@
-"""Core module of the package."""
+"""Classes for dependency and call graphs."""
 import re
 import glob
 import pickle
 from collections import OrderedDict, defaultdict
 from typing import Set, Callable
 
-from .rules import Rules, ExtRules
+from .rules import Rules, DependRules
 
 
 __all__ = ["DependGraph", "CallGraph"]
@@ -48,7 +48,7 @@ class DependGraph:
         """
         self._sources = OrderedDict()
         if rules is None:
-            rules = ExtRules()
+            rules = DependRules()
         self._rules = rules
 
     def parse_source(self, src_name: str) -> Source:
@@ -124,7 +124,7 @@ class DependGraph:
                     if src_name not in candidates:  # Skip self-dependence.
                         if len(candidates) == 1:
                             src_obj.dependencies.add(list(candidates)[0])
-                        else:  # In the face of ambiguity, refuse the temptation to guess.
+                        else:  # In the face of ambiguity, refuse to guess.
                             print(f"WARNING: skipping multiple definition for"
                                   f" {item} in {src_name}:\n\t{candidates}")
                 except KeyError:

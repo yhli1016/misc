@@ -1,20 +1,10 @@
 #! /usr/bin/env python
 """Script for generating the dependency digraph using Graphviz."""
 
-import re
 import argparse
 import os
 
 from fortlint import DependGraph
-
-
-def color_func(src_name):
-    """Custom coloring function."""
-    if re.match(r"tests/", src_name) is not None:
-        color = "red"
-    else:
-        color = "black"
-    return color
 
 
 def main():
@@ -29,7 +19,7 @@ def main():
     graph = DependGraph()
     graph.load_cache(file_name=args.file_name)
     dot_name = args.output.split(".")[0] + ".dot"
-    graph.write_dot(dot_name=dot_name, color_func=color_func)
+    graph.write_dot(dot_name=dot_name)
     os.system(f"dot -Tsvg -o{args.output} {dot_name}")
 
 

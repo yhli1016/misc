@@ -1,8 +1,9 @@
+"""Classes regular expressions."""
 import re
 from typing import Union, List, Set
 
 
-__all__ = ["Rules", "ExtRules"]
+__all__ = ["Rules", "DependRules"]
 
 
 class Rules:
@@ -11,11 +12,11 @@ class Rules:
 
     Attributes
     ----------
-    _def_start: Dict[str, Tuple[re.Pattern, int]]
+    _def_start: List[Tuple[str, re.Pattern, int]]
         rules for detecting starting line of definition
-    _def_end: Dict[str, Tuple[re.Pattern, int]]
+    _def_end: List[Tuple[str, re.Pattern, int]]
         rules for detecting ending line of definition
-    _ref: Dict[str, Tuple[re.Pattern, int]]
+    _ref: List[Tuple[str, re.Pattern, int]]
         rules for detecting references
     _exclude: Set[str]
         reserved keywords to exclude from matched results
@@ -23,30 +24,28 @@ class Rules:
     def __init__(self):
         # CAUTION: interface to operators must be placed prior to interface to
         # subroutines and functions.
-        self._def_start = {
-            "sub": (re.compile(r"^\s*(pure)?\s*subroutine\s+(\w+)", re.I), 2),
-            "func": (re.compile(r"^\s*(pure)?\s*function\s+(\w+)",  re.I), 2),
-            "int_op": (re.compile(r"^\s*interface\s+operator\s*\((\s*\.\w+\.\s*)\)",
-                                  re.I), 1),
-            "int_sub": (re.compile(r"^\s*interface\s+(\w+)",  re.I), 1),
-        }
-        self._def_end = {
-            "sub": (re.compile(r"^\s*end\s+subroutine", re.I), 1),
-            "func": (re.compile(r"^\s*end\s+function", re.I), 1),
-            "int_op": (re.compile(r"^\s*end\s+interface", re.I), 1),
-            "int_sub": (re.compile(r"^\s*end\s+interface", re.I), 1),
-        }
-        self._ref = {
-            "sub": (re.compile(r"^\s*call\s+(\w+)", re.I), 1),
-            "func": (re.compile(r"^\s*\w+\s*=\s*(\w+)\(.*\)", re.I), 1),
-            "op": (re.compile(r"^\s*[^!].+(\.\w+\.)", re.I), 1),
-            "int": (re.compile(r"^\s*module\s+procedure\s+([\w\s,]+)", re.I), 1),
-        }
+        self._def_start = [
+            ("sub", re.compile(r"^\s*(pure)?\s*subroutine\s+(\w+)", re.I), 2),
+            ("func", re.compile(r"^\s*(pure)?\s*function\s+(\w+)", re.I), 2),
+            ("int_op", re.compile(r"^\s*interface\s+operator\s*\((\s*\.\w+\.\s*)\)", re.I), 1),
+            ("int_sub", re.compile(r"^\s*interface\s+(\w+)", re.I), 1),
+        ]
+        self._def_end = [
+            ("sub", re.compile(r"^\s*end\s+subroutine", re.I), 1),
+            ("func", re.compile(r"^\s*end\s+function", re.I), 1),
+            ("int_op", re.compile(r"^\s*end\s+interface", re.I), 1),
+            ("int_sub", re.compile(r"^\s*end\s+interface", re.I), 1),
+        ]
+        self._ref = [
+            ("sub", re.compile(r"^\s*call\s+(\w+)", re.I), 1),
+            ("func", re.compile(r"^\s*\w+\s*=\s*(\w+)\(.*\)", re.I), 1),
+            ("op", re.compile(r"^\s*[^!].+(\.\w+\.)", re.I), 1),
+            ("int", re.compile(r"^\s*module\s+procedure\s+([\w\s,]+)", re.I), 1),
+        ]
         self._exclude = {".true.", ".false.", ".and.", ".or.", ".g.", ".gt.",
                          ".ge.", ".eq.", "operator", "abs", "sin", "cos", "dsin",
                          "dcos", "acos", "sqrt", "dcmplx", "cmplx", "size",
-                         "aimag", "exp", "hop_ind", "kq_map", "x",  "q_point",
-                         "omegas", "kmesh", "eng"}
+                         "aimag", "exp"}
 
     def match_def_start(self, line: str) -> Union[str, None]:
         """
@@ -56,8 +55,8 @@ class Rules:
         :return: matched symbol, otherwise none
         """
         sym_def = None
-        for kind, rule in self._def_start.items():
-            pattern, idx = rule
+        for rule in self._def_start:
+            kind, pattern, idx = rule
             result = re.search(pattern, line)
             if result is not None:
                 s = result.group(idx).lstrip().rstrip().lower()
@@ -74,8 +73,8 @@ class Rules:
         :return: matched symbol, otherwise none
         """
         sym_def = None
-        for kind, rule in self._def_end.items():
-            pattern, idx = rule
+        for rule in self._def_end:
+            kind, pattern, idx = rule
             result = re.search(pattern, line)
             if result is not None:
                 sym_def = "matched"
@@ -91,10 +90,10 @@ class Rules:
         """
         sym_refs = []
         for line in content:
-            for kind, rule in self._ref.items():
+            for rule in self._ref:
                 # A single line may contain multiple references.
                 # DO NOT add any break for this loop.
-                pattern, idx = rule
+                kind, pattern, idx = rule
                 result = re.search(pattern, line)
                 if result is not None:
                     if kind != "int":
@@ -108,10 +107,10 @@ class Rules:
         return sym_refs
 
 
-class ExtRules(Rules):
-    """Rules with module support."""
+class DependRules(Rules):
+    """Extended rules with module support."""
     def __init__(self):
         super().__init__()
-        self._def_start["mod"] = (re.compile(r"^\s*module\s+(\w+)", re.I), 1)
-        self._def_end["mod"] = (re.compile(r"^\s*end\s+module\s+(\w+)", re.I), 1)
-        self._ref["mod"] = (re.compile(r"^\s*use\s+(\w+)", re.I), 1)
+        self._def_start.insert(0, ("mod", re.compile(r"^\s*module\s+(\w+)", re.I), 1))
+        self._def_end.insert(0, ("mod", re.compile(r"^\s*end\s+module\s+(\w+)", re.I), 1))
+        self._ref.insert(0, ("mod", re.compile(r"^\s*use\s+(\w+)", re.I), 1))
