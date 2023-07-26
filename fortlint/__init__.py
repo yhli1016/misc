@@ -1,1 +1,2 @@
-from .core import SourceTree
+from .rules import *
+from .core import *

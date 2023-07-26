@@ -3,7 +3,7 @@
 
 import argparse
 
-from fortlint import SourceTree
+from fortlint import DependGraph
 
 
 def main():
@@ -16,18 +16,18 @@ def main():
     args = parser.parse_args()
 
     # Load cache
-    sources = SourceTree()
-    sources.load_cache(file_name=args.file_name)
+    graph = DependGraph()
+    graph.load_cache(file_name=args.file_name)
 
     # Search for the symbol and echo
     symbol = args.symbol
     if args.ref:
-        candidates = sources.find_symbol(symbol, 'ref')
+        candidates = graph.find_symbol(symbol, 'ref')
         print(f"References of '{symbol}' found in:")
         for item in candidates:
             print(f"{'':4s}{item}")
     else:
-        candidates = sources.find_symbol(symbol, 'def')
+        candidates = graph.find_symbol(symbol, 'def')
         print(f"Definitions of '{symbol}' found in:")
         for item in candidates:
             print(f"{'':4s}{item}")

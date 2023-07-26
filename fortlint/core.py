@@ -1,102 +1,14 @@
 """Core module of the package."""
-
 import re
 import glob
 import pickle
-from collections import OrderedDict
-from typing import Tuple, Union, Set, Callable
+from collections import OrderedDict, defaultdict
+from typing import Set, Callable
+
+from .rules import Rules, ExtRules
 
 
-class RuleCollection:
-    """
-    Class for extracting definitions and references of symbols from lines of
-    FORTRAN source code according to user-defined rules in regular expressions.
-
-    Attributes
-    ----------
-    def_rules: List[Tuple[re.Pattern, int]]
-        rules for extracting definitions
-    ref_rules: List[Tuple[re.Pattern, int]]
-        rules for extracting references
-    """
-    def __init__(self) -> None:
-        self.def_rules = []
-        self.ref_rules = []
-
-    def add_def(self, pattern: str, idx: int = 1) -> None:
-        """
-        Add a definition rule.
-
-        :param pattern: regular expression of the rule
-        :param idx: index to extract the symbol from the matched result
-        :return: None. The 'def_rules' attribute is updated.
-        """
-        pattern = re.compile(pattern, re.IGNORECASE)
-        self.def_rules.append((pattern, idx))
-
-    def add_ref(self, pattern: str, idx: int = 1) -> None:
-        """
-        Add a reference rule.
-
-        :param pattern: regular expression of the rule
-        :param idx: index to extract the symbol from the matched result
-        :return: None. The 'ref_rules' attribute is updated.
-        """
-        pattern = re.compile(pattern, re.IGNORECASE)
-        self.ref_rules.append((pattern, idx))
-
-    def match(self, line: str) -> Tuple[Union[str, None], bool]:
-        """
-        Loop over the rules to match given line of FORTRAN source code.
-
-        :param line: line of FORTRAN source code
-        :return: the extracted symbol (None if not matched) and if the
-            matched result is a definition
-        """
-        symbol, is_def = None, False
-
-        # Check for definitions
-        for rule in self.def_rules:
-            pattern, idx = rule
-            result = re.search(pattern, line)
-            if result is not None:
-                symbol = result.group(idx).lstrip().rstrip().lower()
-                is_def = True
-                break
-
-        # Check for references
-        if symbol is None:
-            for rule in self.ref_rules:
-                pattern, idx = rule
-                result = re.search(pattern, line)
-                if result is not None:
-                    symbol = result.group(idx).lstrip().rstrip().lower()
-                    break
-
-        return symbol, is_def
-
-
-# Predefined matching rules
-# TODO: type definition and usage
-RULES = RuleCollection()
-# module definition
-RULES.add_def(r"^\s*module\s+(\w+)")
-# subroutine definition
-RULES.add_def(r"^\s*(pure)?\s*subroutine\s+(\w+)", idx=2)
-# function definition
-RULES.add_def(r"^\s*(pure)?\s*function\s+(\w+)", idx=2)
-# interface to subroutines and functions
-RULES.add_def(r"^\s*interface\s+(\w+)")
-# interface to operators
-RULES.add_def(r"^\s*interface operator\s*\((\s*\.\w+\.\s*)\)")
-# module usage
-RULES.add_ref(r"^\s*use\s+(\w+)")
-# subroutine call
-RULES.add_ref(r"^\s*call\s+(\w+)")
-# function call
-RULES.add_ref(r"^\s*\w+\s*=\s*(\w+)\(.*\)")
-# operator call
-RULES.add_ref(r"^\s*[^!].+(\.\w+\.)")
+__all__ = ["DependGraph", "CallGraph"]
 
 
 class Source:
@@ -117,49 +29,29 @@ class Source:
         self.references = set()
         self.dependencies = set()
 
-    def add_definition(self, definition: str) -> None:
-        """
-        Add a definition to the definitions.
 
-        :param definition: the definition
-        :return: None.
-        """
-        self.definitions.add(definition)
-
-    def add_reference(self, reference: str) -> None:
-        """
-        Add a reference to the references.
-
-        :param reference: the reference
-        :return: None.
-        """
-        self.references.add(reference)
-
-    def add_dependency(self, dependency: str) -> None:
-        """
-        Add a dependent source file to the dependencies.
-
-        :param dependency: name of the source file
-        :return: None.
-        """
-        self.dependencies.add(dependency)
-
-
-class SourceTree:
+class DependGraph:
     """
     Class representing a tree of sources files.
 
     Attributes
     ----------
-    sources: OrderedDict[str, Source]
+    _sources: OrderedDict[str, Source]
         collection of instances of the 'Source' class,
         keys: file names, values: instances
+    _rules: ExtRules
+        regex rules for detecting symbols
     """
-    def __init__(self) -> None:
-        self.sources = OrderedDict()
+    def __init__(self, rules: Rules = None) -> None:
+        """
+        :param rules: regex rules for detecting symbols
+        """
+        self._sources = OrderedDict()
+        if rules is None:
+            rules = ExtRules()
+        self._rules = rules
 
-    @staticmethod
-    def parse_source(src_name: str) -> Source:
+    def parse_source(self, src_name: str) -> Source:
         """
         Parse a FORTRAN source file.
 
@@ -174,12 +66,10 @@ class SourceTree:
         with open(src_name, "r") as in_file:
             content = in_file.readlines()
         for line in content:
-            symbol, is_def = RULES.match(line)
+            symbol = self._rules.match_def_start(line)
             if symbol is not None:
-                if is_def:
-                    source.add_definition(symbol)
-                else:
-                    source.add_reference(symbol)
+                source.definitions.add(symbol)
+        source.references = self._rules.match_ref(content)
         return source
 
     def parse_source_tree(self, dir_name: str = ".") -> None:
@@ -206,7 +96,7 @@ class SourceTree:
             result = re.search(pattern, file)
             if result is not None:
                 src_name = result.group(1)
-                self.sources[src_name] = self.parse_source(file)
+                self._sources[src_name] = self.parse_source(file)
 
     def resolve_dependencies(self) -> None:
         """
@@ -219,7 +109,7 @@ class SourceTree:
         # key: the definitions
         # value: list of sources where the definitions can be found
         def_table = dict()
-        for src_name, src_obj in self.sources.items():
+        for src_name, src_obj in self._sources.items():
             for item in src_obj.definitions:
                 try:
                     def_table[item].add(src_name)
@@ -227,13 +117,13 @@ class SourceTree:
                     def_table[item] = {src_name}
 
         # Build dependencies
-        for src_name, src_obj in self.sources.items():
+        for src_name, src_obj in self._sources.items():
             for item in src_obj.references:
                 try:
                     candidates = def_table[item]
                     if src_name not in candidates:  # Skip self-dependence.
                         if len(candidates) == 1:
-                            src_obj.add_dependency(list(candidates)[0])
+                            src_obj.dependencies.add(list(candidates)[0])
                         else:  # In the face of ambiguity, refuse the temptation to guess.
                             print(f"WARNING: skipping multiple definition for"
                                   f" {item} in {src_name}:\n\t{candidates}")
@@ -241,10 +131,10 @@ class SourceTree:
                     pass
 
         # Check for cyclic dependencies
-        for src_name, src_obj in self.sources.items():
+        for src_name, src_obj in self._sources.items():
             dep_tree = list(src_obj.dependencies)
             for name2 in dep_tree:
-                for dep in self.sources[name2].dependencies:
+                for dep in self._sources[name2].dependencies:
                     if dep not in dep_tree:
                         dep_tree.append(dep)
             if src_name in dep_tree:
@@ -258,7 +148,7 @@ class SourceTree:
         :return: None.
         """
         with open(file_name, "wb") as f:
-            pickle.dump(self.sources, f, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(self._sources, f, pickle.HIGHEST_PROTOCOL)
 
     def load_cache(self, file_name: str = "sources.pkl") -> None:
         """
@@ -268,7 +158,7 @@ class SourceTree:
         :return: None. The 'sources' attribute is updated.
         """
         with open(file_name, 'rb') as f:
-            self.sources = pickle.load(f)
+            self._sources = pickle.load(f)
 
     def write_dot(self, dot_name: str = "dep.dot",
                   color_func: Callable[[str], str] = None) -> None:
@@ -283,7 +173,7 @@ class SourceTree:
         """
         with open(dot_name, "w") as dot:
             dot.write("digraph Dependency {\nrankdir=LR\n")
-            for src_name, src_obj in self.sources.items():
+            for src_name, src_obj in self._sources.items():
                 if color_func is not None:
                     color = color_func(src_name)
                     dot.write(f"\"{src_name}\""
@@ -300,7 +190,7 @@ class SourceTree:
         :return: None.
         """
         with open(make_name, "w") as make:
-            for src_name, src_obj in self.sources.items():
+            for src_name, src_obj in self._sources.items():
                 for dep in sorted(src_obj.dependencies):
                     make.write(f"{src_name}.o: {dep}.o\n")
 
@@ -316,11 +206,11 @@ class SourceTree:
         candidates = set()
         symbol = symbol.lower()
         if kind == "def":
-            for src_name, src_obj in self.sources.items():
+            for src_name, src_obj in self._sources.items():
                 if symbol in src_obj.definitions:
                     candidates.add(src_name)
         else:
-            for src_name, src_obj in self.sources.items():
+            for src_name, src_obj in self._sources.items():
                 if symbol in src_obj.references:
                     candidates.add(src_name)
         return candidates
@@ -337,13 +227,102 @@ class SourceTree:
         candidates = set()
         pattern = re.compile(f"^{node}$", re.IGNORECASE)
         if direction == "in":
-            for src_name, src_obj in self.sources.items():
+            for src_name, src_obj in self._sources.items():
                 if re.search(pattern, src_name) is not None:
                     candidates = src_obj.dependencies
         else:
-            for src_name, src_obj in self.sources.items():
+            for src_name, src_obj in self._sources.items():
                 for dep in src_obj.dependencies:
                     if re.search(pattern, dep) is not None:
                         candidates.add(src_name)
                         break
         return candidates
+
+
+class CallGraph:
+    """
+    Class for generating call graph.
+
+    Attributes
+    ----------
+    _call_table: Dict[str, Set[str]
+        symbols and references called by each symbol
+    _rules: Rules
+        regex rules for detecting symbols
+    """
+    def __init__(self, rules: Rules = None):
+        """
+        :param rules: regex rules for detecting symbols
+        """
+        self._call_table = defaultdict(set)
+        if rules is None:
+            rules = Rules()
+        self._rules = rules
+
+    def parse_source(self, src_name: str) -> None:
+        """
+        Parse a FORTRAN source file.
+
+        NOTE: all the definitions and references in the source file will be
+        converted to lower case. This is because identifiers in FORTRAN are
+        case-insensitive.
+
+        :param src_name: name of the source file
+        :return: None
+        """
+        with open(src_name, "r") as in_file:
+            content = in_file.readlines()
+
+        # Get start and end line indices of definitions
+        def_ln, num_lines = dict(), len(content)
+        for i, line in enumerate(content):
+            sym_def = self._rules.match_def_start(line)
+            if sym_def is not None:
+                for j in range(i+1, num_lines):
+                    if self._rules.match_def_end(content[j]) is not None:
+                        def_ln[sym_def] = (i, j)
+                        break
+
+        # Extract references within each definition
+        for sym_def, ln in def_ln.items():
+            refs = self._rules.match_ref(content[ln[0]+1:ln[1]])
+            self._call_table[sym_def] = self._call_table[sym_def].union(refs)
+
+    def parse_source_tree(self, dir_name: str = ".") -> None:
+        """
+        Parse all the source files under given directory.
+
+        NOTE: the source name WILL NOT be converted to lower case, unlike
+        the 'parse_source' method. This is because file names in UNIX are
+        case-sensitive.
+
+        :param dir_name: name of the directory
+        :return: None. The 'sources' attribute is updated.
+        """
+        # Get the file list under the directory
+        # Omit the directory name for pwd. Keep it in other cases.
+        if dir_name in (".", "./"):
+            all_files = sorted(glob.glob("*"))
+        else:
+            all_files = sorted(glob.glob(f"{dir_name}/*"))
+
+        # Parse FORTRAN source files
+        pattern = re.compile(r"^(\S+)\.([fF]+\d*)$", re.IGNORECASE)
+        for file in all_files:
+            result = re.search(pattern, file)
+            if result is not None:
+                self.parse_source(file)
+
+    def write_dot(self, dot_name: str = "call.dot") -> None:
+        """
+        Write the call graph to dot file for visualization.
+
+        :param dot_name: name of the dot file
+        :return: None.
+        """
+        with open(dot_name, "w") as dot:
+            dot.write("digraph CallGraph {\nrankdir=LR\n")
+            for symbol, ref in self._call_table.items():
+                for i in ref:
+                    dot.write(f"\"{i}\" -> \"{symbol}\"\n")
+            dot.write("}\n")

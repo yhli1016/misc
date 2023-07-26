@@ -6,7 +6,7 @@ Script for finding the relevant nodes of given node in the dependency digraph.
 import argparse
 import re
 
-from fortlint import SourceTree
+from fortlint import DependGraph
 
 
 def main():
@@ -19,8 +19,8 @@ def main():
     args = parser.parse_args()
 
     # Load cache
-    sources = SourceTree()
-    sources.load_cache(file_name=args.file_name)
+    graph = DependGraph()
+    graph.load_cache(file_name=args.file_name)
 
     # Remove leading "./" and trailing '.' if any
     node = args.node
@@ -37,12 +37,12 @@ def main():
 
     # Search for the nodes and echo
     if args.out:
-        candidates = sources.find_relevant_nodes(node, 'out')
+        candidates = graph.find_relevant_nodes(node, 'out')
         print(f"'{node}' -> {len(candidates)} nodes:")
         for item in candidates:
             print(f"{'':4s}{item}")
     else:
-        candidates = sources.find_relevant_nodes(node, 'in')
+        candidates = graph.find_relevant_nodes(node, 'in')
         print(f"{len(candidates)} nodes -> '{node}':")
         for item in candidates:
             print(f"{'':4s}{item}")

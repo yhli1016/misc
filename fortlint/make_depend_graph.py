@@ -5,7 +5,7 @@ import re
 import argparse
 import os
 
-from fortlint import SourceTree
+from fortlint import DependGraph
 
 
 def color_func(src_name):
@@ -26,10 +26,10 @@ def main():
                         default="dep.svg")
     args = parser.parse_args()
 
-    sources = SourceTree()
-    sources.load_cache(file_name=args.file_name)
+    graph = DependGraph()
+    graph.load_cache(file_name=args.file_name)
     dot_name = args.output.split(".")[0] + ".dot"
-    sources.write_dot(dot_name=dot_name, color_func=color_func)
+    graph.write_dot(dot_name=dot_name, color_func=color_func)
     os.system(f"dot -Tsvg -o{args.output} {dot_name}")
 
 

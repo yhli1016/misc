@@ -1,9 +1,10 @@
 #! /usr/bin/env python
-"""Script for generating make.depend for Makefile."""
+"""Script for generating the call digraph using Graphviz."""
 
 import argparse
+import os
 
-from fortlint import DependGraph
+from fortlint import CallGraph
 
 
 def main():
@@ -12,12 +13,14 @@ def main():
     parser.add_argument("-f", "--file-name", type=str, action="store",
                         default="sources.pkl")
     parser.add_argument("-o", "--output", type=str, action="store",
-                        default="make.depend")
+                        default="call.svg")
     args = parser.parse_args()
 
-    graph = DependGraph()
-    graph.load_cache(file_name=args.file_name)
-    graph.write_make(args.output)
+    sources = CallGraph()
+    sources.parse_source_tree(".")
+    dot_name = args.output.split(".")[0] + ".dot"
+    sources.write_dot(dot_name=dot_name)
+    os.system(f"dot -Tsvg -o{args.output} {dot_name}")
 
 
 if __name__ == "__main__":
