@@ -313,16 +313,21 @@ class CallGraph:
             if result is not None:
                 self.parse_source(file)
 
-    def write_dot(self, dot_name: str = "call.dot") -> None:
+    def write_dot(self, dot_name: str = "call.dot",
+                  internal: bool = False) -> None:
         """
         Write the call graph to dot file for visualization.
 
         :param dot_name: name of the dot file
+        :param internal: whether to output internal symbols only
         :return: None.
         """
         with open(dot_name, "w") as dot:
+            symbols = self._call_table.keys()
             dot.write("digraph CallGraph {\nrankdir=LR\n")
             for symbol, ref in self._call_table.items():
+                if internal:
+                    ref = ref.intersection(symbols)
                 for i in ref:
                     dot.write(f"\"{i}\" -> \"{symbol}\"\n")
             dot.write("}\n")
