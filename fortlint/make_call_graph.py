@@ -7,14 +7,6 @@ import os
 from fortlint import Rules, CallGraph
 
 
-class MyRules(Rules):
-    def __init__(self):
-        super().__init__()
-        exclude = {"hop_ind", "kq_map", "x",  "q_point", "omegas", "kmesh",
-                   "eng"}
-        self._exclude = self._exclude.union(exclude)
-
-
 def main():
     # Parse command-line parameters
     parser = argparse.ArgumentParser()
@@ -26,7 +18,12 @@ def main():
                         default=False)
     args = parser.parse_args()
 
-    rules = MyRules()
+    # User defined excluded symbols
+    rules = Rules()
+    new_exclude = {"hop_ind", "kq_map", "x", "q_point", "omegas", "kmesh",
+                   "eng"}
+    rules.exclude = rules.exclude.union(new_exclude)
+
     sources = CallGraph(rules)
     sources.parse_source_tree(".")
     dot_name = args.output.split(".")[0] + ".dot"

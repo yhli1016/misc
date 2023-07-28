@@ -1,6 +1,6 @@
 """Classes regular expressions."""
 import re
-from typing import Union, List, Set
+from typing import Union, List, Set, Tuple
 
 
 __all__ = ["Rules", "DependRules"]
@@ -105,6 +105,31 @@ class Rules:
                             sym_refs.append(s.lstrip().rstrip().lower())
         sym_refs = set(sym_refs).difference(self._exclude)
         return sym_refs
+
+    @property
+    def def_start(self) -> list:
+        """Interface for _def_start attribute."""
+        return self._def_start
+
+    @property
+    def def_end(self) -> list:
+        """Interface for _def_end attribute."""
+        return self._def_end
+
+    @property
+    def ref(self) -> list:
+        """Interface for _ref attribute."""
+        return self._ref
+
+    @property
+    def exclude(self) -> Set[str]:
+        """Interface for _exclude attribute."""
+        return self._exclude
+
+    @exclude.setter
+    def exclude(self, new_exclude: Set[str]) -> None:
+        """Interface for _exclude attribute."""
+        self._exclude = new_exclude
 
 
 class DependRules(Rules):
