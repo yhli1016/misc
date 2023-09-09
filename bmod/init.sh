@@ -71,21 +71,26 @@ set_alias () {
 }
 
 set_ps () {
-    declare -A psc
-    psc=([k]=30 [r]=31 [g]=32 [y]=33 [b]=34 [m]=35 [c]=36 [w]=37)
+    declare -A fgc
+    fgc=([k]=30 [r]=31 [g]=32 [y]=33 [b]=34 [m]=35 [c]=36 [w]=37)
     local style=$1
     local color=$2
-    local cu="\033[${psc[${color:0:1}]};1m"
-    local ch="\033[${psc[${color:1:1}]};1m"
-    local cw="\033[${psc[${color:2:1}]};1m"
-    local cp="\033[${psc[${color:3:1}]};1m"
+    local effect=$3
+    test -z "$effect" && effect="m" || effect=";${effect}m"
+    local cu="\033[${fgc[${color:0:1}]}${effect}"
+    local ch="\033[${fgc[${color:1:1}]}${effect}"
+    local cw="\033[${fgc[${color:2:1}]}${effect}"
+    local cp="\033[${fgc[${color:3:1}]}${effect}"
     local c0="\033[0m"
     case $style in
     *suse*)
-        export PS1="$cu\u$ch@\h:$cw\w$cp>$c0 "
+        export PS1="$cu\u$cp@$ch\h$cp:$cw\w$cp>$c0 "
+        ;;
+    *ubuntu*)
+        export PS1="$cu\u$cp@$ch\h$cp:$cw\w$cp\$$c0 "
         ;;
     *)
-        export PS1="$cp[$cu\u$ch@\h $cw\W$cp]\$$c0 "
+        export PS1="$cp[$cu\u$cp@$ch\h $cw\W$cp]\$$c0 "
         ;;
     esac
 }
