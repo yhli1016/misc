@@ -17,7 +17,7 @@ def get_energies(xml_name):
         for i in entries:
             eng_ki = []
             for line in content[i+1:]:
-                if len(line.split()) == 2:
+                if len(line.split()) == 3:
                     eng_ki.append(float(line.split()[1]))
                 else:
                     break
