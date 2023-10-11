@@ -2,6 +2,7 @@
 export BMOD_ROOT=$(dirname $BASH_SOURCE)
 export BMOD_MOD=$BMOD_ROOT/modules
 export BMOD_LOADED_MODS=$BMOD_LOADED_MODS
+export BMOD_SEP="+"
 
 # Function for manipulating environment variables
 reset_env () {
@@ -98,7 +99,7 @@ set_ps () {
 # Wrapper for set_env with presets of environment variables
 set_mod () {
     local cmd=$1
-    local presets=$(echo $2 | sed 's/+/\n/g')
+    local presets=$(echo $2 | sed 's/'"$BMOD_SEP"'/\n/g')
     local pattern=$3
     local path=""
     for preset in $presets; do
