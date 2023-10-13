@@ -69,16 +69,14 @@ class Boson:
 
     Attributes
     ----------
-    _is_null: boolean
-        whether the state is a null state
     _sign: int
         sign of the state, effective when evaluating inner products
         For the null state, we set it to 0 for safety.
-    _occ: Dict[int, int]
+    _occ: Dict[int, int] or None
         occupation numbers on the single particle states
+        None for a null state (numerically zero in second quantization regime).
     """
     def __init__(self, occupied_states: Iterable[int] = None) -> None:
-        self._is_null = False
         self._sign = 1
         self._occ = defaultdict(int)
         for idx in occupied_states:
@@ -86,7 +84,8 @@ class Boson:
 
     def __eq__(self, other) -> bool:
         """
-        Check if this state equals to the other state.
+        Check if this state equals to the other state by comparing their
+        occupation numbers.
 
         :param other: other state to compare
         :return: whether this state equals to the other state
@@ -111,9 +110,8 @@ class Boson:
 
         :return: None
         """
-        self._is_null = True
         self._sign = 0
-        self._occ = defaultdict(int)
+        self._occ = None
 
     def purge(self) -> None:
         """
@@ -145,11 +143,6 @@ class Boson:
         return prod
 
     @property
-    def is_null(self) -> bool:
-        """Interface for the '_is_null' attribute."""
-        return self._is_null
-
-    @property
     def sign(self) -> int:
         """Interface for the '_sign' attribute."""
         return self._sign
@@ -160,14 +153,15 @@ class Boson:
         return self._occ
 
     @property
-    def is_empty(self) -> bool:
-        """Check if the occupation numbers are empty."""
-        return sum([abs(_) for _ in self._occ.values()]) == 0
+    def is_null(self) -> bool:
+        """Check if the state is the null state."""
+        return self._occ is None
 
     @property
     def is_vac(self) -> bool:
         """Check if the state is the vacuum state."""
-        return not self.is_null and self.is_empty
+        sum_occ = sum([abs(_) for _ in self._occ.values()])
+        return (self._occ is not None) and (sum_occ == 0)
 
     def destroy(self, idx: int) -> None:
         """
