@@ -275,23 +275,39 @@ class Operator:
         else:
             raise ValueError(f"Duplicate term {term}")
 
-    def add_2bd(self, i: int, j: int, with_conj: bool = False) -> None:
+    def add_t(self, i: int, j: int) -> None:
         """Add a two-body term c_{i+} c_j."""
         self._add_term((i, j))
-        if with_conj:
-            self._add_term((j, i))
 
-    def add_4bd(self, i: int, j: int, n: int, m: int) -> None:
+    def add_v(self, i: int, j: int, n: int, m: int) -> None:
         """Add a four-body term c_{i+} c_{j+} c_n c_m."""
         self._add_term((i, j, n, m))
 
-    def add_onsite(self, i: int) -> None:
+    def add_ons(self, i: int) -> None:
         """Add an on-site term c_{i+} c_i."""
-        self.add_2bd(i, i, with_conj=False)
+        self.add_t(i, i)
+
+    def add_hop(self, i: int, j: int, with_conj: bool = False):
+        """Add a hopping term c_{i+} c_j with i != j."""
+        if i != j:
+            self.add_t(i, j)
+            if with_conj:
+                self.add_t(j, i)
+        else:
+            raise ValueError(f"Hopping term require {i} != {j}")
 
     def add_hubbard(self, i: int, j: int) -> None:
-        """Add a Hubbard term c_{i+} c_i c_{j+} c_j."""
-        self.add_4bd(i, j, j, i)
+        """
+        Add a Hubbard term c_{i+} c_i c_{j+} c_j.
+
+        The derivation follows
+            (i+, i, j+, j) = -(i+, j+, i, j) = (i+, j+, j, i)
+        which requires i != j.
+        """
+        if i != j:
+            self.add_v(i, j, j, i)
+        else:
+            raise ValueError(f"Hubbard term require {i} != {j}")
 
     def eval(self, bra: Boson, ket: Boson) -> List[Tuple[int, term_type]]:
         """

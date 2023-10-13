@@ -37,8 +37,8 @@ def test_u():
 
     # Define operators
     hop_terms = Operator()
-    hop_terms.add_2bd(idx['1+'], idx['2+'], with_conj=True)
-    hop_terms.add_2bd(idx['1-'], idx['2-'], with_conj=True)
+    hop_terms.add_hop(idx['1+'], idx['2+'], with_conj=True)
+    hop_terms.add_hop(idx['1-'], idx['2-'], with_conj=True)
     u_terms = Operator()
     u_terms.add_hubbard(idx['1+'], idx['1-'])
     u_terms.add_hubbard(idx['2+'], idx['2-'])
@@ -69,12 +69,12 @@ def test_eig():
 
     # Define operators
     hop_terms = Operator()
-    hop_terms.add_2bd(idx['1+'], idx['2+'], with_conj=True)
-    hop_terms.add_2bd(idx['2+'], idx['3+'], with_conj=True)
-    hop_terms.add_2bd(idx['3+'], idx['4+'], with_conj=True)
-    hop_terms.add_2bd(idx['1-'], idx['2-'], with_conj=True)
-    hop_terms.add_2bd(idx['2-'], idx['3-'], with_conj=True)
-    hop_terms.add_2bd(idx['3-'], idx['4-'], with_conj=True)
+    hop_terms.add_hop(idx['1+'], idx['2+'], with_conj=True)
+    hop_terms.add_hop(idx['2+'], idx['3+'], with_conj=True)
+    hop_terms.add_hop(idx['3+'], idx['4+'], with_conj=True)
+    hop_terms.add_hop(idx['1-'], idx['2-'], with_conj=True)
+    hop_terms.add_hop(idx['2-'], idx['3-'], with_conj=True)
+    hop_terms.add_hop(idx['3-'], idx['4-'], with_conj=True)
     u_terms = Operator()
     u_terms.add_hubbard(idx['1+'], idx['1-'])
     u_terms.add_hubbard(idx['2+'], idx['2-'])
@@ -111,7 +111,7 @@ def test_speed():
     # Define operators
     hop_terms = Operator()
     for i, j in sp_states.permutations(2):
-        hop_terms.add_2bd(i, j)
+        hop_terms.add_hop(i, j)
 
     # Benchmark
     t0 = time.time()
