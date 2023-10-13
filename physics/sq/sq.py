@@ -275,24 +275,24 @@ class Operator:
         else:
             raise ValueError(f"Duplicate term {term}")
 
-    def add_t(self, i: int, j: int) -> None:
-        """Add a two-body term c_{i+} c_j."""
+    def add_2bd(self, i: int, j: int) -> None:
+        """Add a general two-body term c_{i+} c_j."""
         self._add_term((i, j))
 
-    def add_v(self, i: int, j: int, n: int, m: int) -> None:
-        """Add a four-body term c_{i+} c_{j+} c_n c_m."""
+    def add_4bd(self, i: int, j: int, n: int, m: int) -> None:
+        """Add a general four-body term c_{i+} c_{j+} c_n c_m."""
         self._add_term((i, j, n, m))
 
     def add_ons(self, i: int) -> None:
         """Add an on-site term c_{i+} c_i."""
-        self.add_t(i, i)
+        self.add_2bd(i, i)
 
     def add_hop(self, i: int, j: int, with_conj: bool = False):
         """Add a hopping term c_{i+} c_j with i != j."""
         if i != j:
-            self.add_t(i, j)
+            self.add_2bd(i, j)
             if with_conj:
-                self.add_t(j, i)
+                self.add_2bd(j, i)
         else:
             raise ValueError(f"Hopping term require {i} != {j}")
 
@@ -305,7 +305,7 @@ class Operator:
         which requires i != j.
         """
         if i != j:
-            self.add_v(i, j, j, i)
+            self.add_4bd(i, j, j, i)
         else:
             raise ValueError(f"Hubbard term require {i} != {j}")
 
