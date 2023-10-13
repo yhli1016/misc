@@ -22,9 +22,12 @@ class SPStates:
 
         :param state: identifier of the new state
         :return: None
+        :raises RuntimeError: if the new state is duplicate
         """
         if state not in self._states:
             self._states.append(state)
+        else:
+            raise RuntimeError(f"Duplicate state {state}")
 
     def permutations(self, num_states: int = 1) -> permutations:
         """
