@@ -1,7 +1,10 @@
 from copy import deepcopy
 from itertools import permutations, combinations
 from collections import defaultdict
-from typing import List, Dict, Hashable, Iterable
+from typing import List, Dict, Hashable, Iterable, Tuple, Union
+
+
+term_type = Union[Tuple[int, int], Tuple[int, int, int, int]]
 
 
 class SPStates:
@@ -252,39 +255,64 @@ class Fermion(Boson):
         return factor
 
 
-class TwoBody:
-    """Operator of c_{i+} c_j."""
-    def __init__(self, i: int, j: int) -> None:
-        self.indices = (i, j)
+class Operator:
+    """
+    Class for representing an operator consisted of two-body and four-body terms
+    in second quantized form.
 
-    def eval(self, bra: Boson, ket: Boson) -> int:
-        ket_c = deepcopy(ket)
-        ket_c.destroy(self.indices[1])
-        ket_c.create(self.indices[0])
-        return bra.inner_prod(ket_c)
+    Attributes
+    ----------
+    _terms: Set[term_type]
+        indices of the terms, with elements being tuples of 2 or 4 integers
+    """
+    def __init__(self) -> None:
+        self._terms = set()
 
+    def _add_term(self, term: term_type) -> None:
+        """Add a new term to the operator."""
+        if term not in self._terms:
+            self._terms.add(term)
+        else:
+            raise ValueError(f"Duplicate term {term}")
 
-class OnSite(TwoBody):
-    """Operator of c_{i+} c_i."""
-    def __init__(self, i: int) -> None:
-        super().__init__(i, i)
+    def add_2bd(self, i: int, j: int, with_conj: bool = False) -> None:
+        """Add a two-body term c_{i+} c_j."""
+        self._add_term((i, j))
+        if with_conj:
+            self._add_term((j, i))
 
+    def add_4bd(self, i: int, j: int, n: int, m: int) -> None:
+        """Add a four-body term c_{i+} c_{j+} c_n c_m."""
+        self._add_term((i, j, n, m))
 
-class FourBody:
-    """Operator of c_{i+} c_{j+} c_n c_m."""
-    def __init__(self, i: int, j: int, n: int, m: int):
-        self.indices = (i, j, n, m)
+    def add_onsite(self, i: int) -> None:
+        """Add an on-site term c_{i+} c_i."""
+        self.add_2bd(i, i, with_conj=False)
 
-    def eval(self, bra: Boson, ket: Boson) -> int:
-        ket_c = deepcopy(ket)
-        ket_c.destroy(self.indices[3])
-        ket_c.destroy(self.indices[2])
-        ket_c.create(self.indices[1])
-        ket_c.create(self.indices[0])
-        return bra.inner_prod(ket_c)
+    def add_hubbard(self, i: int, j: int) -> None:
+        """Add a Hubbard term c_{i+} c_i c_{j+} c_j."""
+        self.add_4bd(i, j, j, i)
 
+    def eval(self, bra: Boson, ket: Boson) -> List[Tuple[int, term_type]]:
+        """
+        Evaluate the matrix element between two Fock states.
 
-class Hubbard(FourBody):
-    """Operator of c_{i+} c_i c_{j+} c_j."""
-    def __init__(self, i: int, j: int):
-        super().__init__(i, j, j, i)
+        :param bra: left operand
+        :param ket: right operand
+        :return: list of coefficients and corresponding non-zero terms
+        """
+        result = []
+        for term in self._terms:
+            ket_c = deepcopy(ket)
+            if len(term) == 2:
+                ket_c.destroy(term[1])
+                ket_c.create(term[0])
+            else:
+                ket_c.destroy(term[3])
+                ket_c.destroy(term[2])
+                ket_c.create(term[1])
+                ket_c.create(term[0])
+            prod = bra.inner_prod(ket_c)
+            if prod != 0:
+                result.append((prod, term))
+        return result
