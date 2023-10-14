@@ -262,41 +262,44 @@ class Operator:
 
     Attributes
     ----------
-    _terms: Set[term_type]
-        indices of the terms, with elements being tuples of 2 or 4 integers
+    _terms: Dict[term_type, complex]
+        indices and coefficients of the terms, with keys being tuples of 2 or 4
+        integers
     """
     def __init__(self) -> None:
-        self._terms = set()
+        self._terms = dict()
 
-    def _add_term(self, term: term_type) -> None:
+    def _add_term(self, term: term_type, coeff: complex = 0.0) -> None:
         """Add a new term to the operator."""
-        if term not in self._terms:
-            self._terms.add(term)
+        if term not in self._terms.keys():
+            self._terms[term] = coeff
         else:
             raise ValueError(f"Duplicate term {term}")
 
-    def add_2bd(self, i: int, j: int) -> None:
+    def add_2bd(self, i: int, j: int, coeff: complex = 0.0) -> None:
         """Add a general two-body term c_{i+} c_j."""
-        self._add_term((i, j))
+        self._add_term((i, j), coeff)
 
-    def add_4bd(self, i: int, j: int, n: int, m: int) -> None:
+    def add_4bd(self, i: int, j: int, n: int, m: int,
+                coeff: complex = 0.0) -> None:
         """Add a general four-body term c_{i+} c_{j+} c_n c_m."""
-        self._add_term((i, j, n, m))
+        self._add_term((i, j, n, m), coeff)
 
-    def add_ons(self, i: int) -> None:
+    def add_ons(self, i: int, coeff: complex = 0.0) -> None:
         """Add an on-site term c_{i+} c_i."""
-        self.add_2bd(i, i)
+        self.add_2bd(i, i, coeff)
 
-    def add_hop(self, i: int, j: int, with_conj: bool = False):
+    def add_hop(self, i: int, j: int, coeff: complex = 0.0,
+                with_conj: bool = False) -> None:
         """Add a hopping term c_{i+} c_j with i != j."""
         if i != j:
-            self.add_2bd(i, j)
+            self.add_2bd(i, j, coeff)
             if with_conj:
-                self.add_2bd(j, i)
+                self.add_2bd(j, i, coeff.conjugate())
         else:
             raise ValueError(f"Hopping term require {i} != {j}")
 
-    def add_hubbard(self, i: int, j: int) -> None:
+    def add_hubbard(self, i: int, j: int, coeff: complex = 0.0) -> None:
         """
         Add a Hubbard term c_{i+} c_i c_{j+} c_j.
 
@@ -305,20 +308,21 @@ class Operator:
         which requires i != j.
         """
         if i != j:
-            self.add_4bd(i, j, j, i)
+            self.add_4bd(i, j, j, i, coeff)
         else:
             raise ValueError(f"Hubbard term require {i} != {j}")
 
-    def eval(self, bra: Boson, ket: Boson) -> List[Tuple[int, term_type]]:
+    def eval(self, bra: Boson, ket: Boson) -> Dict[term_type, complex]:
         """
         Evaluate the matrix element between two Fock states.
 
         :param bra: left operand
         :param ket: right operand
-        :return: list of coefficients and corresponding non-zero terms
+        :return: dictionary of non-zero terms and corresponding coefficients
+            with sign of +-1
         """
-        result = []
-        for term in self._terms:
+        result = dict()
+        for term, coeff in self._terms.items():
             ket_c = deepcopy(ket)
             if len(term) == 2:
                 ket_c.destroy(term[1])
@@ -330,5 +334,5 @@ class Operator:
                 ket_c.create(term[0])
             prod = bra.inner_prod(ket_c)
             if prod != 0:
-                result.append((prod, term))
+                result[term] = coeff * prod
         return result
