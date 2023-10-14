@@ -1,5 +1,6 @@
 import time
 from itertools import product
+from copy import deepcopy
 
 import numpy as np
 import scipy.linalg.lapack as lapack
@@ -54,6 +55,33 @@ def diff(a1, a2):
             print(x)
 
 
+def split_det(det_list, i):
+    result = []
+    for det in det_list:
+        d1, d2 = list(deepcopy(det)), list(deepcopy(det))
+        if i == 0:
+            d1[i] = ("u-x", d1[i][1], d1[i][2])
+            d2[i] = ("u", 0, 0)
+        elif i == 1:
+            d1[i] = (d1[i][0], "u-x", d1[i][2])
+            d2[i] = (0, "u", 0)
+        else:
+            d1[i] = (d1[i][0], d1[i][1], "u-x")
+            d2[i] = (0, 0, "u")
+        d1, d2 = tuple(d1), tuple(d2)
+        result.append(d1)
+        result.append(d2)
+    return result
+
+
+def print_det(det):
+    for row in det:
+        for v in row:
+            print("%4s" % v, end="")
+        print()
+    print("------------")
+
+
 def test_u():
     # Define single-particle states
     sp_states = SPStates()
@@ -103,6 +131,7 @@ def test_eig():
 
     # Define operators
     hop_terms = Operator()
+    # On-site terms
     hop_terms.add_ons(idx['1+'], -0.2)
     hop_terms.add_ons(idx['1-'], 0.5)
     hop_terms.add_ons(idx['2+'], -1.0)
@@ -111,12 +140,19 @@ def test_eig():
     hop_terms.add_ons(idx['3-'], -0.5)
     hop_terms.add_ons(idx['4+'], 1.0)
     hop_terms.add_ons(idx['4-'], 0.1)
+    # 1st nearest hopping terms
     hop_terms.add_hop(idx['1+'], idx['2+'], -1.0, True)
     hop_terms.add_hop(idx['2+'], idx['3+'], 2.5, True)
     hop_terms.add_hop(idx['3+'], idx['4+'], -1.5, True)
     hop_terms.add_hop(idx['1-'], idx['2-'], -2.0, True)
     hop_terms.add_hop(idx['2-'], idx['3-'], 1.2, True)
     hop_terms.add_hop(idx['3-'], idx['4-'], -1.0, True)
+    # 2nd nearest hopping terms
+    hop_terms.add_hop(idx['1+'], idx['3+'], -0.5, True)
+    hop_terms.add_hop(idx['2+'], idx['4+'], 0.3, True)
+    hop_terms.add_hop(idx['1-'], idx['3-'], 0.5, True)
+    hop_terms.add_hop(idx['2-'], idx['4-'], -0.3, True)
+    # Hubbard terms
     u_terms = Operator()
     u_terms.add_hubbard(idx['1+'], idx['1-'], 0.0)
     u_terms.add_hubbard(idx['2+'], idx['2-'], 0.0)
@@ -170,7 +206,20 @@ def test_speed():
     print(t1 - t0)
 
 
+def test_det():
+    det = (("2u-x", "t", 0),
+           ("t", "2u-x", "t"),
+           (0, "t", "2u-x"))
+    det_list = [det]
+    det_list = split_det(det_list, 0)
+    det_list = split_det(det_list, 1)
+    det_list = split_det(det_list, 2)
+    for det in det_list:
+        print_det(det)
+
+
 if __name__ == "__main__":
     test_u()
     test_eig()
     test_speed()
+    test_det()
