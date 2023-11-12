@@ -8,59 +8,26 @@ import sympy as sp
 f_type = Union[int, float, sp.Basic]
 c_type = Union[int, float, complex, sp.Basic]
 rn_type = Tuple[int, int, int]
-pair_type = Tuple[int, int]
 pos_type = Tuple[f_type, f_type, f_type]
 
 
-def invert_rn(rn: rn_type, i: int = 0) -> bool:
+def check_conj(hop_ind: Tuple[int, ...], i: int = 0) -> bool:
     """
-    Check if the cell index should be inverted.
+    Check whether to take the conjugate part of the hopping term.
 
-    :param rn: (r_a, r_b, r_c), cell index
+    :param hop_ind: (r_a, r_b, r_c, orb_i, orb_j), hopping index
     :param i: component index
-    :return: whether to invert the cell index
+    :return: whether to take conjugate
     """
-    if rn[i] > 0:
+    if hop_ind[i] > 0:
         return False
-    elif rn[i] < 0:
+    elif hop_ind[i] < 0:
         return True
     else:
         if i < 2:
-            return invert_rn(rn, i+1)
+            return check_conj(hop_ind, i+1)
         else:
-            return False
-
-
-def norm_keys(rn: Tuple[int, int, int],
-              orb_i: int,
-              orb_j: int) -> Tuple[rn_type, pair_type, bool]:
-    """
-    Normalize cell index and orbital pair into permitted keys.
-
-    For IntraHopping, it should check whether to take the conjugation and
-    return the status in conj.
-
-    :param rn: (r_a, r_b, r_c), cell index
-    :param orb_i: orbital index or bra
-    :param orb_j: orbital index of ket
-    :return: (rn, pair, conj)
-        where rn is the normalized cell index,
-        pair is the normalized orbital pair,
-        conj is the flag of whether to take the conjugate of hopping energy
-    """
-    if invert_rn(rn):
-        rn = (-rn[0], -rn[1], -rn[2])
-        pair = (orb_j, orb_i)
-        conj = True
-    elif rn == (0, 0, 0) and orb_i > orb_j:
-        rn = rn
-        pair = (orb_j, orb_i)
-        conj = True
-    else:
-        rn = rn
-        pair = (orb_i, orb_j)
-        conj = False
-    return rn, pair, conj
+            return hop_ind[3] > hop_ind[4]
 
 
 class Model:
@@ -105,6 +72,7 @@ class Model:
         :raises IndexError: if orb_i or orb_j falls out of range
         :raises ValueError: if rn == (0, 0, 0) and orb_i == orb_j
         """
+        # Check arguments
         num_orb = len(self._orbitals)
         if not (0 <= orb_i < num_orb):
             raise IndexError(f"orb_i {orb_i} out of range {num_orb}")
@@ -112,16 +80,22 @@ class Model:
             raise IndexError(f"orb_i {orb_i} out of range {num_orb}")
         if rn == (0, 0, 0) and orb_i == orb_j:
             raise ValueError(f"{rn} {orb_i, orb_j} is an on-site term")
-        rn, pair, conj = norm_keys(rn, orb_i, orb_j)
-        if conj:
+
+        # Add term
+        pair = (orb_i, orb_j)
+        if check_conj(rn + pair):
+            rn = (-rn[0], -rn[1], -rn[2])
+            pair = (orb_j, orb_i)
             energy = energy.conjugate()
         self._hoppings[rn + pair] = energy
 
-    def print_hk(self, convention: int = 1) -> None:
+    def print_hk(self, convention: int = 1, with_tril: bool = False) -> None:
         """
         Print analytical Hamiltonian as the function of k-point.
 
         :param convention: convention for setting up the Hamiltonian
+        :param with_tril: whether to print lower triangular hopping terms,
+            otherwise print upper triangular hopping terms only
         :return: None
         """
         # Collect on-site terms
@@ -147,7 +121,7 @@ class Model:
 
         # Print
         for pair, formula in hk.items():
-            if pair[0] <= pair[1]:
+            if formula != 0 and (pair[0] <= pair[1] or with_tril):
                 ham_ij = f"ham[{pair[0]}, {pair[1]}]"
                 formula = sp.sympify(formula)
                 print(f"{ham_ij} = {formula}")
