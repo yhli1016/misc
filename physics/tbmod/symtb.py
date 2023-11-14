@@ -1,73 +1,21 @@
 from collections import defaultdict, namedtuple
-from typing import Tuple, Union, List
-import math
+from typing import Tuple, List
 
 import sympy as sp
 import numpy as np
 from scipy.spatial import KDTree
 
+from utils import f_type, c_type, frac2cart
+
+
+__all__ = ["Model"]
+
 
 # Type aliases
-f_type = Union[int, float, sp.Basic]
-c_type = Union[int, float, complex, sp.Basic]
 rn_type = Tuple[int, int, int]
 pos_type = Tuple[f_type, f_type, f_type]
 Orbital = namedtuple("Orbital", ("position", "energy"))
 HopTerm = namedtuple("HopTerm", ("rn", "pair", "rij", "distance"))
-
-
-def cart2frac(lattice_vectors: np.ndarray,
-              cartesian_coordinates: np.ndarray,
-              origin: np.ndarray = np.zeros(3)) -> np.ndarray:
-    """
-    Convert Cartesian coordinates to fractional coordinates.
-
-    :param lattice_vectors: (3, 3) float64 array
-        Cartesian coordinates of lattice vectors
-    :param cartesian_coordinates: (num_coord, 3) float64 array
-        Cartesian coordinates to convert
-    :param origin: float64 array of length 3
-        Cartesian coordinate of lattice origin
-    :return: (num_coord, 3) float64 array
-        fractional coordinates in basis of lattice vectors
-    """
-    if not isinstance(lattice_vectors, np.ndarray):
-        lattice_vectors = np.array(lattice_vectors)
-    if not isinstance(cartesian_coordinates, np.ndarray):
-        cartesian_coordinates = np.array(cartesian_coordinates)
-    fractional_coordinates = np.zeros(cartesian_coordinates.shape)
-    conversion_matrix = np.linalg.inv(lattice_vectors.T)
-    for i, row in enumerate(cartesian_coordinates):
-        fractional_coordinates[i] = np.matmul(conversion_matrix,
-                                              (row - origin).T)
-    return fractional_coordinates
-
-
-def frac2cart(lattice_vectors: np.ndarray,
-              fractional_coordinates: np.ndarray,
-              origin: np.ndarray = np.zeros(3)) -> np.ndarray:
-    """
-    Convert fractional coordinates to Cartesian coordinates.
-
-    :param lattice_vectors: (3, 3) float64 array
-        Cartesian coordinates of lattice vectors
-    :param fractional_coordinates: (num_coord, 3) float64 array
-        fractional coordinates to convert in basis of lattice vectors
-    :param origin: float64 array of length 3
-        Cartesian coordinate of lattice origin
-    :return: (num_coord, 3) float64 array
-        Cartesian coordinates converted from fractional coordinates
-    """
-    if not isinstance(lattice_vectors, np.ndarray):
-        lattice_vectors = np.array(lattice_vectors)
-    if not isinstance(fractional_coordinates, np.ndarray):
-        fractional_coordinates = np.ndarray(fractional_coordinates)
-    cartesian_coordinates = np.zeros(fractional_coordinates.shape)
-    conversion_matrix = lattice_vectors.T
-
-    for i, row in enumerate(fractional_coordinates):
-        cartesian_coordinates[i] = np.matmul(conversion_matrix, row.T) + origin
-    return cartesian_coordinates
 
 
 def check_conj(hop_ind: Tuple[int, ...], i: int = 0) -> bool:
@@ -239,30 +187,3 @@ class Model:
                 ham_ij = f"ham[{pair[0]}, {pair[1]}]"
                 formula = sp.sympify(formula)
                 print(f"{ham_ij} = {formula}")
-
-
-def main():
-    lattice = 2.46 * np.array([
-        [1.0, 0.0, 0.0],
-        [0.5, math.sqrt(3)/2, 0.0],
-        [0.0, 0.0, 1.0]
-    ])
-    f = sp.Rational(1, 3)
-    t = sp.Symbol("t", real=True)
-
-    model = Model(lattice)
-    model.add_orbital((f, f, 0))
-    model.add_orbital((2*f, 2*f, 0))
-    model.add_hopping((0, 0, 0), 0, 1, t)
-    model.add_hopping((1, 0, 0), 1, 0, t)
-    model.add_hopping((0, 1, 0), 1, 0, t)
-    model.print_hk(1)
-    model.print_hk(2)
-
-    neighbors = model.find_neighbors(a_max=2, b_max=2, max_distance=2.0)
-    for term in neighbors:
-        print(term.rn, term.pair, term.distance)
-
-
-if __name__ == "__main__":
-    main()
