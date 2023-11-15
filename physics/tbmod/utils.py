@@ -584,69 +584,44 @@ class SK:
 
 class SOCTable:
     """
-    Hard-coded spin-orbital coupling term table, generated using the
-    'print_soc_table' method of 'SOC' class.
+    Hard-coded spin-orbital coupling term table, taking from
+    https://journals.aps.org/prb/abstract/10.1103/PhysRevB.82.245412
 
     Attributes
     ----------
-    _up_up: Dict[[str, str], complex]
-        soc terms for up-up spin chanel
-    _up_down: Dict[[str, str], complex]
-        soc terms for up-down spin chanel
-    _down_up: Dict[[str, str], complex]
-        soc terms for down-up spin chanel
+    _data: Dict[Tuple[str, str], sp.Matrix]
+        soc coupling matrices
     _orbital_labels: Set[str]
         labels of atomic orbitals
     _spin_labels: Set[str]
         directions of spins
     """
     def __init__(self):
-        self._up_up = {('px', 'py'): -0.5000000000000001j,
-                       ('py', 'px'): 0.5000000000000001j,
-                       ('dxy', 'dx2-y2'): 1.0000000000000002j,
-                       ('dx2-y2', 'dxy'): -1.0000000000000002j,
-                       ('dyz', 'dzx'): 0.5000000000000001j,
-                       ('dzx', 'dyz'): -0.5000000000000001j}
-        self._up_down = {('px', 'pz'): 0.5000000000000001,
-                         ('py', 'pz'): -0.5000000000000001j,
-                         ('pz', 'px'): -0.5000000000000001,
-                         ('pz', 'py'): 0.5000000000000001j,
-                         ('dxy', 'dyz'): (0.5000000000000001+0j),
-                         ('dxy', 'dzx'): -0.5000000000000001j,
-                         ('dx2-y2', 'dyz'): 0.5000000000000001j,
-                         ('dx2-y2', 'dzx'): 0.5000000000000001,
-                         ('dyz', 'dxy'): (-0.5000000000000001+0j),
-                         ('dyz', 'dx2-y2'): -0.5000000000000001j,
-                         ('dyz', 'dz2'): -0.8660254037844386j,
-                         ('dzx', 'dxy'): 0.5000000000000001j,
-                         ('dzx', 'dx2-y2'): -0.5000000000000001,
-                         ('dzx', 'dz2'): 0.8660254037844386,
-                         ('dz2', 'dyz'): 0.8660254037844386j,
-                         ('dz2', 'dzx'): -0.8660254037844386}
-        self._down_up = {('px', 'pz'): -0.5000000000000001,
-                         ('py', 'pz'): -0.5000000000000001j,
-                         ('pz', 'px'): 0.5000000000000001,
-                         ('pz', 'py'): 0.5000000000000001j,
-                         ('dxy', 'dyz'): (-0.5000000000000001+0j),
-                         ('dxy', 'dzx'): -0.5000000000000001j,
-                         ('dx2-y2', 'dyz'): 0.5000000000000001j,
-                         ('dx2-y2', 'dzx'): -0.5000000000000001,
-                         ('dyz', 'dxy'): (0.5000000000000001+0j),
-                         ('dyz', 'dx2-y2'): -0.5000000000000001j,
-                         ('dyz', 'dz2'): -0.8660254037844386j,
-                         ('dzx', 'dxy'): 0.5000000000000001j,
-                         ('dzx', 'dx2-y2'): 0.5000000000000001,
-                         ('dzx', 'dz2'): -0.8660254037844386,
-                         ('dz2', 'dyz'): 0.8660254037844386j,
-                         ('dz2', 'dzx'): 0.8660254037844386}
-        self._orbital_labels = {"s", "px", "py", "pz", "dxy", "dx2-y2", "dyz",
-                                "dzx", "dz2"}
+        half = sp.Rational(1, 2)
+        s_x = half * sp.Matrix([[0, 1], [1, 0]])
+        s_y = half * sp.Matrix([[0, -sp.I], [sp.I, 0]])
+        s_z = half * sp.Matrix([[1, 0], [0, -1]])
+        self._data = {
+            ('px', 'py'): -sp.I * s_z,
+            ('px', 'pz'): sp.I * s_y,
+            ('py', 'pz'): -sp.I * s_x,
+            ('dxy', 'dx2-y2'): 2 * sp.I * s_z,
+            ('dxy', 'dzx'): -sp.I * s_x,
+            ('dxy', 'dyz'): sp.I * s_y,
+            ('dx2-y2', 'dzx'): sp.I * s_y,
+            ('dx2-y2', 'dyz'): sp.I * s_x,
+            ('dzx', 'dyz'): -sp.I * s_z,
+            ('dzx', 'dz2'): sp.I * sp.sqrt(3) * s_y,
+            ('dyz', 'dz2'): -sp.I * sp.sqrt(3) * s_x,
+        }
+        self._orbital_labels = {"s", "px", "py", "pz",
+                                "dxy", "dx2-y2", "dyz", "dzx", "dz2"}
         self._spin_labels = {"up", "down"}
 
     def eval(self, label_i: str = "s",
              spin_i: str = "up",
              label_j: str = "s",
-             spin_j: str = "down") -> complex:
+             spin_j: str = "down") -> c_type:
         """
         Evaluate the matrix element <i,s_i|l*s|j,s_j>.
 
@@ -666,17 +641,15 @@ class SOCTable:
             if spin not in self._spin_labels:
                 raise ValueError(f"Illegal spin direction {spin}")
         try:
-            if spin_idx == ("up", "up"):
-                product = self._up_up[label_idx]
-            elif spin_idx == ("up", "down"):
-                product = self._up_down[label_idx]
-            elif spin_idx == ("down", "up"):
-                product = self._down_up[label_idx]
-            else:
-                product = -1 * self._up_up[label_idx]
+            soc_mat = self._data[label_idx]
         except KeyError:
-            product = 0.0
-        return product
+            try:
+                soc_mat = -self._data[(label_j, label_i)]
+            except KeyError:
+                soc_mat = sp.zeros(2)
+        s_i = 0 if spin_i == "up" else 1
+        s_j = 0 if spin_j == "up" else 1
+        return soc_mat[s_i, s_j]
 
 
 class ParamFit(ABC):

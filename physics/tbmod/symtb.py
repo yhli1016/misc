@@ -5,7 +5,7 @@ import sympy as sp
 import numpy as np
 from scipy.spatial import KDTree
 
-from utils import f_type, c_type, frac2cart
+from .utils import f_type, c_type, frac2cart
 
 
 __all__ = ["Model"]
