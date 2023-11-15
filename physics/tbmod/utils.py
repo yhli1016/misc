@@ -586,6 +586,7 @@ class SOCTable:
     """
     Hard-coded spin-orbital coupling term table, taking from
     https://journals.aps.org/prb/abstract/10.1103/PhysRevB.82.245412
+    adapted from the 'SOCTable2' class of TBPLaS.
 
     Attributes
     ----------

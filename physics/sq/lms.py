@@ -244,9 +244,10 @@ class AtomicOrbital:
         return self.product(ket_copy)
 
 
-class SOC2:
+class SOC:
     """
-    Class for evaluating spin-orbital coupling terms.
+    Class for evaluating spin-orbital coupling terms, adapted from the 'SOC'
+    class of TBPLaS.
 
     Attributes
     ----------
@@ -358,7 +359,7 @@ class SOC2:
 def main():
     import tbplas as tb
     soc = tb.SOC()
-    soc2 = SOC2()
+    soc2 = SOC()
     orbital_labels = ("s", "px", "py", "pz",
                       "dxy", "dx2-y2", "dyz", "dzx", "dz2")
     spin_labels = ("up", "down")
