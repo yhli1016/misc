@@ -615,6 +615,11 @@ class SOCTable:
             ('dzx', 'dz2'): sp.I * sp.sqrt(3) * s_y,
             ('dyz', 'dz2'): -sp.I * sp.sqrt(3) * s_x,
         }
+        # Restore the remaining terms according to antisymmetric relation
+        data2 = dict()
+        for key, value in self._data.items():
+            data2[(key[1], key[0])] = -value
+        self._data.update(data2)
         self._orbital_labels = {"s", "px", "py", "pz",
                                 "dxy", "dx2-y2", "dyz", "dzx", "dz2"}
         self._spin_labels = {"up", "down"}
@@ -644,10 +649,7 @@ class SOCTable:
         try:
             soc_mat = self._data[label_idx]
         except KeyError:
-            try:
-                soc_mat = -self._data[(label_j, label_i)]
-            except KeyError:
-                soc_mat = sp.zeros(2)
+            soc_mat = sp.zeros(2)
         s_i = 0 if spin_i == "up" else 1
         s_j = 0 if spin_j == "up" else 1
         return soc_mat[s_i, s_j]
