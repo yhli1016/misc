@@ -29,7 +29,7 @@ class AtomicOrbital:
         :param value: the new coefficient
         :return: None
         """
-        self._check_lms(key)
+        self._check_qn(key)
         self._coeff[key] = value
 
     def __getitem__(self, key: Tuple[int, int, int]) -> c_type:
@@ -39,11 +39,11 @@ class AtomicOrbital:
         :param key: (l, m, s) of the state
         :return: the coefficient
         """
-        self._check_lms(key)
+        self._check_qn(key)
         return self._coeff[key]
 
     @staticmethod
-    def _check_lms(key: Tuple[int, int, int]) -> None:
+    def _check_qn(key: Tuple[int, int, int]) -> None:
         """
         Check if the combination of (l, m, s) is legal.
 
@@ -53,9 +53,9 @@ class AtomicOrbital:
         """
         l, m, s = key
         if not -l <= m <= l:
-            raise ValueError(f"{key[1]} should in [-{key[0]}, {key[0]}]")
+            raise ValueError(f"Illegal quantum number m: {m}")
         if s != -1 and s != 1:
-            raise ValueError(f"{s} should be -1 or 1")
+            raise ValueError(f"Illegal quantum number s: {s}")
 
     def l_plus(self) -> None:
         """
@@ -246,9 +246,9 @@ class SOC:
         collection of atomic orbitals s, px, py, pz. etc
     """
     def __init__(self) -> None:
-        self._orbital_labels = ("s", "px", "py", "pz",
-                                "dxy", "dx2-y2", "dyz", "dzx", "dz2")
-        self._spin_labels = ("up", "down")
+        self._orbital_labels = {"s", "px", "py", "pz",
+                                "dxy", "dx2-y2", "dyz", "dzx", "dz2"}
+        self._spin_labels = {"up", "down"}
 
         # Initialize atomic orbitals
         self._orbital_basis = dict()
