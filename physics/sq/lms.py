@@ -52,10 +52,8 @@ class AtomicOrbital:
         :raises ValueError: if the quantum numbers are illegal
         """
         l, m, s = key
-        if not -l <= m <= l:
-            raise ValueError(f"Illegal quantum number m: {m}")
-        if s != -1 and s != 1:
-            raise ValueError(f"Illegal quantum number s: {s}")
+        if (not -l <= m <= l) or  (s != -1 and s != 1):
+            raise ValueError(f"Illegal quantum number {key}")
 
     def l_plus(self) -> None:
         """
@@ -71,8 +69,13 @@ class AtomicOrbital:
         for key, value in self._coeff.items():
             l, m, s = key
             key_new = (l, m+1, s)
-            factor = sp.sqrt((l - m) * (l + m + 1))
-            new_coefficients[key_new] = value * factor
+            try:
+                self._check_qn(key)
+            except ValueError:
+                pass
+            else:
+                factor = sp.sqrt((l - m) * (l + m + 1))
+                new_coefficients[key_new] = value * factor
         self._coeff = new_coefficients
 
     def l_minus(self) -> None:
@@ -89,8 +92,13 @@ class AtomicOrbital:
         for key, value in self._coeff.items():
             l, m, s = key
             key_new = (l, m-1, s)
-            factor = sp.sqrt((l + m) * (l - m + 1))
-            new_coefficients[key_new] = value * factor
+            try:
+                self._check_qn(key)
+            except ValueError:
+                pass
+            else:
+                factor = sp.sqrt((l + m) * (l - m + 1))
+                new_coefficients[key_new] = value * factor
         self._coeff = new_coefficients
 
     def l_z(self) -> None:
@@ -137,7 +145,12 @@ class AtomicOrbital:
         for key, value in self._coeff.items():
             l, m, s = key
             key_new = (l, m, s+2)
-            new_coefficients[key_new] = value
+            try:
+                self._check_qn(key)
+            except ValueError:
+                pass
+            else:
+                new_coefficients[key_new] = value
         self._coeff = new_coefficients
 
     def s_minus(self) -> None:
@@ -156,7 +169,12 @@ class AtomicOrbital:
         for key, value in self._coeff.items():
             l, m, s = key
             key_new = (l, m, s-2)
-            new_coefficients[key_new] = value
+            try:
+                self._check_qn(key)
+            except ValueError:
+                pass
+            else:
+                new_coefficients[key_new] = value
         self._coeff = new_coefficients
 
     def s_z(self) -> None:
