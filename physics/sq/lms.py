@@ -1,4 +1,5 @@
 from typing import Tuple, Dict, Iterable, Union
+from collections import defaultdict
 from copy import deepcopy
 
 import sympy as sp
@@ -13,24 +14,14 @@ class AtomicOrbital:
 
     Attributes
     ----------
-    _l_max: int
-        maximum angular quantum number l
     _coeff: Dict[Tuple[int, int, int], c_type]
         keys: (l, m, s), values: coefficients on |l,m,s>, where s is the quantum
         number of sigma_z which should be either -1 or 1
-    _allowed_qn: Set[Tuple[int, int, int]]
-        set of allowed (l, m, s) pairs
     """
-    def __init__(self, l_max: int = 2) -> None:
-        """
-        :param l_max: maximum angular quantum number l
-        """
-        self._l_max = l_max
-        self._coeff = self._init_coeff()
-        self._allowed_qn = set(self._coeff.keys())
+    def __init__(self) -> None:
+        self._coeff = defaultdict(int)
 
-    def __setitem__(self, key: Tuple[int, int, int],
-                    value: c_type = 1) -> None:
+    def __setitem__(self, key: Tuple[int, int, int], value: c_type = 1) -> None:
         """
         Set the coefficient on state |l,m,s>.
 
@@ -38,8 +29,7 @@ class AtomicOrbital:
         :param value: the new coefficient
         :return: None
         """
-        if key not in self._allowed_qn:
-            raise KeyError(f"Undefined key {key}")
+        self._check_lms(key)
         self._coeff[key] = value
 
     def __getitem__(self, key: Tuple[int, int, int]) -> c_type:
@@ -49,22 +39,23 @@ class AtomicOrbital:
         :param key: (l, m, s) of the state
         :return: the coefficient
         """
-        if key not in self._allowed_qn:
-            raise KeyError(f"Undefined key {key}")
+        self._check_lms(key)
         return self._coeff[key]
 
-    def _init_coeff(self) -> Dict[Tuple[int, int, int], c_type]:
+    @staticmethod
+    def _check_lms(key: Tuple[int, int, int]) -> None:
         """
-        Build initial coefficients.
+        Check if the combination of (l, m, s) is legal.
 
-        :return: dictionary with keys being (l, m, s) and values being zero
+        :param key: (l, m, s) of the state
+        :return: None
+        :raises ValueError: if the quantum numbers are illegal
         """
-        coefficients = dict()
-        for l_i in range(self._l_max + 1):
-            for m in range(-l_i, l_i+1):
-                for s in (-1, 1):
-                    coefficients[(l_i, m, s)] = 0
-        return coefficients
+        l, m, s = key
+        if not -l <= m <= l:
+            raise ValueError(f"{key[1]} should in [-{key[0]}, {key[0]}]")
+        if s != -1 and s != 1:
+            raise ValueError(f"{s} should be -1 or 1")
 
     def l_plus(self) -> None:
         """
@@ -76,13 +67,12 @@ class AtomicOrbital:
 
         :return: None
         """
-        new_coefficients = self._init_coeff()
+        new_coefficients = defaultdict(int)
         for key, value in self._coeff.items():
             l, m, s = key
             key_new = (l, m+1, s)
-            if key_new in self._allowed_qn:
-                factor = sp.sqrt((l - m) * (l + m + 1))
-                new_coefficients[key_new] = value * factor
+            factor = sp.sqrt((l - m) * (l + m + 1))
+            new_coefficients[key_new] = value * factor
         self._coeff = new_coefficients
 
     def l_minus(self) -> None:
@@ -95,13 +85,12 @@ class AtomicOrbital:
 
         :return: None
         """
-        new_coefficients = self._init_coeff()
+        new_coefficients = defaultdict(int)
         for key, value in self._coeff.items():
             l, m, s = key
             key_new = (l, m-1, s)
-            if key_new in self._allowed_qn:
-                factor = sp.sqrt((l + m) * (l - m + 1))
-                new_coefficients[key_new] = value * factor
+            factor = sp.sqrt((l + m) * (l - m + 1))
+            new_coefficients[key_new] = value * factor
         self._coeff = new_coefficients
 
     def l_z(self) -> None:
@@ -144,12 +133,11 @@ class AtomicOrbital:
 
         :return: None
         """
-        new_coefficients = self._init_coeff()
+        new_coefficients = defaultdict(int)
         for key, value in self._coeff.items():
             l, m, s = key
             key_new = (l, m, s+2)
-            if key_new in self._allowed_qn:
-                new_coefficients[key_new] = value
+            new_coefficients[key_new] = value
         self._coeff = new_coefficients
 
     def s_minus(self) -> None:
@@ -164,12 +152,11 @@ class AtomicOrbital:
 
         :return: None
         """
-        new_coefficients = self._init_coeff()
+        new_coefficients = defaultdict(int)
         for key, value in self._coeff.items():
             l, m, s = key
             key_new = (l, m, s-2)
-            if key_new in self._allowed_qn:
-                new_coefficients[key_new] = value
+            new_coefficients[key_new] = value
         self._coeff = new_coefficients
 
     def s_z(self) -> None:
@@ -268,7 +255,7 @@ class SOC:
         for orbital in self._orbital_labels:
             for spin in self._spin_labels:
                 label = (orbital, spin)
-                self._orbital_basis[label] = AtomicOrbital(l_max=2)
+                self._orbital_basis[label] = AtomicOrbital()
 
         # Reference:
         # https://en.wikipedia.org/wiki/Table_of_spherical_harmonics
