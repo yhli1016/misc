@@ -4,16 +4,16 @@ from typing import Tuple, List
 import sympy as sp
 import numpy as np
 from scipy.spatial import KDTree
+import matplotlib.pyplot as plt
 
-from .utils import f_type, c_type, frac2cart
+from .utils import f_type, c_type, pos_type, rn_type, frac2cart
+from .visual import ModelViewer
 
 
 __all__ = ["Model"]
 
 
 # Type aliases
-rn_type = Tuple[int, int, int]
-pos_type = Tuple[f_type, f_type, f_type]
 Orbital = namedtuple("Orbital", ("position", "energy"))
 HopTerm = namedtuple("HopTerm", ("rn", "pair", "rij", "distance"))
 
@@ -187,3 +187,132 @@ class Model:
                 ham_ij = f"ham[{pair[0]}, {pair[1]}]"
                 formula = sp.sympify(formula)
                 print(f"{ham_ij} = {formula}")
+
+    def plot(self, fig_name: str = None,
+             fig_size: Tuple[float, float] = None,
+             fig_dpi: int = 300,
+             with_orbitals: bool = True,
+             with_cells: bool = True,
+             with_conj: bool = True,
+             orb_color: List[str] = None,
+             hop_as_arrows: bool = True,
+             hop_color: str = "r",
+             view: str = "ab") -> None:
+        """
+        Plot lattice vectors, orbitals, and hopping terms.
+
+        If figure name is given, save the figure to file. Otherwise, show it on
+        the screen.
+
+        :param fig_name: file name to which the figure will be saved
+        :param fig_size: width and height of the figure
+        :param fig_dpi: resolution of the figure file
+        :param with_orbitals: whether to plot orbitals as filled circles
+        :param with_cells: whether to plot borders of primitive cells
+        :param with_conj: whether to plot conjugate hopping terms as well
+        :param orb_color: colors of the orbitals
+        :param hop_as_arrows: whether to plot hopping terms as arrows
+            If true, hopping terms will be plotted as arrows using axes.arrow()
+            method. Otherwise, they will be plotted as lines using
+            LineCollection. The former is more intuitive but much slower.
+        :param hop_color: color of hopping terms
+        :param view: kind of view point
+        :returns: None
+        :raises ValueError: if view is illegal
+        """
+        # Assemble arrays
+        num_orb = len(self._orbitals)
+        num_hop = len(self._hoppings)
+        hop_ind = np.array([_ for _ in self._hoppings.keys()])
+        orb_pos = np.array([orb.position for orb in self._orbitals])
+        orb_pos = frac2cart(self._lattice, orb_pos)
+        origin = np.zeros(3)
+        dr = np.zeros((num_hop, 3), dtype=np.float64)
+        for i_h, ind in enumerate(hop_ind):
+            orb_i, orb_j = ind.item(3), ind.item(4)
+            rn = np.matmul(ind[0:3], self._lattice)
+            dr[i_h] = orb_pos[orb_j] + rn - orb_pos[orb_i]
+
+        # Initialize visualizer
+        fig, axes = plt.subplots(figsize=fig_size)
+        axes.set_aspect('equal')
+        viewer = ModelViewer(axes, self._lattice, origin, view)
+
+        # Determine the range of rn
+        rn_range = np.zeros((3, 2), dtype=np.int32)
+        if num_hop > 0:
+            for i in range(3):
+                ri_min = hop_ind[:, i].min()
+                ri_max = hop_ind[:, i].max()
+                if with_conj:
+                    rn_range[i, 0] = min([ri_min, ri_max, -ri_min, -ri_max])
+                    rn_range[i, 1] = max([ri_min, ri_max, -ri_min, -ri_max])
+                else:
+                    rn_range[i, 0] = ri_min
+                    rn_range[i, 1] = ri_max
+        ra_min, ra_max = rn_range.item(0, 0), rn_range.item(0, 1)
+        rb_min, rb_max = rn_range.item(1, 0), rn_range.item(1, 1)
+        rc_min, rc_max = rn_range.item(2, 0), rn_range.item(2, 1)
+
+        # Plot orbitals
+        if orb_color is None:
+            orb_color = ['b' for _ in range(num_orb)]
+        if num_orb > 0:
+            if with_orbitals:
+                for i_a in range(ra_min, ra_max+1):
+                    for i_b in range(rb_min, rb_max+1):
+                        for i_c in range(rc_min, rc_max+1):
+                            center = np.matmul((i_a, i_b, i_c), self._lattice)
+                            pos_rn = orb_pos + center
+                            viewer.scatter(pos_rn, s=100, c=orb_color)
+
+        # Plot hopping terms
+        if num_hop > 0:
+            hop_i = hop_ind[:, 3]
+            hop_j = hop_ind[:, 4]
+            arrow_args = {"color": hop_color, "length_includes_head": True,
+                          "width": 0.02, "head_width": 0.2, "fill": False}
+            for i_h in range(hop_i.shape[0]):
+                # Original term
+                pos_i = orb_pos[hop_i.item(i_h)]
+                pos_j = pos_i + dr[i_h]
+                if hop_as_arrows:
+                    viewer.plot_arrow(pos_i, pos_j, **arrow_args)
+                else:
+                    viewer.add_line(pos_i, pos_j)
+
+                # Conjugate term
+                if with_conj:
+                    pos_j = orb_pos[hop_j.item(i_h)]
+                    pos_i = pos_j - dr[i_h]
+                    if hop_as_arrows:
+                        viewer.plot_arrow(pos_j, pos_i, **arrow_args)
+                    else:
+                        viewer.add_line(pos_j, pos_i)
+            if not hop_as_arrows:
+                viewer.plot_line(color=hop_color)
+
+        # Plot cells
+        if with_cells:
+            if view in ("ab", "ba"):
+                viewer.add_grid(ra_min, ra_max + 1, rb_min, rb_max + 1)
+            elif view in ("bc", "cb"):
+                viewer.add_grid(rb_min, rb_max + 1, rc_min, rc_max + 1)
+            else:
+                viewer.add_grid(ra_min, ra_max + 1, rc_min, rc_max + 1)
+            viewer.plot_grid(color="k", linestyle=":")
+            viewer.plot_lat_vec(color="k", length_includes_head=True,
+                                width=0.05, head_width=0.2)
+
+        # Hide spines and ticks.
+        for key in ("top", "bottom", "left", "right"):
+            axes.spines[key].set_visible(False)
+        axes.set_xticks([])
+        axes.set_yticks([])
+        fig.tight_layout()
+        plt.autoscale()
+        if fig_name is not None:
+            plt.savefig(fig_name, dpi=fig_dpi)
+        else:
+            plt.show()
+        plt.close()

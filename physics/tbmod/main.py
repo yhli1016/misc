@@ -23,6 +23,7 @@ def main():
     model.add_hopping((0, 1, 0), 1, 0, t)
     model.print_hk(1)
     model.print_hk(2)
+    model.plot(orb_color=["r", "b"], hop_color="gray")
 
     neighbors = model.find_neighbors(a_max=2, b_max=2, max_distance=2.0)
     for term in neighbors:

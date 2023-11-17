@@ -9,14 +9,15 @@ import numpy as np
 from scipy.optimize import leastsq
 
 
-__all__ = ["f_type", "c_type", "cart2frac", "frac2cart", "SK", "SOCTable",
-           "ParamFit"]
+__all__ = ["f_type", "c_type", "rn_type", "pos_type", "cart2frac", "frac2cart",
+           "SK", "SOCTable", "ParamFit"]
 
 
 # Type aliases
 f_type = Union[int, float, sp.Basic]
 c_type = Union[int, float, complex, sp.Basic]
-
+rn_type = Tuple[int, int, int]
+pos_type = Tuple[f_type, f_type, f_type]
 
 def cart2frac(lattice_vectors: np.ndarray,
               cartesian_coordinates: np.ndarray,
