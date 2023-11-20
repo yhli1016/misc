@@ -4,6 +4,7 @@ from collections import defaultdict
 from typing import List, Dict, Hashable, Iterable, Tuple, Union
 
 import sympy as sp
+import sympy.physics.secondquant as qn
 
 
 c_type = Union[int, float, complex, sp.Basic]
@@ -285,7 +286,7 @@ class Operator:
     def __init__(self) -> None:
         self._terms = dict()
 
-    def _add_term(self, term: term_type, coeff: c_type = 0) -> None:
+    def __add_term(self, term: term_type, coeff: c_type = 0) -> None:
         """Add a new term to the operator."""
         if term not in self._terms.keys():
             self._terms[term] = coeff
@@ -294,12 +295,12 @@ class Operator:
 
     def add_2bd(self, i: int, j: int, coeff: c_type = 0) -> None:
         """Add a general two-body term c_{i+} c_j."""
-        self._add_term((i, j), coeff)
+        self.__add_term((i, j), coeff)
 
     def add_4bd(self, i: int, j: int, n: int, m: int,
                 coeff: c_type = 0) -> None:
         """Add a general four-body term c_{i+} c_{j+} c_n c_m."""
-        self._add_term((i, j, n, m), coeff)
+        self.__add_term((i, j, n, m), coeff)
 
     def add_ons(self, i: int, coeff: c_type = 0) -> None:
         """Add an on-site term c_{i+} c_i."""
@@ -349,4 +350,39 @@ class Operator:
                 ket_c.create(term[0])
             prod = bra.inner_prod(ket_c)
             result += coeff * prod
+        return result
+
+
+class OperatorSympy(Operator):
+    """
+    Class for representing an operator consisted of two-body and four-body terms
+    in second quantized form for Fermions.
+
+    Attributes
+    ----------
+    _terms: sp.Add
+        terms in the operator
+    """
+    def __init__(self) -> None:
+        super().__init__()
+        self._terms = 0
+
+    def add_2bd(self, i: int, j: int, coeff: c_type = 0) -> None:
+        """Add a general two-body term c_{i+} c_j."""
+        self._terms += coeff * qn.Fd(i) * qn.F(j)
+
+    def add_4bd(self, i: int, j: int, n: int, m: int,
+                coeff: c_type = 0) -> None:
+        """Add a general four-body term c_{i+} c_{j+} c_n c_m."""
+        self._terms += coeff * qn.Fd(i) * qn.Fd(j) * qn.F(n) * qn.F(m)
+
+    def eval(self, bra: qn.FermionState, ket: qn.FermionState) -> c_type:
+        """
+        Evaluate the matrix element between two Fock states.
+
+        :param bra: left operand
+        :param ket: right operand
+        :return: the matrix element
+        """
+        result = qn.apply_operators(qn.Dagger(bra) * self._terms * ket)
         return result

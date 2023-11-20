@@ -5,8 +5,9 @@ from copy import deepcopy
 import numpy as np
 import scipy.linalg.lapack as lapack
 import sympy as sp
+import sympy.physics.secondquant as qn
 
-from sq import SPStates, Fermion, Operator
+from sq import SPStates, Fermion, Operator, OperatorSympy
 
 
 def eval_matrix_elements(operator, basis):
@@ -102,6 +103,41 @@ def test_u():
             Fermion([idx['1-'], idx['2+']]),
             Fermion([idx['2+'], idx['2-']]),
             Fermion([idx['1+'], idx['1-']]),
+        ]
+
+    # Evaluate matrix elements
+    print("Hopping terms:")
+    eval_matrix_elements(hop_terms, basis)
+    print("Hubbard terms:")
+    eval_matrix_elements(u_terms, basis)
+
+
+def test_u2():
+    # Define single-particle states
+    sp_states = SPStates()
+    sp_states.append('1+')
+    sp_states.append('1-')
+    sp_states.append('2+')
+    sp_states.append('2-')
+    idx = sp_states.index_sympy
+
+    # Define operators
+    t, u = sp.symbols("t U", real=True)
+    hop_terms = OperatorSympy()
+    hop_terms.add_hop(idx['1+'], idx['2+'], t, True)
+    hop_terms.add_hop(idx['1-'], idx['2-'], t, True)
+    u_terms = OperatorSympy()
+    u_terms.add_hubbard(idx['1+'], idx['1-'], u)
+    u_terms.add_hubbard(idx['2+'], idx['2-'], u)
+
+    # Define Fock states
+    basis = [
+            qn.FKet([idx['1+'], idx['2+']]),
+            qn.FKet([idx['1-'], idx['2-']]),
+            qn.FKet([idx['1+'], idx['2-']]),
+            qn.FKet([idx['1-'], idx['2+']]),
+            qn.FKet([idx['2+'], idx['2-']]),
+            qn.FKet([idx['1+'], idx['1-']]),
         ]
 
     # Evaluate matrix elements
@@ -215,6 +251,6 @@ def test_det():
 
 if __name__ == "__main__":
     test_u()
-    test_eig()
-    test_speed()
-    test_det()
+    #test_eig()
+    #test_speed()
+    #test_det()
