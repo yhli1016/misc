@@ -69,6 +69,16 @@ class SPStates:
         """
         return {state: idx for idx, state in enumerate(self._states)}
 
+    @property
+    def index_sympy(self) -> Dict[Hashable, int]:
+        """
+        Get the dictionary for indexing single particle states, but starting
+        from 1, which is required by the second quantization module of sympy.
+
+        :return: indexing dictionary
+        """
+        return {state: idx+1 for idx, state in enumerate(self._states)}
+
 
 class Boson:
     """
