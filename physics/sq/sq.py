@@ -1,10 +1,12 @@
-import math
 from copy import deepcopy
 from itertools import permutations, combinations
 from collections import defaultdict
 from typing import List, Dict, Hashable, Iterable, Tuple, Union
 
+import sympy as sp
 
+
+c_type = Union[int, float, complex, sp.Basic]
 term_type = Union[Tuple[int, int], Tuple[int, int, int, int]]
 
 
@@ -86,7 +88,7 @@ class Boson:
 
     Attributes
     ----------
-    _coeff: float
+    _coeff: c_type
         coefficient of the state, effective when evaluating inner products
         For the null state, we set it to 0 for safety.
     _occ: Dict[int, int] or None
@@ -141,7 +143,7 @@ class Boson:
             if self._occ[idx] <= 0:
                 self._occ.pop(idx)
 
-    def inner_prod(self, ket) -> float:
+    def inner_prod(self, ket) -> c_type:
         """
         Evaluate the inner product <self|ket>.
 
@@ -160,7 +162,7 @@ class Boson:
         return prod
 
     @property
-    def coeff(self) -> float:
+    def coeff(self) -> c_type:
         """Interface for the '_coeff' attribute."""
         return self._coeff
 
@@ -195,7 +197,7 @@ class Boson:
             if occ <= 0:
                 self.nullify()
             else:
-                self._coeff *= math.sqrt(occ)
+                self._coeff *= sp.sqrt(occ)
                 self._occ[idx] = occ - 1
 
     def create(self, idx: int) -> None:
@@ -210,7 +212,7 @@ class Boson:
             pass
         else:
             occ = self._occ[idx]
-            self._coeff *= math.sqrt(occ + 1)
+            self._coeff *= sp.sqrt(occ + 1)
             self._occ[idx] += 1
 
 
@@ -276,34 +278,34 @@ class Operator:
 
     Attributes
     ----------
-    _terms: Dict[term_type, complex]
+    _terms: Dict[term_type, c_type]
         indices and coefficients of the terms, with keys being tuples of 2 or 4
         integers
     """
     def __init__(self) -> None:
         self._terms = dict()
 
-    def _add_term(self, term: term_type, coeff: complex = 0.0) -> None:
+    def _add_term(self, term: term_type, coeff: c_type = 0) -> None:
         """Add a new term to the operator."""
         if term not in self._terms.keys():
             self._terms[term] = coeff
         else:
             raise ValueError(f"Duplicate term {term}")
 
-    def add_2bd(self, i: int, j: int, coeff: complex = 0.0) -> None:
+    def add_2bd(self, i: int, j: int, coeff: c_type = 0) -> None:
         """Add a general two-body term c_{i+} c_j."""
         self._add_term((i, j), coeff)
 
     def add_4bd(self, i: int, j: int, n: int, m: int,
-                coeff: complex = 0.0) -> None:
+                coeff: c_type = 0) -> None:
         """Add a general four-body term c_{i+} c_{j+} c_n c_m."""
         self._add_term((i, j, n, m), coeff)
 
-    def add_ons(self, i: int, coeff: complex = 0.0) -> None:
+    def add_ons(self, i: int, coeff: c_type = 0) -> None:
         """Add an on-site term c_{i+} c_i."""
         self.add_2bd(i, i, coeff)
 
-    def add_hop(self, i: int, j: int, coeff: complex = 0.0,
+    def add_hop(self, i: int, j: int, coeff: c_type = 0,
                 with_conj: bool = False) -> None:
         """Add a hopping term c_{i+} c_j with i != j."""
         if i != j:
@@ -313,7 +315,7 @@ class Operator:
         else:
             raise ValueError(f"Hopping term require {i} != {j}")
 
-    def add_hubbard(self, i: int, j: int, coeff: complex = 0.0) -> None:
+    def add_hubbard(self, i: int, j: int, coeff: c_type = 0) -> None:
         """
         Add a Hubbard term c_{i+} c_i c_{j+} c_j.
 
@@ -326,16 +328,15 @@ class Operator:
         else:
             raise ValueError(f"Hubbard term require {i} != {j}")
 
-    def eval(self, bra: Boson, ket: Boson) -> Dict[term_type, complex]:
+    def eval(self, bra: Boson, ket: Boson) -> c_type:
         """
         Evaluate the matrix element between two Fock states.
 
         :param bra: left operand
         :param ket: right operand
-        :return: dictionary of non-zero terms and corresponding coefficients
-            with sign of +-1
+        :return: the matrix element
         """
-        result = dict()
+        result = 0
         for term, coeff in self._terms.items():
             ket_c = deepcopy(ket)
             if len(term) == 2:
@@ -347,6 +348,5 @@ class Operator:
                 ket_c.create(term[1])
                 ket_c.create(term[0])
             prod = bra.inner_prod(ket_c)
-            if prod != 0:
-                result[term] = coeff * prod
+            result += coeff * prod
         return result

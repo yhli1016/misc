@@ -4,6 +4,7 @@ from copy import deepcopy
 
 import numpy as np
 import scipy.linalg.lapack as lapack
+import sympy as sp
 
 from sq import SPStates, Fermion, Operator
 
@@ -12,10 +13,8 @@ def eval_matrix_elements(operator, basis):
     for ib, bra in enumerate(basis):
         for ik, ket in enumerate(basis):
             result = operator.eval(bra, ket)
-            if len(result) != 0:
-                print(f"H({ib}, {ik}) =")
-                for term, coeff in result.items():
-                    print(f"\t{coeff} * h{term}")
+            if result != 0:
+                print(f"H({ib}, {ik}) = {result}")
 
 
 def get_eig_val(sp_states, num_particle, hop_terms, u_terms):
@@ -24,13 +23,8 @@ def get_eig_val(sp_states, num_particle, hop_terms, u_terms):
     ham = np.zeros((len(basis), len(basis)))
     for ib, bra in enumerate(basis):
         for ik, ket in enumerate(basis):
-            # Hopping terms
-            result = hop_terms.eval(bra, ket)
-            ham[ib, ik] += sum(result.values())
-
-            # Hubbard term
-            result = u_terms.eval(bra, ket)
-            ham[ib, ik] += sum(result.values())
+            ham[ib, ik] += hop_terms.eval(bra, ket)
+            ham[ib, ik] += u_terms.eval(bra, ket)
 
     # Diagonalization
     eig_val, eig_vec, info = lapack.zheev(ham)
@@ -92,12 +86,13 @@ def test_u():
     idx = sp_states.index
 
     # Define operators
+    t, u = sp.symbols("t U", real=True)
     hop_terms = Operator()
-    hop_terms.add_hop(idx['1+'], idx['2+'], 1, True)
-    hop_terms.add_hop(idx['1-'], idx['2-'], 1, True)
+    hop_terms.add_hop(idx['1+'], idx['2+'], t, True)
+    hop_terms.add_hop(idx['1-'], idx['2-'], t, True)
     u_terms = Operator()
-    u_terms.add_hubbard(idx['1+'], idx['1-'], 1)
-    u_terms.add_hubbard(idx['2+'], idx['2-'], 1)
+    u_terms.add_hubbard(idx['1+'], idx['1-'], u)
+    u_terms.add_hubbard(idx['2+'], idx['2-'], u)
 
     # Define Fock states
     basis = [
