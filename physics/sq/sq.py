@@ -54,6 +54,28 @@ class SPStates:
         """
         return combinations(range(self.size), num_states)
 
+    def permutations_sympy(self, num_states: int = 1) -> permutations:
+        """
+        Get the permutations of state indices, for constructing operators.
+
+        The indices start from 1, which is suitable for sympy.
+
+        :param num_states: number of selected states
+        :return: all possible permutations
+        """
+        return permutations(range(1, self.size+1), num_states)
+
+    def combinations_sympy(self, num_states: int = 1) -> combinations:
+        """
+        Get the combinations of state indices, for constructing Fock states.
+
+        The indices start from 1, which is suitable for sympy.
+
+        :param num_states: number of selected states
+        :return: all possible combinations
+        """
+        return combinations(range(1, self.size+1), num_states)
+
     @property
     def size(self) -> int:
         """

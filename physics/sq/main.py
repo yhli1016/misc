@@ -251,6 +251,6 @@ def test_det():
 
 if __name__ == "__main__":
     test_u()
-    #test_eig()
-    #test_speed()
-    #test_det()
+    test_eig()
+    test_speed()
+    test_det()
