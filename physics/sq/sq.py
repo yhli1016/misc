@@ -1,3 +1,4 @@
+import math
 from copy import deepcopy
 from itertools import permutations, combinations
 from collections import defaultdict
@@ -64,7 +65,7 @@ class SPStates:
         """
         Get the dictionary for indexing single particle states.
 
-        :return: indexing array
+        :return: indexing dictionary
         """
         return {state: idx for idx, state in enumerate(self._states)}
 
@@ -75,15 +76,15 @@ class Boson:
 
     Attributes
     ----------
-    _sign: int
-        sign of the state, effective when evaluating inner products
+    _coeff: float
+        coefficient of the state, effective when evaluating inner products
         For the null state, we set it to 0 for safety.
     _occ: Dict[int, int] or None
         occupation numbers on the single particle states
         None for a null state (numerically zero in second quantization regime).
     """
     def __init__(self, occupied_states: Iterable[int] = None) -> None:
-        self._sign = 1
+        self._coeff = 1
         self._occ = defaultdict(int)
         for idx in occupied_states:
             self._occ[idx] += 1
@@ -116,7 +117,7 @@ class Boson:
 
         :return: None
         """
-        self._sign = 0
+        self._coeff = 0
         self._occ = None
 
     def purge(self) -> None:
@@ -130,7 +131,7 @@ class Boson:
             if self._occ[idx] <= 0:
                 self._occ.pop(idx)
 
-    def inner_prod(self, ket) -> int:
+    def inner_prod(self, ket) -> float:
         """
         Evaluate the inner product <self|ket>.
 
@@ -143,15 +144,15 @@ class Boson:
             prod = 0
         else:
             if self == ket:
-                prod = self.sign * ket.sign
+                prod = self.coeff * ket.coeff
             else:
                 prod = 0
         return prod
 
     @property
-    def sign(self) -> int:
-        """Interface for the '_sign' attribute."""
-        return self._sign
+    def coeff(self) -> float:
+        """Interface for the '_coeff' attribute."""
+        return self._coeff
 
     @property
     def occ(self) -> Dict[int, int]:
@@ -184,6 +185,7 @@ class Boson:
             if occ <= 0:
                 self.nullify()
             else:
+                self._coeff *= math.sqrt(occ)
                 self._occ[idx] = occ - 1
 
     def create(self, idx: int) -> None:
@@ -197,6 +199,8 @@ class Boson:
         if self.is_null:
             pass
         else:
+            occ = self._occ[idx]
+            self._coeff *= math.sqrt(occ + 1)
             self._occ[idx] += 1
 
 
@@ -220,7 +224,7 @@ class Fermion(Boson):
                 self.nullify()
             else:
                 self._occ[idx] = occ - 1
-                self._sign *= self.sign_factor(idx)
+                self._coeff *= self.sign_factor(idx)
 
     def create(self, idx: int) -> None:
         """
@@ -238,7 +242,7 @@ class Fermion(Boson):
                 self.nullify()
             else:
                 self._occ[idx] = occ + 1
-                self._sign *= self.sign_factor(idx)
+                self._coeff *= self.sign_factor(idx)
 
     def sign_factor(self, idx: int) -> int:
         """
