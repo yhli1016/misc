@@ -1,4 +1,4 @@
-from collections import defaultdict, namedtuple
+from collections import namedtuple
 from typing import Tuple, List
 
 import sympy as sp
@@ -87,7 +87,7 @@ class Model:
         :raises ValueError: if rn == (0, 0, 0) and orb_i == orb_j
         """
         # Check arguments
-        num_orb = len(self._orbitals)
+        num_orb = self.num_orb
         if not (0 <= orb_i < num_orb):
             raise IndexError(f"orb_i {orb_i} out of range {num_orb}")
         if not (0 <= orb_j < num_orb):
@@ -151,26 +151,23 @@ class Model:
         neighbors = sorted(neighbors, key=lambda x: x.distance)
         return neighbors
 
-    def print_hk(self, convention: int = 1, with_tril: bool = False) -> None:
+    def get_hk(self, convention: int = 1) -> sp.Matrix:
         """
-        Print analytical Hamiltonian as the function of k-point.
+        Get analytical Hamiltonian matrix as the function of k-point.
 
         :param convention: convention for setting up the Hamiltonian
-        :param with_tril: whether to print lower triangular hopping terms,
-            otherwise print upper triangular hopping terms only
-        :return: None
+        :return: analytical Hamiltonian matrix
         """
         # Collect on-site terms
-        hk = defaultdict(int)
+        hk = sp.zeros(self.num_orb)
         for i, orb in enumerate(self._orbitals):
-            hk[(i, i)] = orb.energy
+            hk[i, i] = orb.energy
 
         # Collect hopping terms
         kpt = [sp.Symbol(_, real=True) for _ in ("ka", "kb", "kc")]
         for hop, energy in self._hoppings.items():
-            rn, pair = hop[:3], hop[3:5]
+            rn, orb_i, orb_j = hop[:3], hop[3], hop[4]
             if convention == 1:
-                orb_i, orb_j = pair
                 pos_i = self._orbitals[orb_i].position
                 pos_j = self._orbitals[orb_j].position
                 dr = [rn[_] + pos_j[_] - pos_i[_] for _ in range(3)]
@@ -178,15 +175,9 @@ class Model:
                 dr = rn
             k_dot_r = kpt[0] * dr[0] + kpt[1] * dr[1] + kpt[2] * dr[2]
             phase = 2 * sp.pi * k_dot_r
-            hk[pair] += energy * sp.exp(sp.I * phase)
-            hk[(pair[1], pair[0])] = hk[pair].conjugate()
-
-        # Print
-        for pair, formula in hk.items():
-            if formula != 0 and (pair[0] <= pair[1] or with_tril):
-                ham_ij = f"ham[{pair[0]}, {pair[1]}]"
-                formula = sp.sympify(formula)
-                print(f"{ham_ij} = {formula}")
+            hk[orb_i, orb_j] += energy * sp.exp(sp.I * phase)
+            hk[orb_j, orb_i] = hk[orb_i, orb_j].conjugate()
+        return hk
 
     def plot(self, fig_name: str = None,
              fig_size: Tuple[float, float] = None,
@@ -221,13 +212,11 @@ class Model:
         :raises ValueError: if view is illegal
         """
         # Assemble arrays
-        num_orb = len(self._orbitals)
-        num_hop = len(self._hoppings)
         hop_ind = np.array([_ for _ in self._hoppings.keys()])
         orb_pos = np.array([orb.position for orb in self._orbitals])
         orb_pos = frac2cart(self._lattice, orb_pos)
         origin = np.zeros(3)
-        dr = np.zeros((num_hop, 3), dtype=np.float64)
+        dr = np.zeros((self.num_hop, 3), dtype=np.float64)
         for i_h, ind in enumerate(hop_ind):
             orb_i, orb_j = ind.item(3), ind.item(4)
             rn = np.matmul(ind[0:3], self._lattice)
@@ -240,7 +229,7 @@ class Model:
 
         # Determine the range of rn
         rn_range = np.zeros((3, 2), dtype=np.int32)
-        if num_hop > 0:
+        if self.num_hop > 0:
             for i in range(3):
                 ri_min = hop_ind[:, i].min()
                 ri_max = hop_ind[:, i].max()
@@ -256,8 +245,8 @@ class Model:
 
         # Plot orbitals
         if orb_color is None:
-            orb_color = ['b' for _ in range(num_orb)]
-        if num_orb > 0:
+            orb_color = ['b' for _ in range(self.num_orb)]
+        if self.num_orb > 0:
             if with_orbitals:
                 for i_a in range(ra_min, ra_max+1):
                     for i_b in range(rb_min, rb_max+1):
@@ -267,7 +256,7 @@ class Model:
                             viewer.scatter(pos_rn, s=100, c=orb_color)
 
         # Plot hopping terms
-        if num_hop > 0:
+        if self.num_hop > 0:
             hop_i = hop_ind[:, 3]
             hop_j = hop_ind[:, 4]
             arrow_args = {"color": hop_color, "length_includes_head": True,
@@ -316,3 +305,13 @@ class Model:
         else:
             plt.show()
         plt.close()
+
+    @property
+    def num_orb(self) -> int:
+        """Get the number of orbitals in the model."""
+        return len(self._orbitals)
+
+    @property
+    def num_hop(self) -> int:
+        """Get the number of hopping terms in the model."""
+        return len(self._hoppings)
