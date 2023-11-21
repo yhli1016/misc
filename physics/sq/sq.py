@@ -1,7 +1,7 @@
 from copy import deepcopy
 from itertools import permutations, combinations
 from collections import defaultdict
-from typing import List, Dict, Hashable, Iterable, Tuple, Union
+from typing import Dict, Hashable, Iterable, Tuple, Union
 
 import sympy as sp
 import sympy.physics.secondquant as qn
@@ -17,24 +17,25 @@ class SPStates:
 
     Attributes
     ----------
-    _states: List[Hashable]
-        identifiers of single particle states
+    _states: Dict[Hashable, int]
+        tags and indices of single particle states, with indices starting from 0
     """
     def __init__(self) -> None:
-        self._states = []
+        self._states = dict()
 
-    def append(self, state: Hashable) -> None:
+    def append(self, tag: Hashable) -> None:
         """
         Append a new state to the list of states.
 
-        :param state: identifier of the new state
+        :param tag: tag of the new state
         :return: None
         :raises RuntimeError: if the new state is duplicate
         """
-        if state not in self._states:
-            self._states.append(state)
+        if tag not in self._states.keys():
+            num_states = len(self._states)
+            self._states[tag] = num_states
         else:
-            raise RuntimeError(f"Duplicate state {state}")
+            raise RuntimeError(f"Duplicate state {tag}")
 
     def permutations(self, num_states: int = 1) -> permutations:
         """
@@ -92,7 +93,7 @@ class SPStates:
 
         :return: indexing dictionary
         """
-        return {state: idx for idx, state in enumerate(self._states)}
+        return self._states
 
     @property
     def index_sympy(self) -> Dict[Hashable, int]:
@@ -102,7 +103,7 @@ class SPStates:
 
         :return: indexing dictionary
         """
-        return {state: idx+1 for idx, state in enumerate(self._states)}
+        return {state: idx+1 for idx, state in self._states.items()}
 
 
 class Boson:
