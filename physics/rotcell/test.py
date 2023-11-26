@@ -1,11 +1,7 @@
 import math
 
-import ase
 import numpy as np
 from ase.io import read, write
-
-import tbplas as tb
-import tbmod as tb2
 
 
 def rotate_coord(coord: np.ndarray,
@@ -65,23 +61,6 @@ def rotate_lattice(lattice: np.ndarray,
     return lattice
 
 
-def plot_model(atoms: ase.Atoms) -> None:
-    """Visualize rotated structure using TBPLaS."""
-    prim_cell = tb.PrimitiveCell(atoms.cell)
-    print(np.array(atoms.cell))
-    for atom in atoms[:2]:
-        prim_cell.add_orbital(atom.scaled_position, energy=1.0)
-    for atom in atoms[2:]:
-        prim_cell.add_orbital(atom.scaled_position, energy=-1.0)
-    neighbors = tb.find_neighbors(prim_cell, a_max=1, b_max=1, c_max=1,
-                                  max_distance=0.2)
-    for term in neighbors:
-        prim_cell.add_hopping(term.rn, term.pair[0], term.pair[1], energy=1.0)
-    prim_cell.plot(view="ab", with_conj=False, hop_as_arrows=False)
-    prim_cell.plot(view="bc", with_conj=False, hop_as_arrows=False)
-    prim_cell.plot(view="ca", with_conj=False, hop_as_arrows=False)
-
-
 def main():
     atoms = read("CONTCAR", index=-1)
     lat_vec = atoms.cell
@@ -105,7 +84,6 @@ def main():
     # Save structure
     atoms.set_cell(lat_vec, scale_atoms=True)
     write("POSCAR", atoms)
-    plot_model(atoms)
 
 
 if __name__ == "__main__":
