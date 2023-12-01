@@ -6,7 +6,6 @@ import matplotlib.ticker as ticker
 
 
 class Config:
-    """Class for holding plotting configurations."""
     def __init__(self) -> None:
         # Figure settings
         self.figure_size = (6.4, 4.8)
@@ -38,28 +37,27 @@ class Config:
         return plt.figure(figsize=self.figure_size, dpi=self.figure_dpi,
                           **kwargs)
 
-
 def plot(ax: plt.Axes, config: Config) -> None:
     """Actually plot the data."""
-    energy, dos = np.load("energy.npy"), np.load("dos.npy")
-    ax.plot(energy, dos, 'r-', linewidth=config.line_width)
+    x, y = np.load("x.npy"), np.load("y.npy")
+    ax.plot(x, y, 'r-', linewidth=config.line_width)
 
     # Basic ticks settings
-    ax.set_xlabel("Energy (eV)", fontsize="large", weight=config.font_weight)
-    ax.set_ylabel("DOS (1/eV)", fontsize="large", weight=config.font_weight)
-    ax.set_xlim(-9, 9)
-    ax.set_ylim(0, 0.18)
+    # ax.set_xlabel("", fontsize="large", weight=config.font_weight)
+    # ax.set_ylabel("", fontsize="large", weight=config.font_weight)
+    # ax.set_xlim()
+    # ax.set_ylim()
     # ax.set_xicks()
     # ax.set_yticks()
     # ax.set_xticklabels()
     # ax.set_yticklabels()
 
     # Advanced ticks settings
-    ax.minorticks_on()
-    ax.xaxis.set_major_locator(ticker.MultipleLocator(2.0))
-    ax.xaxis.set_minor_locator(ticker.MultipleLocator(1.0))
-    ax.yaxis.set_major_locator(ticker.MultipleLocator(0.05))
-    ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.01))
+    # ax.minorticks_on()
+    # ax.xaxis.set_major_locator(ticker.MultipleLocator())
+    # ax.xaxis.set_minor_locator(ticker.MultipleLocator())
+    # ax.yaxis.set_major_locator(ticker.MultipleLocator())
+    # ax.yaxis.set_minor_locator(ticker.MultipleLocator())
     ax.tick_params(which="both", direction="in", width=config.tick_width)
     ax.tick_params(which="major", length=config.tick_length_major)
     ax.tick_params(which="minor", length=config.tick_length_minor)

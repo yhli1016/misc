@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+import re
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -11,7 +12,7 @@ class Config:
         # Figure settings
         self.figure_size = (6.4, 4.8)
         self.figure_dpi = 300
-        self.figure_name = "fig.png"
+        self.figure_name = "ebs.png"
 
         # Font settings
         self.font_size = 16
@@ -41,28 +42,50 @@ class Config:
 
 def plot(ax: plt.Axes, config: Config) -> None:
     """Actually plot the data."""
-    energy, dos = np.load("energy.npy"), np.load("dos.npy")
-    ax.plot(energy, dos, 'r-', linewidth=config.line_width)
+    # Load KLABELS
+    hsp = np.loadtxt("KLABELS", dtype=np.string_, skiprows=1,
+                     usecols=(0, 1))
+    labels_x = [float(i) for i in hsp[:-1,1].tolist()]
+    group_labels = hsp[:-1,0].tolist()
+    group_labels = [i.decode('utf-8','ignore') for i in group_labels]
+    for i, label in enumerate(group_labels):
+        if re.search(r"GAMMA", label) is not None:
+            group_labels[i] = "$\Gamma$"
+        elif re.search(r"\w+_\d+", label) is not None:
+            group_labels[i] = "$\mathrm{%s}$" % label
+
+    # Load band data
+    data = np.loadtxt("EBS.dat")
+    kpt = data[:,0]
+    eng = data[:,1]
+    wgt = data[:,2] * 2
+
+    # Plot
+    ax.scatter(kpt, eng, c=wgt, s=wgt, cmap="YlOrRd")
+    for x in labels_x[1:-1]:
+        ax.axvline(x, color="k", linewidth=config.axline_width)
+    ax.axhline(0.0, color="k", linewidth=config.axline_width, linestyle="--")
 
     # Basic ticks settings
-    ax.set_xlabel("Energy (eV)", fontsize="large", weight=config.font_weight)
-    ax.set_ylabel("DOS (1/eV)", fontsize="large", weight=config.font_weight)
-    ax.set_xlim(-9, 9)
-    ax.set_ylim(0, 0.18)
-    # ax.set_xicks()
+    # ax.set_xlabel()
+    ax.set_ylabel("Energy (eV)")
+    ax.set_xlim(0, np.amax(kpt))
+    ax.set_ylim(-2, 2)
+    ax.set_xticks(labels_x)
     # ax.set_yticks()
-    # ax.set_xticklabels()
+    ax.set_xticklabels(group_labels)
     # ax.set_yticklabels()
 
     # Advanced ticks settings
-    ax.minorticks_on()
-    ax.xaxis.set_major_locator(ticker.MultipleLocator(2.0))
-    ax.xaxis.set_minor_locator(ticker.MultipleLocator(1.0))
-    ax.yaxis.set_major_locator(ticker.MultipleLocator(0.05))
-    ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.01))
+    # ax.minorticks_on()
+    # ax.xaxis.set_major_locator(ticker.MultipleLocator())
+    # ax.xaxis.set_minor_locator(ticker.MultipleLocator())
+    ax.yaxis.set_major_locator(ticker.MultipleLocator(1.0))
+    ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.2))
     ax.tick_params(which="both", direction="in", width=config.tick_width)
     ax.tick_params(which="major", length=config.tick_length_major)
     ax.tick_params(which="minor", length=config.tick_length_minor)
+    ax.tick_params(axis="x", which="both", length=0)
 
     # Set spines
     for pos in ("top", "bottom", "left", "right"):

@@ -11,8 +11,8 @@ dat = np.loadtxt("eps1.dat")
 xco = dat[:, 0].reshape((10, 10)).T
 yco = dat[:, 1].reshape((10, 10)).T
 zco = dat[:, 3].reshape((10, 10)).T
-eps1 = np.array([7.0 for i in range(5)])
-eps2 = np.array([3.74 for i in range(5)])
+eps1 = np.array([7.0 for _ in range(5)])
+eps2 = np.array([3.74 for _ in range(5)])
 d = np.array([5.9, 7.8, 10.1, 14.3, 26.2])
 
 # Interpolate
