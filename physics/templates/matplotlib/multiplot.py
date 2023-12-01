@@ -50,6 +50,7 @@ def plot(axes: List[plt.Axes], config: Config) -> None:
     e_step = 0.001
     sigma = 0.05
     strain = ["0.98", "0.99", "1.00", "1.01", "1.02"]
+    strain_label = ["-2%", "-1%", "0", "+1%", "+2%"]
 
     for r in ["rot"]:
         for i, s in enumerate(strain):
@@ -65,9 +66,12 @@ def plot(axes: List[plt.Axes], config: Config) -> None:
 
             # Plot
             ax = axes[i]
-            ax.plot(energy, pdos0, 'r-', label="$\mathrm{d_{//}}$", linewidth=config.line_width)
-            ax.plot(energy, pdos1, 'b-', label="$\mathrm{\pi^*}$", linewidth=config.line_width)
+            ax.plot(energy, pdos0, 'r-', label="$d_{//}$", linewidth=config.line_width)
+            ax.plot(energy, pdos1, 'b-', label="$\pi^*$", linewidth=config.line_width)
             ax.axvline(color="k", linestyle="--", linewidth=config.axline_width)
+            ax.fill_between(energy, pdos0, where=(energy<=0), color="r", alpha=0.3)
+            ax.fill_between(energy, pdos1, where=(energy<=0), color="b", alpha=0.3)
+            ax.annotate(f"$\sigma$ = {strain_label[i]}", (0.8, 0.04))
 
             # Basic ticks settings
             ax.set_xlabel("Energy (eV)", weight=config.font_weight)
@@ -105,7 +109,7 @@ def main():
     gs = fig.add_gridspec(5, hspace=0)
     axes = gs.subplots(sharex=True, sharey=True)
 
-    # Plot data
+    # Plot
     plot(axes, config)
 
     # Save figure
