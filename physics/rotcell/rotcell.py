@@ -101,8 +101,8 @@ def rotate_atoms(atoms: ase.Atoms,
     atoms.set_cell(lat_vec, scale_atoms=True)
 
 
-def main():
-    atoms = read("CONTCAR", index=-1)
+def test_r():
+    atoms = read("POSCAR_R.origin", index=-1)
     algo = 0
 
     if algo == 0:
@@ -143,8 +143,17 @@ def main():
         rotate_atoms(atoms, idx0, idx1, ref_vec)
 
     # Save structure
-    write("POSCAR", atoms)
+    write("POSCAR_R.rot", atoms)
+
+
+def test_m1():
+    atoms = read("POSCAR_M1.origin", index=-1)
+    idx0, idx1 = 2, 9
+    ref_vec = np.array([0.0, 0.0, 1.0])
+    rotate_atoms(atoms, idx0, idx1, ref_vec)
+    write("POSCAR_M1.rot", atoms)
 
 
 if __name__ == "__main__":
-    main()
+    test_r()
+    test_m1()
