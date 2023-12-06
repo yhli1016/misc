@@ -1,7 +1,9 @@
 #! /usr/bin/env python
 import math
 
+import ase
 import numpy as np
+from numpy.linalg import norm
 from ase.io import read, write
 
 
@@ -62,28 +64,85 @@ def rotate_lattice(lattice: np.ndarray,
     return lattice
 
 
+def calc_norm_vector(v1: np.ndarray, v2: np.ndarray) -> np.ndarray:
+    """Calculate the norm vector of the plane formed by v1 and v2."""
+    v3 = np.cross(v1, v2)
+    v3 /= norm(v3)
+    return v3
+
+
+def calc_angle(v1: np.ndarray, v2: np.ndarray) -> float:
+    """Calculate the angle between v2 and v2."""
+    angle = math.acos(np.dot(v1, v2) / norm(v1) / norm(v2))
+    return angle
+
+
+def rotate_atoms(atoms: ase.Atoms,
+                 idx0: int,
+                 idx1: int,
+                 ref_vec: np.ndarray) -> None:
+    """
+    Rotate the atoms such that the given bond parallels to reference vector.
+
+    :param atoms: atoms to rotate
+    :param idx0: starting atom index of the bond
+    :param idx1: ending atom index of the bond
+    :param ref_vec: Cartesian coordinates of the reference vector
+    :return: None. The incoming image is modified.
+    """
+    lat_vec = atoms.cell
+    atom_pos = atoms.get_positions()
+    ra, rb = atom_pos[idx0], atom_pos[idx1]
+    ab = rb - ra
+    angle = calc_angle(ab, ref_vec)
+    axis = calc_norm_vector(ab, ref_vec)
+    center = ra
+    lat_vec = rotate_lattice(lat_vec, angle, axis, center)
+    atoms.set_cell(lat_vec, scale_atoms=True)
+
+
 def main():
     atoms = read("CONTCAR", index=-1)
-    lat_vec = atoms.cell
+    algo = 0
 
-    # First approach which rotate twice
-    angle = -0.5 * math.pi
-    axis = np.matmul(lat_vec, [1, 1, 0])
-    center = np.matmul(lat_vec, [0.5, 0.5, 0.5])
-    lat_vec = rotate_lattice(lat_vec, angle, axis, center)
-    angle = -0.25 * math.pi
-    axis = np.array([0, 0, 1], dtype=np.float64)
-    center = np.matmul(lat_vec, [0.5, 0.5, 0.5])
-    lat_vec = rotate_lattice(lat_vec, angle, axis, center)
+    if algo == 0:
+        # First approach which rotate twice
+        lat_vec = atoms.cell
+        angle = -0.5 * math.pi
+        axis = np.matmul(lat_vec, [1, 1, 0])
+        center = np.matmul(lat_vec, [0.5, 0.5, 0.5])
+        lat_vec = rotate_lattice(lat_vec, angle, axis, center)
+        angle = -0.25 * math.pi
+        axis = np.array([0, 0, 1], dtype=np.float64)
+        center = np.matmul(lat_vec, [0.5, 0.5, 0.5])
+        lat_vec = rotate_lattice(lat_vec, angle, axis, center)
+        atoms.set_cell(lat_vec, scale_atoms=True)
 
-    # # Second approach which rotates only once
-    # angle = -0.25 * math.pi
-    # axis = np.matmul(lat_vec, [-1, 1, 0])
-    # center = np.matmul(lat_vec, [0.5, 0.5, 0.5])
-    # lat_vec = rotate_lattice(lat_vec, angle, axis, center)
+    elif algo == 1:
+        # Alternative of first approach
+        idx0, idx1 = 1, 5
+        ref_vec = np.array([0.0, 0.0, 1.0])
+        rotate_atoms(atoms, idx0, idx1, ref_vec)
+        idx0, idx1 = 1, 2
+        ref_vec = np.array([-1.0, -1.0, 0.0])
+        rotate_atoms(atoms, idx0, idx1, ref_vec)
+
+    elif algo == 2:
+        # Second approach which rotates only once
+        lat_vec = atoms.cell
+        angle = -0.25 * math.pi
+        axis = np.matmul(lat_vec, [-1, 1, 0])
+        center = np.matmul(lat_vec, [0.5, 0.5, 0.5])
+        lat_vec = rotate_lattice(lat_vec, angle, axis, center)
+        atoms.set_cell(lat_vec, scale_atoms=True)
+
+    else:
+        # Alternative of first approach
+        idx0, idx1 = 1, 2
+        ref_vec = np.array([0.0, 0.0, -1.0])
+        rotate_atoms(atoms, idx0, idx1, ref_vec)
 
     # Save structure
-    atoms.set_cell(lat_vec, scale_atoms=True)
     write("POSCAR", atoms)
 
 
