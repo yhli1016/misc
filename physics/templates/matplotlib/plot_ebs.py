@@ -40,7 +40,7 @@ class Config:
                           **kwargs)
 
 
-def plot(ax: plt.Axes, config: Config) -> None:
+def plot(fig: plt.Figure, ax: plt.Axes, config: Config) -> None:
     """Actually plot the data."""
     # Load KLABELS
     hsp = np.loadtxt("KLABELS", dtype=np.string_, skiprows=1,
@@ -58,13 +58,14 @@ def plot(ax: plt.Axes, config: Config) -> None:
     data = np.loadtxt("EBS.dat")
     kpt = data[:,0]
     eng = data[:,1]
-    wgt = data[:,2] * 2
+    wgt = data[:,2]
 
     # Plot
-    ax.scatter(kpt, eng, c=wgt, s=wgt, cmap="YlOrRd")
+    img = ax.scatter(kpt, eng, c=wgt, s=wgt*2, cmap="YlOrRd")
     for x in labels_x[1:-1]:
         ax.axvline(x, color="k", linewidth=config.axline_width)
     ax.axhline(0.0, color="k", linewidth=config.axline_width, linestyle="--")
+    fig.colorbar(img)
 
     # Basic ticks settings
     # ax.set_xlabel()
@@ -100,8 +101,8 @@ def main():
     fig = config.new_figure()
     ax = fig.add_subplot()
 
-    # Plot data
-    plot(ax, config)
+    # Plot figure
+    plot(fig, ax, config)
 
     # Save figure
     fig.tight_layout()
