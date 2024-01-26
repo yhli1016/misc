@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-from mace import include, write_defs, run_m4
+from mace import include, Mace
 
 
 m = {}
@@ -46,5 +46,4 @@ ATOMIC_POSITIONS {crystal}
 m["KPT"] = include("kpt.inc")
 
 # Generate input from template
-write_defs(m)
-run_m4("scf.m4", "test.in")
+Mace(m).expand_m4("scf.m4", "test.in")

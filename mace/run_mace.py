@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-from mace import include, expand_file
+from mace import include, Mace
 
 
 m = {}
@@ -46,4 +46,4 @@ ATOMIC_POSITIONS {crystal}
 m["KPT"] = include("kpt.inc")
 
 # Call expand_file to expand the macros
-expand_file(m, "scf.tpl", "test.in")
+Mace(m).expand_re("scf.tpl", "test.in")
