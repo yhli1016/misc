@@ -1,0 +1,17 @@
+begin species
+  C  12.01  C.pz-vbc.UPF
+  H   1.00  H.pbe-mt_fhi.UPF
+end species
+
+begin lattice bohr
+  1.2333 3.4444 1.0
+  1.5   2.7 2.1
+  1.0   3.9 1.2
+end lattice
+
+begin positions bohr
+   C  1.0 0.5 0.0
+   C  2.0 1.0 0.3
+   H  0.1 1.2 0.1
+end positions
+
