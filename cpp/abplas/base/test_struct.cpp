@@ -9,21 +9,25 @@ void print(T &elements) {
     }
 }
 
-void testValue(InputFile &inp) {
-    std::cout << "-------- Key value --------\n";
-    std::stringstream ss;
-    int nx, ny, nz;
-    if (inp.getValue("^\\s*k_grid(\\s+\\d+){3}\\s*$", ss)) {
-        ss >> nx >> ny >> nz;
-        std::cout << "k_grid = " << nx << " " << ny << " " << nz << "\n";
-    } else {
-        std::cout << "k_grid not found\n";
-    }
-    std::string mix_algo;
-    if (inp.getValue("^\\s*mix_algo\\s+\\w+\\s*$", ss)) {
-        ss >> mix_algo;
-        std::cout << "mix_algo = " << mix_algo << "\n";
-    }
+void testConvert() {
+    std::cout << "-------- Coordinates conversion --------\n";
+    Eigen::Matrix3d lat_vec {{1.0, 1.0, -1.0},
+                             {2.0, -1.5, 1.0},
+                             {0.0, 0.1, 2.1}};
+    Eigen::Matrix3Xd frac_coord {{0.5, 0.0, 0.0, 0.7, 6.0},
+                                {1.0, 1.0, 0.0, 0.1, -0.1},
+                                {0.0, 1.0, 1.0, -1.2, 0.7}};
+    Eigen::Matrix3Xd cart_coord;
+    std::cout << "lat_vec:\n";
+    std::cout << lat_vec.transpose() << "\n\n";
+    std::cout << "frac_coord:\n";
+    std::cout << frac_coord.transpose() << "\n\n";
+    frac2cart(lat_vec, frac_coord, cart_coord);
+    std::cout << "cart_coord:\n";
+    std::cout << cart_coord.transpose() << "\n\n";
+    cart2frac(lat_vec, cart_coord, frac_coord);
+    std::cout << "frac_coord:\n";
+    std::cout << frac_coord.transpose() << "\n\n";
 }
 
 void testNum(StructFile &sf) {
@@ -60,30 +64,13 @@ void testPositions(StructFile &sf) {
     std::cout << positions.transpose() << "\n";
 }
 
-void testConvert() {
-    std::cout << "-------- Coordinates conversion --------\n";
-    Eigen::Matrix3d lat_vec {{1.0, 1.0, -1.0},
-                             {2.0, -1.5, 1.0},
-                             {0.0, 0.1, 2.1}};
-    Eigen::Matrix3Xd frac_coord {{0.5, 0.0, 0.0, 0.7, 6.0},
-                                {1.0, 1.0, 0.0, 0.1, -0.1},
-                                {0.0, 1.0, 1.0, -1.2, 0.7}};
-    Eigen::Matrix3Xd cart_coord;
-    std::cout << lat_vec << "\n\n";
-    std::cout << frac_coord << "\n\n";
-    frac2cart(lat_vec, frac_coord, cart_coord);
-    std::cout << cart_coord << "\n\n";
-    cart2frac(lat_vec, cart_coord, frac_coord);
-    std::cout << frac_coord << "\n\n";
-}
+
 
 int main() {
-    InputFile inp("INPUT");
     StructFile sf("STRUCT");
-    testValue(inp);
+    testConvert();
     testNum(sf);
     testSpecies(sf);
     testLattice(sf);
     testPositions(sf);
-    testConvert();
 }

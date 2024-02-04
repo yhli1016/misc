@@ -1,2 +1,3 @@
 k_grid 1 2 2
 mix_algo kerker
+sigma -0.1

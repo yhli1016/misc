@@ -1,10 +1,30 @@
 #include "input.h"
+#include "consts.h"
+#include "lattice.h"
 
 namespace {
 
 void resetStringStream(std::stringstream &ss) {
     ss.clear();
     ss.str("");
+}
+
+double getScaleFactorLength(const std::string &currentUnit) {
+    std::regex bohr("^\\s*b(ohr)?\\s*$", std::regex_constants::icase);
+    std::regex ang("^\\s*a(ng)?(strom)?\\s*$", std::regex_constants::icase);
+    std::regex nm("^\\s*n(ano)?m?(eter)?\\s*$", std::regex_constants::icase);
+    double scale_factor = 1.0;
+    if (std::regex_match(currentUnit, bohr)) {
+        scale_factor = 1.0;
+    } else if (std::regex_match(currentUnit, ang)) {
+        scale_factor = abplas::base::ANG2BOHR;
+    } else if (std::regex_match(currentUnit, nm)){
+        scale_factor = abplas::base::NM2BOHR;
+    } else {
+        std::cout << "Unknown length unit " << currentUnit << "\n";
+        std::exit(-1);
+    }
+    return scale_factor;
 }
 
 } // namespace
@@ -194,6 +214,7 @@ void StructFile::getLattice(Eigen::Matrix3d &lattice) {
 
     // Initialize parameters
     lattice = Eigen::Matrix3d();
+    std::string length_unit = "bohr";
 
     // Parsing
     rewind();
@@ -203,6 +224,9 @@ void StructFile::getLattice(Eigen::Matrix3d &lattice) {
     int idx = 0;
     while (std::getline(m_InFile, buffer)) {
         if (std::regex_match(buffer, m_LatticeHead)) {
+            ::resetStringStream(ss);
+            ss << buffer;
+            ss >> length_unit >> length_unit >> length_unit;
             in_block = true;
             continue;
         }
@@ -221,6 +245,9 @@ void StructFile::getLattice(Eigen::Matrix3d &lattice) {
             idx++;
         }
     }
+
+    // Unit and coordinates conversion
+    lattice *= ::getScaleFactorLength(length_unit);
 }
 
 void StructFile::getPositions(std::vector<std::string> &elements,
@@ -235,6 +262,7 @@ void StructFile::getPositions(std::vector<std::string> &elements,
     // Initialize parameters
     elements = std::vector<std::string>(num_atoms);
     positions = Eigen::Matrix3Xd(3, num_atoms);
+    std::string length_unit = "bohr";
 
     // Parsing
     rewind();
@@ -244,6 +272,9 @@ void StructFile::getPositions(std::vector<std::string> &elements,
     int idx = 0;
         while (std::getline(m_InFile, buffer)) {
         if (std::regex_match(buffer, m_PositionsHead)) {
+            ::resetStringStream(ss);
+            ss << buffer;
+            ss >> length_unit >> length_unit >> length_unit;
             in_block = true;
             continue;
         }
@@ -261,6 +292,18 @@ void StructFile::getPositions(std::vector<std::string> &elements,
             ss >> elements[idx] >> positions(0, idx) >> positions(1, idx) >> positions(2, idx);
             idx++;
         }
+    }
+
+    // Unit and coordinates conversion
+    std::regex crystal("^\\s*c(rystal)?\\s*$", std::regex_constants::icase);
+    if (std::regex_match(length_unit, crystal)) {
+        Eigen::Matrix3d lattice;
+        Eigen::Matrix3Xd positions_cart(3, num_atoms);
+        getLattice(lattice);
+        frac2cart(lattice, positions, positions_cart);
+        positions = positions_cart;
+    } else {
+        positions *= ::getScaleFactorLength(length_unit);
     }
 }
 

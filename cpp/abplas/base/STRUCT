@@ -9,7 +9,7 @@ begin lattice bohr
   1.0   3.9 1.2
 end lattice
 
-begin positions bohr
+begin positions crystal
    C  1.0 0.5 0.0
    C  2.0 1.0 0.3
    H  0.1 1.2 0.1
