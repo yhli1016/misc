@@ -13,7 +13,7 @@ namespace base {
 
 class InputFile {
     public:
-        InputFile(const std::string fileName);
+        InputFile(const std::string &fileName);
         ~InputFile();
         bool getValue(const std::string &keyPattern, std::stringstream &valueStream);
     protected:
@@ -26,14 +26,14 @@ class InputFile {
 
 class StructFile: public InputFile {
     public:
-        StructFile(const std::string fileName);
+        StructFile(const std::string &fileName);
         ~StructFile(){};
         int getNumSpecies();
         int getNumLattice();
         int getNumAtoms();
         void getSpecies(std::vector<std::string> &elements, Eigen::VectorXd &mass, std::vector<std::string> &pseudoPots);
         void getLattice(Eigen::Matrix3d &lattice);
-        void getPositions(std::vector<std::string> &elements, Eigen::MatrixXd &positions);
+        void getPositions(std::vector<std::string> &elements, Eigen::Matrix3Xd &positions);
     private:
         void checkSanity();
     private:

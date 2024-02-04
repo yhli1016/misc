@@ -3,7 +3,7 @@
 namespace abplas {
 namespace base {
 
-InputFile::InputFile(const std::string fileName) {
+InputFile::InputFile(const std::string &fileName) {
     m_InFile.open(fileName, std::ios::in);
     if (!m_InFile.is_open()) {
         std::cout << "Failed to open " << fileName << "\n";
@@ -66,7 +66,7 @@ bool InputFile::getValue(const std::string &keyPattern, std::stringstream &value
     return matched;
 }
 
-StructFile::StructFile(const std::string fileName): InputFile(fileName) {
+StructFile::StructFile(const std::string &fileName): InputFile(fileName) {
     m_SpeciesHead = std::regex("^\\s*begin\\s+species\\s*$", std::regex_constants::icase);
     m_SpeciesBody = std::regex("^\\s*\\w+\\s+[\\d\\.]+\\s+[\\w\\.\\-]+\\s*$", std::regex_constants::icase);
     m_SpeciesTail = std::regex("^\\s*end\\s+species\\s*$", std::regex_constants::icase);
@@ -134,7 +134,7 @@ int StructFile::getNumAtoms() {
 
 void StructFile::getSpecies(std::vector<std::string> &elements,
                                 Eigen::VectorXd &mass,
-                                std::vector<std::string> &pseudo_pots) {
+                                std::vector<std::string> &pseudoPots) {
     // Further check struct sanity
     int num_species = getNumSpecies();
     if (num_species < 1) {
@@ -145,7 +145,7 @@ void StructFile::getSpecies(std::vector<std::string> &elements,
     // Initialize parameters
     elements = std::vector<std::string>(num_species);
     mass = Eigen::VectorXd(num_species);
-    pseudo_pots = std::vector<std::string>(num_species);
+    pseudoPots = std::vector<std::string>(num_species);
 
     // Parsing
     rewind();
@@ -167,7 +167,7 @@ void StructFile::getSpecies(std::vector<std::string> &elements,
                 std::exit(-1);
             }
             std::stringstream ss(buffer);
-            ss >> elements[idx] >> mass(idx) >> pseudo_pots[idx];
+            ss >> elements[idx] >> mass(idx) >> pseudoPots[idx];
             idx++;
         }
     }
@@ -211,7 +211,7 @@ void StructFile::getLattice(Eigen::Matrix3d &lattice) {
 }
 
 void StructFile::getPositions(std::vector<std::string> &elements,
-                                  Eigen::MatrixXd &positions) {
+                                  Eigen::Matrix3Xd &positions) {
     // Further check struct sanity
     int num_atoms = getNumAtoms();
     if (num_atoms < 1) {
@@ -221,7 +221,7 @@ void StructFile::getPositions(std::vector<std::string> &elements,
 
     // Initialize parameters
     elements = std::vector<std::string>(num_atoms);
-    positions = Eigen::MatrixXd(3, num_atoms);
+    positions = Eigen::Matrix3Xd(3, num_atoms);
 
     // Parsing
     rewind();

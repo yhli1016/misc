@@ -1,4 +1,5 @@
 #include "input.h"
+#include "lattice.h"
 using namespace abplas::base;
 
 template<typename T>
@@ -53,10 +54,27 @@ void testLattice(StructFile &sf) {
 void testPositions(StructFile &sf) {
     std::cout << "-------- Positions --------\n";
     std::vector<std::string> elements;
-    Eigen::MatrixXd positions;
+    Eigen::Matrix3Xd positions;
     sf.getPositions(elements, positions);
     print(elements);
     std::cout << positions.transpose() << "\n";
+}
+
+void testConvert() {
+    std::cout << "-------- Coordinates conversion --------\n";
+    Eigen::Matrix3d lat_vec {{1.0, 1.0, -1.0},
+                             {2.0, -1.5, 1.0},
+                             {0.0, 0.1, 2.1}};
+    Eigen::Matrix3Xd frac_coord {{0.5, 0.0, 0.0, 0.7, 6.0},
+                                {1.0, 1.0, 0.0, 0.1, -0.1},
+                                {0.0, 1.0, 1.0, -1.2, 0.7}};
+    Eigen::Matrix3Xd cart_coord;
+    std::cout << lat_vec << "\n\n";
+    std::cout << frac_coord << "\n\n";
+    frac2cart(lat_vec, frac_coord, cart_coord);
+    std::cout << cart_coord << "\n\n";
+    cart2frac(lat_vec, cart_coord, frac_coord);
+    std::cout << frac_coord << "\n\n";
 }
 
 int main() {
@@ -67,4 +85,5 @@ int main() {
     testSpecies(sf);
     testLattice(sf);
     testPositions(sf);
+    testConvert();
 }
