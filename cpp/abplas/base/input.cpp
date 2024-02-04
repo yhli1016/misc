@@ -1,5 +1,14 @@
 #include "input.h"
 
+namespace {
+
+void resetStringStream(std::stringstream &ss) {
+    ss.clear();
+    ss.str("");
+}
+
+} // namespace
+
 namespace abplas {
 namespace base {
 
@@ -50,7 +59,7 @@ int InputFile::indexPattern(const std::regex &pattern) {
 }
 
 bool InputFile::getValue(const std::string &keyPattern, std::stringstream &valueStream) {
-    valueStream.clear();
+    ::resetStringStream(valueStream);
     rewind();
     std::string buffer;
     std::regex pattern(keyPattern, std::regex_constants::icase);
@@ -150,6 +159,7 @@ void StructFile::getSpecies(std::vector<std::string> &elements,
     // Parsing
     rewind();
     std::string buffer;
+    std::stringstream ss;
     bool in_block = false;
     int idx = 0;
     while (std::getline(m_InFile, buffer)) {
@@ -166,7 +176,8 @@ void StructFile::getSpecies(std::vector<std::string> &elements,
                 std::cout << "Illegal line in species: " << buffer << "\n";
                 std::exit(-1);
             }
-            std::stringstream ss(buffer);
+            ::resetStringStream(ss);
+            ss << buffer;
             ss >> elements[idx] >> mass(idx) >> pseudoPots[idx];
             idx++;
         }
@@ -187,6 +198,7 @@ void StructFile::getLattice(Eigen::Matrix3d &lattice) {
     // Parsing
     rewind();
     std::string buffer;
+    std::stringstream ss;
     bool in_block = false;
     int idx = 0;
     while (std::getline(m_InFile, buffer)) {
@@ -203,7 +215,8 @@ void StructFile::getLattice(Eigen::Matrix3d &lattice) {
                 std::cout << "Illegal line in lattice: " << buffer << "\n";
                 std::exit(-1);
             }
-            std::stringstream ss(buffer);
+            ::resetStringStream(ss);
+            ss << buffer;
             ss >> lattice(0, idx) >> lattice(1, idx) >> lattice(2, idx);
             idx++;
         }
@@ -226,6 +239,7 @@ void StructFile::getPositions(std::vector<std::string> &elements,
     // Parsing
     rewind();
     std::string buffer;
+    std::stringstream ss;
     bool in_block = false;
     int idx = 0;
         while (std::getline(m_InFile, buffer)) {
@@ -242,7 +256,8 @@ void StructFile::getPositions(std::vector<std::string> &elements,
                 std::cout << "Illegal line in positions: " << buffer << "\n";
                 std::exit(-1);
             }
-            std::stringstream ss(buffer);
+            ::resetStringStream(ss);
+            ss << buffer;
             ss >> elements[idx] >> positions(0, idx) >> positions(1, idx) >> positions(2, idx);
             idx++;
         }
