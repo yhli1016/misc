@@ -34,7 +34,7 @@ void InputFile::rewind() {
 bool InputFile::findPattern(const std::regex &pattern) {
     rewind();
     bool status = false;
-    std::string buffer;
+    std::string buffer = "\0";
     while (std::getline(m_InFile, buffer)) {
         if (std::regex_match(buffer, pattern)) {
             status = true;
@@ -47,7 +47,7 @@ bool InputFile::findPattern(const std::regex &pattern) {
 int InputFile::indexPattern(const std::regex &pattern) {
     rewind();
     int idx = 0;
-    std::string buffer;
+    std::string buffer = "\0";
     while (std::getline(m_InFile, buffer)) {
         if (std::regex_match(buffer, pattern)) {
             break;
@@ -61,13 +61,13 @@ int InputFile::indexPattern(const std::regex &pattern) {
 bool InputFile::getValue(const std::string &keyPattern, std::stringstream &valueStream) {
     ::resetStringStream(valueStream);
     rewind();
-    std::string buffer;
+    std::string buffer = "\0", key = "\0";
     std::regex pattern(keyPattern, std::regex_constants::icase);
     bool matched = false;
     while(std::getline(m_InFile, buffer)) {
         if(std::regex_match(buffer, pattern)) {
             valueStream << buffer;
-            valueStream >> buffer;
+            valueStream >> key;
             matched = true;
             break;
         }
@@ -158,8 +158,8 @@ void StructFile::getSpecies(std::vector<std::string> &elements,
 
     // Parsing
     rewind();
-    std::string buffer;
-    std::stringstream ss;
+    std::string buffer = "\0";
+    std::stringstream ss(buffer);
     bool in_block = false;
     int idx = 0;
     while (std::getline(m_InFile, buffer)) {
@@ -197,8 +197,8 @@ void StructFile::getLattice(Eigen::Matrix3d &lattice) {
 
     // Parsing
     rewind();
-    std::string buffer;
-    std::stringstream ss;
+    std::string buffer = "\0";
+    std::stringstream ss(buffer);
     bool in_block = false;
     int idx = 0;
     while (std::getline(m_InFile, buffer)) {
@@ -238,8 +238,8 @@ void StructFile::getPositions(std::vector<std::string> &elements,
 
     // Parsing
     rewind();
-    std::string buffer;
-    std::stringstream ss;
+    std::string buffer = "\0";
+    std::stringstream ss(buffer);
     bool in_block = false;
     int idx = 0;
         while (std::getline(m_InFile, buffer)) {
