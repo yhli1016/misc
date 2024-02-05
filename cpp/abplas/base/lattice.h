@@ -12,6 +12,12 @@ void frac2cart(const Eigen::Matrix3d &latticeVectors, const Eigen::Matrix3Xd &fr
 void cart2frac(const Eigen::Matrix3d &latticeVectors, const Eigen::Matrix3Xd &cartCoordinates,
                Eigen::Matrix3Xd &fracCoordinates);
 
+void real2recip(const Eigen::Matrix3d &realLatticeVectors, Eigen::Matrix3d &recipLatticeVectors);
+
+void real2recip2(const Eigen::Matrix3d &realLatticeVectors, Eigen::Matrix3d &recipLatticeVectors);
+
+double calcLatticeVolume(const Eigen::Matrix3d &latticeVectors);
+
 }
 }
 

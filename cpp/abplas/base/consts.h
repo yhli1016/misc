@@ -4,6 +4,12 @@
 namespace abplas {
 namespace base {
 
+/// @brief PI
+constexpr double PI = 3.14159265358979323846;
+
+/// @brief twice of PI
+constexpr double TWOPI = 2.0 * PI;
+
 /// @brief multiplication factor from bohr to angstrom
 constexpr double BOHR2ANG = 0.5291772109253;
 
