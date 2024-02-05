@@ -1,13 +1,5 @@
 #include "input.h"
-#include "lattice.h"
 using namespace abplas::base;
-
-template<typename T>
-void print(T &elements) {
-    for (const auto &i: elements) {
-        std::cout << i << "\n";
-    }
-}
 
 void testValue(InputFile &inp) {
     std::cout << "-------- Key value --------\n";
