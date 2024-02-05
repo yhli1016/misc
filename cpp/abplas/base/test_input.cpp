@@ -27,7 +27,49 @@ void testValue(InputFile &inp) {
     }
 }
 
+void testUnits(InputFile &inp) {
+    std::cout << "-------- Length --------\n";
+    std::stringstream ss;
+    double test = 0.0;
+    std::string unit = "\0";
+    std::string head = "^\\s*", tail = "\\s+[\\d\\.\\-]+\\s+\\w+\\s*$";
+
+    // Test length units
+    std::vector<std::string> vec = {"len_a", "len_b", "len_c", "len_d"};
+    for (const auto &s: vec) {
+        if (inp.getValue(head+s+tail, ss)) {
+            ss >> test >> unit;
+            std::cout << s << " = " << test * getScaleFactorLength(unit) << "\n";
+        } else {
+            std::cout << s << " not found\n";
+        }
+    }
+
+    // Test energy units
+    vec = {"energy_a", "energy_b", "energy_c"};
+    for (const auto &s: vec) {
+        if (inp.getValue(head+s+tail, ss)) {
+            ss >> test >> unit;
+            std::cout << s << " = " << test * getScaleFactorEnergy(unit) << "\n";
+        } else {
+            std::cout << s << " not found\n";
+        }
+    }
+
+    // Test time units
+    vec = {"time_a", "time_b", "time_c"};
+    for (const auto &s: vec) {
+        if (inp.getValue(head+s+tail, ss)) {
+            ss >> test >> unit;
+            std::cout << s << " = " << test * getScaleFactorTime(unit) << "\n";
+        } else {
+            std::cout << s << " not found\n";
+        }
+    }
+}
+
 int main() {
     InputFile inp("INPUT");
     testValue(inp);
+    testUnits(inp);
 }

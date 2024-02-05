@@ -11,6 +11,12 @@
 namespace abplas {
 namespace base {
 
+double getScaleFactorLength(const std::string &currentUnit);
+
+double getScaleFactorEnergy(const std::string &currentUnit);
+
+double getScaleFactorTime(const std::string &currentUnit);
+
 class InputFile {
     public:
         InputFile(const std::string &fileName);

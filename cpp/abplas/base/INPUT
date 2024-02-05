@@ -1,3 +1,16 @@
 k_grid 1 2 2
 mix_algo kerker
 sigma -0.1
+
+len_a 1.0 bohr
+len_b 1.0 ang
+len_c 1.0 nm
+len_d 1.0 foo
+
+energy_a 1.0 har
+energy_b 1.0 ev
+energy_c 1.0 foo
+
+time_a 1.0 au
+time_b 1.0 fs
+time_c 1.0 foo

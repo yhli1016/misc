@@ -9,6 +9,11 @@ void resetStringStream(std::stringstream &ss) {
     ss.str("");
 }
 
+} // namespace
+
+namespace abplas {
+namespace base {
+
 double getScaleFactorLength(const std::string &currentUnit) {
     std::regex bohr("^\\s*b(ohr)?\\s*$", std::regex_constants::icase);
     std::regex ang("^\\s*a(ng)?(strom)?\\s*$", std::regex_constants::icase);
@@ -21,16 +26,44 @@ double getScaleFactorLength(const std::string &currentUnit) {
     } else if (std::regex_match(currentUnit, nm)){
         scale_factor = abplas::base::NM2BOHR;
     } else {
-        std::cout << "Unknown length unit " << currentUnit << "\n";
-        std::exit(-1);
+        std::cout << "WARNING: unknown length unit " << currentUnit << ".\n";
+        std::cout << "Treating as Bohr.\n";
+        scale_factor = 1.0;
     }
     return scale_factor;
 }
 
-} // namespace
+double getScaleFactorEnergy(const std::string &currentUnit) {
+    std::regex har("^\\s*h(ar)?(tree)?\\s*$", std::regex_constants::icase);
+    std::regex ev("^\\s*e(lectron)?v(olt)?\\s*$", std::regex_constants::icase);
+    double scale_factor = 1.0;
+    if (std::regex_match(currentUnit, har)) {
+        scale_factor = 1.0;
+    } else if (std::regex_match(currentUnit, ev)) {
+        scale_factor = abplas::base::EV2HAR;
+    } else {
+        std::cout << "WARNING: unknown energy unit " << currentUnit << ".\n";
+        std::cout << "Treating as Hartree.\n";
+        scale_factor = 1.0;
+    }
+    return scale_factor;
+}
 
-namespace abplas {
-namespace base {
+double getScaleFactorTime(const std::string &currentUnit) {
+    std::regex au("^\\s*au\\s*$", std::regex_constants::icase);
+    std::regex fs("^\\s*fs\\s*$", std::regex_constants::icase);
+    double scale_factor = 1.0;
+    if (std::regex_match(currentUnit, au)) {
+        scale_factor = 1.0;
+    } else if (std::regex_match(currentUnit, fs)) {
+        scale_factor = abplas::base::FS2AU;
+    } else {
+        std::cout << "WARNING: unknown time unit " << currentUnit << ".\n";
+        std::cout << "Treating as a.u.\n";
+        scale_factor = 1.0;
+    }
+    return scale_factor;
+}
 
 InputFile::InputFile(const std::string &fileName) {
     m_InFile.open(fileName, std::ios::in);
@@ -247,7 +280,7 @@ void StructFile::getLattice(Eigen::Matrix3d &lattice) {
     }
 
     // Unit and coordinates conversion
-    lattice *= ::getScaleFactorLength(length_unit);
+    lattice *= getScaleFactorLength(length_unit);
 }
 
 void StructFile::getPositions(std::vector<std::string> &elements,
@@ -303,7 +336,7 @@ void StructFile::getPositions(std::vector<std::string> &elements,
         frac2cart(lattice, positions, positions_cart);
         positions = positions_cart;
     } else {
-        positions *= ::getScaleFactorLength(length_unit);
+        positions *= getScaleFactorLength(length_unit);
     }
 }
 
