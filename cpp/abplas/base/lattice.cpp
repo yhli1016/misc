@@ -1,6 +1,7 @@
+#include "lattice.h"
+
 #include <cmath>
 
-#include "lattice.h"
 #include "consts.h"
 
 
