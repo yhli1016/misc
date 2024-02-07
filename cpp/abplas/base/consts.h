@@ -10,16 +10,16 @@ constexpr double PI = 3.14159265358979323846;
 /// @brief twice of PI
 constexpr double TWOPI = 2.0 * PI;
 
-/// @brief multiplication factor from bohr to angstrom
+/// @brief Scaling factor from bohr to angstrom
 constexpr double BOHR2ANG = 0.529177210671212;
 
-/// @brief multiplication factor from bohr to nm
+/// @brief Scaling factor from bohr to nm
 constexpr double BOHR2NM = 0.1 * BOHR2ANG;
 
-/// @brief multiplication factor from angstrom to bohr
+/// @brief Scaling factor from angstrom to bohr
 constexpr double ANG2BOHR = 1.0 / BOHR2ANG;
 
-/// @brief multiplcation factor from nm to bohr
+/// @brief Scaling factor from nm to bohr
 constexpr double NM2BOHR = 1.0 / BOHR2NM;
 
 /// @brief Scaling factor from Hartree to eV

@@ -24,7 +24,6 @@ class InputFile {
         bool getValue(const std::string &keyPattern, std::stringstream &valueStream);
     protected:
         void rewind();
-        bool findPattern(const std::regex &pattern);
         int indexPattern(const std::regex &pattern);
     protected:
         std::ifstream m_InFile;
@@ -34,9 +33,8 @@ class StructFile: public InputFile {
     public:
         StructFile(const std::string &fileName);
         ~StructFile(){};
-        int getNumSpecies();
-        int getNumLattice();
-        int getNumAtoms();
+        int getNumSpecies() const;
+        int getNumAtoms() const;
         void getSpecies(std::vector<std::string> &elements, Eigen::VectorXd &mass, std::vector<std::string> &pseudoPots);
         void getLattice(Eigen::Matrix3d &lattice);
         void getPositions(std::vector<std::string> &elements, Eigen::Matrix3Xd &positions);
@@ -52,6 +50,8 @@ class StructFile: public InputFile {
         std::regex m_PositionsHead;
         std::regex m_PositionsBody;
         std::regex m_PositionsTail;
+        int m_NumSpecies;
+        int m_NumAtoms;
 };
 
 } // namespace

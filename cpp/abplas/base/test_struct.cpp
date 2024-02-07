@@ -12,7 +12,6 @@ void print(T &elements) {
 void testNum(StructFile &sf) {
     std::cout << "-------- Numbers --------\n";
     std::cout << "Number of species " << sf.getNumSpecies() << "\n";
-    std::cout << "Number of lattice vectors " << sf.getNumLattice() << "\n";
     std::cout << "Number of atoms " << sf.getNumAtoms() << "\n";
 }
 

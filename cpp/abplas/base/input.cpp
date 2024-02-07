@@ -9,6 +9,10 @@ void resetStringStream(std::stringstream &ss) {
     ss.str("");
 }
 
+int countLine(int idxStart, int idxEnd) {
+    return idxEnd - idxStart - 1;
+}
+
 } // namespace
 
 namespace abplas {
@@ -26,8 +30,8 @@ double getScaleFactorLength(const std::string &currentUnit) {
     } else if (std::regex_match(currentUnit, nm)){
         scale_factor = abplas::base::NM2BOHR;
     } else {
-        std::cout << "WARNING: unknown length unit " << currentUnit << ".\n";
-        std::cout << "Treating as Bohr.\n";
+        std::cout << "WARNING: unknown length unit: " << currentUnit << "\n";
+        std::cout << "INFO: treating as Bohr\n";
         scale_factor = 1.0;
     }
     return scale_factor;
@@ -42,8 +46,8 @@ double getScaleFactorEnergy(const std::string &currentUnit) {
     } else if (std::regex_match(currentUnit, ev)) {
         scale_factor = abplas::base::EV2HAR;
     } else {
-        std::cout << "WARNING: unknown energy unit " << currentUnit << ".\n";
-        std::cout << "Treating as Hartree.\n";
+        std::cout << "WARNING: unknown energy unit: " << currentUnit << "\n";
+        std::cout << "INFO: treating as Hartree\n";
         scale_factor = 1.0;
     }
     return scale_factor;
@@ -58,8 +62,8 @@ double getScaleFactorTime(const std::string &currentUnit) {
     } else if (std::regex_match(currentUnit, fs)) {
         scale_factor = abplas::base::FS2AU;
     } else {
-        std::cout << "WARNING: unknown time unit " << currentUnit << ".\n";
-        std::cout << "Treating as a.u.\n";
+        std::cout << "WARNING: unknown time unit: " << currentUnit << "\n";
+        std::cout << "INFO: treating as a.u.\n";
         scale_factor = 1.0;
     }
     return scale_factor;
@@ -68,7 +72,7 @@ double getScaleFactorTime(const std::string &currentUnit) {
 InputFile::InputFile(const std::string &fileName) {
     m_InFile.open(fileName, std::ios::in);
     if (!m_InFile.is_open()) {
-        std::cout << "Failed to open " << fileName << "\n";
+        std::cout << "ERROR: failed to open: " << fileName << "\n";
         std::exit(-1);
     }
 }
@@ -84,29 +88,21 @@ void InputFile::rewind() {
     m_InFile.seekg(0, std::ios::beg);
 }
 
-bool InputFile::findPattern(const std::regex &pattern) {
-    rewind();
-    bool status = false;
-    std::string buffer = "\0";
-    while (std::getline(m_InFile, buffer)) {
-        if (std::regex_match(buffer, pattern)) {
-            status = true;
-            break;
-        }
-    }
-    return status;
-}
-
 int InputFile::indexPattern(const std::regex &pattern) {
     rewind();
+    bool found_pattern = false;
     int idx = 0;
     std::string buffer = "\0";
     while (std::getline(m_InFile, buffer)) {
         if (std::regex_match(buffer, pattern)) {
+            found_pattern = true;
             break;
         } else {
             idx++;
         }
+    }
+    if (!found_pattern) {
+        idx = -1;
     }
     return idx;
 }
@@ -138,76 +134,81 @@ StructFile::StructFile(const std::string &fileName): InputFile(fileName) {
     m_PositionsHead = std::regex("^\\s*begin\\s+positions\\s+\\w+\\s*$", std::regex_constants::icase);
     m_PositionsBody = std::regex("^\\s*\\w+(\\s+[\\d\\.\\-]+){3}\\s*$", std::regex_constants::icase);
     m_PositionsTail = std::regex("^\\s*end\\s+positions\\s*$", std::regex_constants::icase);
+    m_NumSpecies = 0;
+    m_NumAtoms = 0;
     checkSanity();
 }
 
 void StructFile::checkSanity() {
+    int idx_start = 0, idx_end = 0;
+
     // atomic species
-    if (!findPattern(m_SpeciesHead)) {
-        std::cout << "Begin species not found!\n";
+    idx_start = indexPattern(m_SpeciesHead);
+    idx_end = indexPattern(m_SpeciesTail);
+    m_NumSpecies = ::countLine(idx_start, idx_end);
+    if (idx_start == -1) {
+        std::cout << "ERROR: begin species not found\n";
         std::exit(-1);
     }
-    if (!findPattern(m_SpeciesTail)) {
-        std::cout << "End species not found!\n";
+    if (idx_end == -1) {
+        std::cout << "ERROR: end species not found\n";
+        std::exit(-1);
+    }
+    if (m_NumSpecies < 1) {
+        std::cout << "ERROR: wrong number of species\n";
         std::exit(-1);
     }
 
     // lattice vectors
-    if (!findPattern(m_LatticeHead)) {
-        std::cout << "Begin lattice not found!\n";
+    idx_start = indexPattern(m_LatticeHead);
+    idx_end = indexPattern(m_LatticeTail);
+    int num_lattice = ::countLine(idx_start, idx_end);
+    if (idx_start == -1) {
+        std::cout << "ERROR: begin lattice not found\n";
         std::exit(-1);
     }
-    if (!findPattern(m_LatticeTail)) {
-        std::cout << "End lattice not found!\n";
+    if (idx_end == -1) {
+        std::cout << "ERROR: end lattice not found\n";
+        std::exit(-1);
+    } 
+    if (num_lattice != 3) {
+        std::cout << "ERROR: wrong number of lattice vectors\n";
         std::exit(-1);
     }
 
     // atomic positions
-    if (!findPattern(m_PositionsHead)) {
-        std::cout << "Begin positions not found!\n";
+    idx_start = indexPattern(m_PositionsHead);
+    idx_end = indexPattern(m_PositionsTail);
+    m_NumAtoms = ::countLine(idx_start, idx_end);
+    if (idx_start == -1) {
+        std::cout << "ERROR: begin positions not found\n";
         std::exit(-1);
     }
-    if (!findPattern(m_PositionsTail)) {
-        std::cout << "End positions not found!\n";
+    if (idx_end == -1) {
+        std::cout << "ERROR: end positions not found\n";
+        std::exit(-1);
+    }
+    if (m_NumAtoms < 1) {
+        std::cout << "ERROR: wrong number of atoms\n";
         std::exit(-1);
     }
 }
 
-int StructFile::getNumSpecies() {
-    int nl_start = indexPattern(m_SpeciesHead);
-    int nl_end = indexPattern(m_SpeciesTail);
-    int num_species = nl_end - nl_start - 1;
-    return num_species;
+int StructFile::getNumSpecies() const {
+    return m_NumSpecies;
 }
 
-int StructFile::getNumLattice() {
-    int nl_start = indexPattern(m_LatticeHead);
-    int nl_end = indexPattern(m_LatticeTail);
-    int num_lattice = nl_end - nl_start - 1;
-    return num_lattice;
-}
-
-int StructFile::getNumAtoms() {
-    int nl_start = indexPattern(m_PositionsHead);
-    int nl_end = indexPattern(m_PositionsTail);
-    int num_atoms = nl_end - nl_start - 1;
-    return num_atoms;
+int StructFile::getNumAtoms() const {
+    return m_NumAtoms;
 }
 
 void StructFile::getSpecies(std::vector<std::string> &elements,
                                 Eigen::VectorXd &mass,
                                 std::vector<std::string> &pseudoPots) {
-    // Further check struct sanity
-    int num_species = getNumSpecies();
-    if (num_species < 1) {
-        std::cout << "Wrong number of atomic species!\n";
-        std::exit(-1);
-    }
-
     // Initialize parameters
-    elements = std::vector<std::string>(num_species);
-    mass = Eigen::VectorXd(num_species);
-    pseudoPots = std::vector<std::string>(num_species);
+    elements = std::vector<std::string>(m_NumSpecies);
+    mass = Eigen::VectorXd(m_NumSpecies);
+    pseudoPots = std::vector<std::string>(m_NumSpecies);
 
     // Parsing
     rewind();
@@ -226,7 +227,7 @@ void StructFile::getSpecies(std::vector<std::string> &elements,
         }
         if (in_block) {
             if (!std::regex_match(buffer, m_SpeciesBody)) {
-                std::cout << "Illegal line in species: " << buffer << "\n";
+                std::cout << "ERROR: illegal line in species: " << buffer << "\n";
                 std::exit(-1);
             }
             ::resetStringStream(ss);
@@ -238,13 +239,6 @@ void StructFile::getSpecies(std::vector<std::string> &elements,
 }
 
 void StructFile::getLattice(Eigen::Matrix3d &lattice) {
-    // Further check struct sanity
-    int num_lattice = getNumLattice();
-    if (num_lattice != 3) {
-        std::cout << "Wrong number of lattice vectors!\n";
-        std::exit(-1);
-    }
-
     // Initialize parameters
     lattice = Eigen::Matrix3d();
     std::string length_unit = "bohr";
@@ -269,7 +263,7 @@ void StructFile::getLattice(Eigen::Matrix3d &lattice) {
         }
         if (in_block) {
             if (!std::regex_match(buffer, m_LatticeBody)) {
-                std::cout << "Illegal line in lattice: " << buffer << "\n";
+                std::cout << "ERROR: illegal line in lattice: " << buffer << "\n";
                 std::exit(-1);
             }
             ::resetStringStream(ss);
@@ -285,16 +279,9 @@ void StructFile::getLattice(Eigen::Matrix3d &lattice) {
 
 void StructFile::getPositions(std::vector<std::string> &elements,
                                   Eigen::Matrix3Xd &positions) {
-    // Further check struct sanity
-    int num_atoms = getNumAtoms();
-    if (num_atoms < 1) {
-        std::cout << "Wrong number of atoms!\n";
-        std::exit(-1);
-    }
-
     // Initialize parameters
-    elements = std::vector<std::string>(num_atoms);
-    positions = Eigen::Matrix3Xd(3, num_atoms);
+    elements = std::vector<std::string>(m_NumAtoms);
+    positions = Eigen::Matrix3Xd(3, m_NumAtoms);
     std::string length_unit = "bohr";
 
     // Parsing
@@ -317,7 +304,7 @@ void StructFile::getPositions(std::vector<std::string> &elements,
         }
         if (in_block) {
             if (!std::regex_match(buffer, m_PositionsBody)) {
-                std::cout << "Illegal line in positions: " << buffer << "\n";
+                std::cout << "ERROR: illegal line in positions: " << buffer << "\n";
                 std::exit(-1);
             }
             ::resetStringStream(ss);
@@ -331,7 +318,7 @@ void StructFile::getPositions(std::vector<std::string> &elements,
     std::regex crystal("^\\s*c(rystal)?\\s*$", std::regex_constants::icase);
     if (std::regex_match(length_unit, crystal)) {
         Eigen::Matrix3d lattice;
-        Eigen::Matrix3Xd positions_cart(3, num_atoms);
+        Eigen::Matrix3Xd positions_cart(3, m_NumAtoms);
         getLattice(lattice);
         frac2cart(lattice, positions, positions_cart);
         positions = positions_cart;
