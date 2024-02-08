@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "input.h"
 #include "lattice.h"
 using namespace abplas::base;

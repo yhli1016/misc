@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "input.h"
 using namespace abplas::base;
 
@@ -5,21 +7,21 @@ void testValue(InputFile &inp) {
     std::cout << "-------- Key value --------\n";
     std::stringstream ss;
     int nx = 0, ny = 0, nz = 0;
-    if (inp.getValue("^\\s*k_grid(\\s+\\d+){3}\\s*$", ss)) {
+    if (inp.getValue(R"(^\s*k_grid(\s+\d+){3}\s*$)", ss)) {
         ss >> nx >> ny >> nz;
         std::cout << "k_grid = " << nx << " " << ny << " " << nz << "\n";
     } else {
         std::cout << "k_grid not found\n";
     }
-    std::string mix_algo = "\0";
-    if (inp.getValue("^\\s*mix_algo\\s+\\w+\\s*$", ss)) {
+    std::string mix_algo;
+    if (inp.getValue(R"(^\s*mix_algo\s+\w+\s*$)", ss)) {
         ss >> mix_algo;
         std::cout << "mix_algo = " << mix_algo << "\n";
     } else {
         std::cout << "mix_algo not found\n";
     }
     double sigma = 0.0;
-    if (inp.getValue("^\\s*sigma\\s+[\\d\\.\\-]+\\s*$", ss)) {
+    if (inp.getValue(R"(^\s*sigma\s+[\d\.\-]+\s*$)", ss)) {
         ss >> sigma;
         std::cout << "sigma = " << sigma << "\n";
     } else {
@@ -31,8 +33,8 @@ void testUnits(InputFile &inp) {
     std::cout << "-------- Length --------\n";
     std::stringstream ss;
     double test = 0.0;
-    std::string unit = "\0";
-    std::string head = "^\\s*", tail = "\\s+[\\d\\.\\-]+\\s+\\w+\\s*$";
+    std::string unit;
+    std::string head = R"(^\s*)", tail = R"(\s+[\d\.\-]+\s+\w+\s*$)";
 
     // Test length units
     std::vector<std::string> vec = {"len_a", "len_b", "len_c", "len_d"};

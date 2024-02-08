@@ -2,10 +2,8 @@
 #define ABPLAS_BASE_INPUT_H
 
 #include <fstream>
-#include <iostream>
 #include <sstream>
 #include <regex>
-#include <cstdlib>
 #include <eigen3/Eigen/Dense>
 
 namespace abplas {
@@ -19,7 +17,7 @@ double getScaleFactorTime(const std::string &currentUnit);
 
 class InputFile {
     public:
-        InputFile(const std::string &fileName);
+        explicit InputFile(const std::string &fileName);
         ~InputFile();
         bool getValue(const std::string &keyPattern, std::stringstream &valueStream);
     protected:
@@ -31,8 +29,8 @@ class InputFile {
 
 class StructFile: public InputFile {
     public:
-        StructFile(const std::string &fileName);
-        ~StructFile(){};
+        explicit StructFile(const std::string &fileName);
+        ~StructFile() = default;
         int getNumSpecies() const;
         int getNumAtoms() const;
         void getSpecies(std::vector<std::string> &elements, Eigen::VectorXd &mass, std::vector<std::string> &pseudoPots);
@@ -54,6 +52,6 @@ class StructFile: public InputFile {
         int m_NumAtoms;
 };
 
-} // namespace
-} // namespace
+}
+}
 #endif

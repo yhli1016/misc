@@ -1,4 +1,8 @@
 #include "input.h"
+
+#include <iostream>
+#include <cstdlib>
+
 #include "consts.h"
 #include "lattice.h"
 
@@ -13,16 +17,16 @@ int countLine(int idxStart, int idxEnd) {
     return idxEnd - idxStart - 1;
 }
 
-} // namespace
+}
 
 namespace abplas {
 namespace base {
 
 double getScaleFactorLength(const std::string &currentUnit) {
-    std::regex bohr("^\\s*b(ohr)?\\s*$", std::regex_constants::icase);
-    std::regex ang("^\\s*a(ng)?(strom)?\\s*$", std::regex_constants::icase);
-    std::regex nm("^\\s*n(ano)?m?(eter)?\\s*$", std::regex_constants::icase);
-    double scale_factor = 1.0;
+    std::regex bohr(R"(^\s*b(ohr)?\s*$)", std::regex_constants::icase);
+    std::regex ang(R"(^\s*a(ng)?(strom)?\s*$)", std::regex_constants::icase);
+    std::regex nm(R"(^\s*n(ano)?m?(eter)?\s*$)", std::regex_constants::icase);
+    double scale_factor;
     if (std::regex_match(currentUnit, bohr)) {
         scale_factor = 1.0;
     } else if (std::regex_match(currentUnit, ang)) {
@@ -38,9 +42,9 @@ double getScaleFactorLength(const std::string &currentUnit) {
 }
 
 double getScaleFactorEnergy(const std::string &currentUnit) {
-    std::regex har("^\\s*h(ar)?(tree)?\\s*$", std::regex_constants::icase);
-    std::regex ev("^\\s*e(lectron)?v(olt)?\\s*$", std::regex_constants::icase);
-    double scale_factor = 1.0;
+    std::regex har(R"(^\s*h(ar)?(tree)?\s*$)", std::regex_constants::icase);
+    std::regex ev(R"(^\s*e(lectron)?v(olt)?\s*$)", std::regex_constants::icase);
+    double scale_factor;
     if (std::regex_match(currentUnit, har)) {
         scale_factor = 1.0;
     } else if (std::regex_match(currentUnit, ev)) {
@@ -54,9 +58,9 @@ double getScaleFactorEnergy(const std::string &currentUnit) {
 }
 
 double getScaleFactorTime(const std::string &currentUnit) {
-    std::regex au("^\\s*au\\s*$", std::regex_constants::icase);
-    std::regex fs("^\\s*fs\\s*$", std::regex_constants::icase);
-    double scale_factor = 1.0;
+    std::regex au(R"(^\s*au\s*$)", std::regex_constants::icase);
+    std::regex fs(R"(^\s*fs\s*$)", std::regex_constants::icase);
+    double scale_factor;
     if (std::regex_match(currentUnit, au)) {
         scale_factor = 1.0;
     } else if (std::regex_match(currentUnit, fs)) {
@@ -92,7 +96,7 @@ int InputFile::indexPattern(const std::regex &pattern) {
     rewind();
     bool found_pattern = false;
     int idx = 0;
-    std::string buffer = "\0";
+    std::string buffer;
     while (std::getline(m_InFile, buffer)) {
         if (std::regex_match(buffer, pattern)) {
             found_pattern = true;
@@ -110,7 +114,7 @@ int InputFile::indexPattern(const std::regex &pattern) {
 bool InputFile::getValue(const std::string &keyPattern, std::stringstream &valueStream) {
     ::resetStringStream(valueStream);
     rewind();
-    std::string buffer = "\0", key = "\0";
+    std::string buffer, key;
     std::regex pattern(keyPattern, std::regex_constants::icase);
     bool matched = false;
     while(std::getline(m_InFile, buffer)) {
@@ -125,26 +129,24 @@ bool InputFile::getValue(const std::string &keyPattern, std::stringstream &value
 }
 
 StructFile::StructFile(const std::string &fileName): InputFile(fileName) {
-    m_SpeciesHead = std::regex("^\\s*begin\\s+species\\s*$", std::regex_constants::icase);
-    m_SpeciesBody = std::regex("^\\s*\\w+\\s+[\\d\\.]+\\s+[\\w\\.\\-]+\\s*$", std::regex_constants::icase);
-    m_SpeciesTail = std::regex("^\\s*end\\s+species\\s*$", std::regex_constants::icase);
-    m_LatticeHead = std::regex("^\\s*begin\\s+lattice\\s+\\w+\\s*$", std::regex_constants::icase);
-    m_LatticeBody = std::regex("^\\s*[\\d\\.\\-]+(\\s+[\\d\\.\\-]+){2}\\s*$", std::regex_constants::icase);
-    m_LatticeTail = std::regex("^\\s*end\\s+lattice\\s*$", std::regex_constants::icase);
-    m_PositionsHead = std::regex("^\\s*begin\\s+positions\\s+\\w+\\s*$", std::regex_constants::icase);
-    m_PositionsBody = std::regex("^\\s*\\w+(\\s+[\\d\\.\\-]+){3}\\s*$", std::regex_constants::icase);
-    m_PositionsTail = std::regex("^\\s*end\\s+positions\\s*$", std::regex_constants::icase);
+    m_SpeciesHead = std::regex(R"(^\s*begin\s+species\s*$)", std::regex_constants::icase);
+    m_SpeciesBody = std::regex(R"(^\s*\w+\s+[\d\.]+\s+[\w\.\-]+\s*$)", std::regex_constants::icase);
+    m_SpeciesTail = std::regex(R"(^\s*end\s+species\s*$)", std::regex_constants::icase);
+    m_LatticeHead = std::regex(R"(^\s*begin\s+lattice\s+\w+\s*$)", std::regex_constants::icase);
+    m_LatticeBody = std::regex(R"(^\s*[\d\.\-]+(\s+[\d\.\-]+){2}\s*$)", std::regex_constants::icase);
+    m_LatticeTail = std::regex(R"(^\s*end\s+lattice\s*$)", std::regex_constants::icase);
+    m_PositionsHead = std::regex(R"(^\s*begin\s+positions\s+\w+\s*$)", std::regex_constants::icase);
+    m_PositionsBody = std::regex(R"(^\s*\w+(\s+[\d\.\-]+){3}\s*$)", std::regex_constants::icase);
+    m_PositionsTail = std::regex(R"(^\s*end\s+positions\s*$)", std::regex_constants::icase);
     m_NumSpecies = 0;
     m_NumAtoms = 0;
     checkSanity();
 }
 
 void StructFile::checkSanity() {
-    int idx_start = 0, idx_end = 0;
-
     // atomic species
-    idx_start = indexPattern(m_SpeciesHead);
-    idx_end = indexPattern(m_SpeciesTail);
+    int idx_start = indexPattern(m_SpeciesHead);
+    int idx_end = indexPattern(m_SpeciesTail);
     m_NumSpecies = ::countLine(idx_start, idx_end);
     if (idx_start == -1) {
         std::cout << "ERROR: begin species not found\n";
@@ -212,20 +214,17 @@ void StructFile::getSpecies(std::vector<std::string> &elements,
 
     // Parsing
     rewind();
-    std::string buffer = "\0";
-    std::stringstream ss(buffer);
+    std::string buffer;
+    std::stringstream ss;
     bool in_block = false;
     int idx = 0;
     while (std::getline(m_InFile, buffer)) {
         if (std::regex_match(buffer, m_SpeciesHead)) {
             in_block = true;
             continue;
-        }
-        if (std::regex_match(buffer, m_SpeciesTail)) {
-            in_block = false;
+        } else if (std::regex_match(buffer, m_SpeciesTail)) {
             break;
-        }
-        if (in_block) {
+        } else if (in_block) {
             if (!std::regex_match(buffer, m_SpeciesBody)) {
                 std::cout << "ERROR: illegal line in species: " << buffer << "\n";
                 std::exit(-1);
@@ -245,8 +244,8 @@ void StructFile::getLattice(Eigen::Matrix3d &lattice) {
 
     // Parsing
     rewind();
-    std::string buffer = "\0";
-    std::stringstream ss(buffer);
+    std::string buffer;
+    std::stringstream ss;
     bool in_block = false;
     int idx = 0;
     while (std::getline(m_InFile, buffer)) {
@@ -256,12 +255,9 @@ void StructFile::getLattice(Eigen::Matrix3d &lattice) {
             ss >> length_unit >> length_unit >> length_unit;
             in_block = true;
             continue;
-        }
-        if (std::regex_match(buffer, m_LatticeTail)) {
-            in_block = false;
+        } else if (std::regex_match(buffer, m_LatticeTail)) {
             break;
-        }
-        if (in_block) {
+        } else if (in_block) {
             if (!std::regex_match(buffer, m_LatticeBody)) {
                 std::cout << "ERROR: illegal line in lattice: " << buffer << "\n";
                 std::exit(-1);
@@ -286,8 +282,8 @@ void StructFile::getPositions(std::vector<std::string> &elements,
 
     // Parsing
     rewind();
-    std::string buffer = "\0";
-    std::stringstream ss(buffer);
+    std::string buffer;
+    std::stringstream ss;
     bool in_block = false;
     int idx = 0;
         while (std::getline(m_InFile, buffer)) {
@@ -297,12 +293,9 @@ void StructFile::getPositions(std::vector<std::string> &elements,
             ss >> length_unit >> length_unit >> length_unit;
             in_block = true;
             continue;
-        }
-        if (std::regex_match(buffer, m_PositionsTail)) {
-            in_block = false;
+        } else if (std::regex_match(buffer, m_PositionsTail)) {
             break;
-        }
-        if (in_block) {
+        } else if (in_block) {
             if (!std::regex_match(buffer, m_PositionsBody)) {
                 std::cout << "ERROR: illegal line in positions: " << buffer << "\n";
                 std::exit(-1);
@@ -315,7 +308,7 @@ void StructFile::getPositions(std::vector<std::string> &elements,
     }
 
     // Unit and coordinates conversion
-    std::regex crystal("^\\s*c(rystal)?\\s*$", std::regex_constants::icase);
+    std::regex crystal(R"(^\s*c(rystal)?\s*$)", std::regex_constants::icase);
     if (std::regex_match(length_unit, crystal)) {
         Eigen::Matrix3d lattice;
         Eigen::Matrix3Xd positions_cart(3, m_NumAtoms);
@@ -327,5 +320,6 @@ void StructFile::getPositions(std::vector<std::string> &elements,
     }
 }
 
-} // namespace
-} // namespace
+
+}
+}
