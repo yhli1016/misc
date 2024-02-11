@@ -1,6 +1,6 @@
 # Set up environment variables used by bmod
 export BMOD_ROOT=$(dirname $BASH_SOURCE)
-export BMOD_MOD=$BMOD_ROOT/modules
+export BMOD_MODPATH=$BMOD_ROOT/modules
 export BMOD_LOADED_MODS=$BMOD_LOADED_MODS
 export BMOD_SEP="+"
 
@@ -155,7 +155,7 @@ bmod () {
         shift 
         for modname in $*; do
             # Locate the script file
-            for path in $(echo $BMOD_MOD | sed 's/:/\n/g'); do
+            for path in $(echo $BMOD_MODPATH | sed 's/:/\n/g'); do
                 if [[ -f $path/$modname.sh ]]; then
                     script=$modname.sh
                     break
@@ -180,12 +180,12 @@ bmod () {
         echo $BMOD_LOADED_MODS | sed -e 's/:/\n/g' -e 's/.sh//g' | tac | \
             awk '{if(NF>0) printf "%4i) %s\n", NR, $1}'
     elif [[ "$cmd" == "av" ]]; then
-        for path in $(echo $BMOD_MOD | sed 's/:/\n/g'); do
+        for path in $(echo $BMOD_MODPATH | sed 's/:/\n/g'); do
             echo "---- $path ----"
             ls $path | sed 's/.sh//g' | sort | awk '{if(NF>0) printf "%4i) %s\n", NR, $1}'
         done
     elif [[ "$cmd" == "cl" ]]; then
-        for path in $(echo $BMOD_MOD | sed 's/:/\n/g'); do
+        for path in $(echo $BMOD_MODPATH | sed 's/:/\n/g'); do
             for script in $(echo $BMOD_LOADED_MODS | sed 's/:/\n/g'); do
                 if [[ -f $path/$script ]]; then
                     source $path/$script rm
@@ -194,7 +194,7 @@ bmod () {
             done
         done
     elif [[ "$cmd" == "pg" ]]; then
-        for path in $(echo $BMOD_MOD | sed 's/:/\n/g'); do
+        for path in $(echo $BMOD_MODPATH | sed 's/:/\n/g'); do
             for script in $(ls $path); do
                 source $path/$script rm
                 set_env rm "BMOD_LOADED_MODS" $script

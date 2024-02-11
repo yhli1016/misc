@@ -145,10 +145,10 @@ reset_env $1 OMP_NUM_THREADS 1
 - cl: 卸载已加载的脚本
 - pg: 卸载所有脚本（含未加载）
 
-`examples`目录下面中自带了很多用作例子的脚本。为了演示bmod的功能，我们把该目录临时加入`BMOD_MOD`环境变量：
+`examples`目录下面中自带了很多用作例子的脚本。为了演示bmod的功能，我们把该目录临时加入`BMOD_MODPATH`环境变量：
 
 ```bash
-set_env add BMOD_MOD $HOME/soft/bmod/examples 
+set_env add BMOD_MODPATH $HOME/soft/bmod/examples 
 ```
 
 然后运行`bmod av`命令，看一下输出结果：
