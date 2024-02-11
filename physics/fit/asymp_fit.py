@@ -25,20 +25,25 @@ def residuals(k, x, y):
     return func(k, x) - y
 
 
-# Load and parse data
-data = np.loadtxt("fit.dat")
-x = data[:, 0]
-y = data[:, 2]
+def main():
+    # Load and parse data
+    data = np.loadtxt("fit.dat")
+    x = data[:, 0]
+    y = data[:, 2]
 
-# Least square fitting
-k0 = initial_guess(x, y)
-result = opt.leastsq(residuals, k0, args=(x, y))
-print("optimal parameters:", result[0])
-print("error code:", result[1])
+    # Least square fitting
+    k0 = initial_guess(x, y)
+    result = opt.leastsq(residuals, k0, args=(x, y))
+    print("optimal parameters:", result[0])
+    print("error code:", result[1])
 
-# Plot original data and fitted curve
-x_plot = np.linspace(np.min(x), np.max(x), 100)
-y_plot = func(result[0], x_plot)
-plt.plot(x, y, "o", color="r")
-plt.plot(x_plot, y_plot, color="b")
-plt.savefig("fit.png")
+    # Plot original data and fitted curve
+    x_plot = np.linspace(np.min(x), np.max(x), 100)
+    y_plot = func(result[0], x_plot)
+    plt.plot(x, y, "o", color="r")
+    plt.plot(x_plot, y_plot, color="b")
+    plt.savefig("fit.png")
+
+
+if __name__ == "__main__":
+    main()
