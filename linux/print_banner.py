@@ -1,14 +1,17 @@
 #! /usr/bin/env python
 
 
-def print_banner_line(text, width=80, mark="-", end="#"):
+def print_banner_line(text: str,
+                      width: int = 80,
+                      mark: str = "-",
+                      end: str = "#") -> None:
     """
     Print a banner like '#--------------- FOO ---------------#' to stdout.
 
-    :param text: string, central text in the banner
-    :param width: integer, total width of the banner
-    :param mark: character, marker
-    :param end: character, end prepended and appended to the banner
+    :param text: central text in the banner
+    :param width: total width of the banner
+    :param mark: marker character
+    :param end: end character prepended and appended to the banner
     :return: None
     """
     num_marks_total = width - len(text) - 4
@@ -20,7 +23,10 @@ def print_banner_line(text, width=80, mark="-", end="#"):
     print(banner_with_marks)
 
 
-def print_banner_block(text, width=80, mark="-", end="#"):
+def print_banner_block(text: str,
+                       width: int = 80,
+                       mark: str = "-",
+                       end: str = "#") -> None:
     """
     Print a banner like
     #----------------------------------#
@@ -50,10 +56,14 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("text", type=str,  action="store")
-    parser.add_argument("--width", "-w",   type=int, action="store", default="80")
-    parser.add_argument("--type", "-t", type=str, action="store", default="line")
-    parser.add_argument("--mark", "-m", type=str, action="store", default="-")
-    parser.add_argument("--end", "-e", type=str, action="store", default="#")
+    parser.add_argument("--width", "-w",   type=int, action="store",
+                        default="80")
+    parser.add_argument("--type", "-t", type=str, action="store",
+                        default="line")
+    parser.add_argument("--mark", "-m", type=str, action="store",
+                        default="-")
+    parser.add_argument("--end", "-e", type=str, action="store",
+                        default="#")
     args = parser.parse_args()
     if args.type == "line":
         print_banner_line(args.text, args.width, args.mark, args.end)
