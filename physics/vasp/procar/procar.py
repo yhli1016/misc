@@ -138,7 +138,7 @@ class Procar:
                   e_min: float = -2.0,
                   e_max: float = 2.0,
                   e_step: float = 0.01,
-                  sigma: float  = 0.1) -> Tuple[np.ndarray, np.ndarray]:
+                  sigma: float = 0.1) -> Tuple[np.ndarray, np.ndarray]:
         """
         Evaluate PDOS.
 
@@ -199,7 +199,6 @@ def main():
             plt.title(f"{r}, {s}")
             plt.legend()
             plt.show()
-
 
 
 if __name__ == "__main__":

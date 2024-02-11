@@ -2,7 +2,7 @@
 import os
 from typing import Iterable, Dict
 
-from mace import expand_file, include
+from mace import Mace
 
 
 def get_input(prompt: str) -> str:
@@ -79,13 +79,13 @@ def main():
 
     # Get arguments
     macro = get_macro()
-    macro["HEAD"] = include(f"{script_dir}/header.sh")
+    m = Mace(macro)
 
     # Generate input file
     job = macro[".job"]
-    expand_file(macro, f"{script_dir}/run_{job}.sh", f"run_{job}.sh")
+    m.expand_re(f"{script_dir}/run_{job}.sh", f"run_{job}.sh")
     if macro[".incar"] == "yes":
-        expand_file(macro, f"{incar_dir}/INCAR_{job}", "INCAR")
+        Mace(macro).expand_re(f"{incar_dir}/INCAR_{job}", "INCAR")
 
     # Notify the user
     print(f"\nScript written to 'run_{job}.sh'")
