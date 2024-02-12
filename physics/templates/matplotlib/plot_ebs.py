@@ -30,12 +30,12 @@ class Config:
         self.axline_width = 0.5
 
     def rc(self, **kwargs) -> None:
-        """Change global settings."""
+        """Change global configurations."""
         plt.rc("font", size=self.font_size, family=self.font_family,
                weight=self.font_weight, **kwargs)
 
-    def new_figure(self, **kwargs) -> plt.Figure:
-        """Create figure."""
+    def figure(self, **kwargs) -> plt.Figure:
+        """Create figure from configurations."""
         return plt.figure(figsize=self.figure_size, dpi=self.figure_dpi,
                           **kwargs)
 
@@ -45,9 +45,9 @@ def plot(fig: plt.Figure, ax: plt.Axes, config: Config) -> None:
     # Load KLABELS
     hsp = np.loadtxt("KLABELS", dtype=np.string_, skiprows=1,
                      usecols=(0, 1))
-    labels_x = [float(i) for i in hsp[:-1,1].tolist()]
-    group_labels = hsp[:-1,0].tolist()
-    group_labels = [i.decode('utf-8','ignore') for i in group_labels]
+    labels_x = [float(i) for i in hsp[:-1, 1].tolist()]
+    group_labels = hsp[:-1, 0].tolist()
+    group_labels = [i.decode('utf-8', 'ignore') for i in group_labels]
     for i, label in enumerate(group_labels):
         if re.search(r"GAMMA", label) is not None:
             group_labels[i] = "$\Gamma$"
@@ -56,9 +56,9 @@ def plot(fig: plt.Figure, ax: plt.Axes, config: Config) -> None:
 
     # Load band data
     data = np.loadtxt("EBS.dat")
-    kpt = data[:,0]
-    eng = data[:,1]
-    wgt = data[:,2]
+    kpt = data[:, 0]
+    eng = data[:, 1]
+    wgt = data[:, 2]
 
     # Plot
     img = ax.scatter(kpt, eng, c=wgt, s=wgt*2, cmap="YlOrRd")
@@ -98,7 +98,7 @@ def main():
     config.rc()
 
     # Create figure and axes
-    fig = config.new_figure()
+    fig = config.figure()
     ax = fig.add_subplot()
 
     # Plot figure

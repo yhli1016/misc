@@ -33,12 +33,12 @@ class Config:
         self.axline_width = 0.5
 
     def rc(self, **kwargs) -> None:
-        """Change global settings."""
+        """Change global configurations."""
         plt.rc("font", size=self.font_size, family=self.font_family,
                weight=self.font_weight, **kwargs)
 
-    def new_figure(self, **kwargs) -> plt.Figure:
-        """Create figure."""
+    def figure(self, **kwargs) -> plt.Figure:
+        """Create figure from configurations."""
         return plt.figure(figsize=self.figure_size, dpi=self.figure_dpi,
                           **kwargs)
 
@@ -100,12 +100,13 @@ def plot(axes: List[plt.Axes], config: Config) -> None:
             # Set legend
             ax.legend(edgecolor="w")
 
+
 def main():
     config = Config()
     config.rc()
 
     # Create figure and axes
-    fig = config.new_figure()
+    fig = config.figure()
     gs = fig.add_gridspec(5, hspace=0)
     axes = gs.subplots(sharex=True, sharey=True)
 

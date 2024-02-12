@@ -29,14 +29,15 @@ class Config:
         self.axline_width = 0.5
 
     def rc(self, **kwargs) -> None:
-        """Change global settings."""
+        """Change global configurations."""
         plt.rc("font", size=self.font_size, family=self.font_family,
                weight=self.font_weight, **kwargs)
 
-    def new_figure(self, **kwargs) -> plt.Figure:
-        """Create figure."""
+    def figure(self, **kwargs) -> plt.Figure:
+        """Create figure from configurations."""
         return plt.figure(figsize=self.figure_size, dpi=self.figure_dpi,
                           **kwargs)
+
 
 def plot(ax: plt.Axes, config: Config) -> None:
     """Actually plot the data."""
@@ -84,7 +85,7 @@ def main():
     config.rc()
 
     # Create figure and axes
-    fig = config.new_figure()
+    fig = config.figure()
     ax = fig.add_subplot()
 
     # Plot data
