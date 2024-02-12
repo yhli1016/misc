@@ -1,8 +1,10 @@
 """Class for evaluating and plotting energy profiles."""
 
 from abc import ABC, abstractmethod
+from typing import List, Tuple
 
 import numpy as np
+import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 
 
@@ -12,17 +14,16 @@ class Path:
 
     Attributes
     ----------
-    label: List[string]
+    label: List[str]
         labels for reactants and products
     energy: List[float]
         energies of reactants and products
-    unit: string
+    unit: str
         unit of energy
     """
-    def __init__(self, unit="ev") -> None:
+    def __init__(self, unit: str = "ev") -> None:
         """
-        :param unit: string
-            unit of energy, should be either "ev" or "kjm"
+        :param unit: unit of energy, should be either "ev" or "kjm"
         :raises ValueError: if unit is neither "ev" nor "kjm"
         """
         self.label = []
@@ -31,12 +32,12 @@ class Path:
             raise ValueError(f"Illegal unit: {unit}")
         self.unit = unit
 
-    def scale_energy(self, unit="ev"):
+    def scale_energy(self, unit: str = "ev") -> np.ndarray:
         """
         Get scaled energy in given unit.
 
-        :param unit: string
-            unit of energy, should be either "ev" or "kjm"
+        :param unit: unit of energy, should be either "ev" or "kjm"
+        :return: scaled energy as an array
         """
         ev2kjm = 96.4916
         if unit not in ("kjm", "ev"):
@@ -54,23 +55,23 @@ class Path:
         energy = np.array(self.energy) * scale_factor
         return energy
 
-    def add_eng(self, label, energy):
+    def add_eng(self, label: str, energy: float) -> None:
         """
         Add an energy level in the reaction path.
 
-        :param string label: label for the state
-        :param float energy: energy of the state
+        :param label: label for the state
+        :param energy: energy of the state
         :return: None
         """
         if energy is not None:  # DO NOT DELETE THIS LINE!
             self.label.append(label)
             self.energy.append(energy)
 
-    def eval_eng(self, unit="eV"):
+    def eval_eng(self, unit: str = "eV") -> None:
         """
         Print energy levels and differences of the reaction path.
 
-        :param string unit: unit of energies for output
+        :param unit: unit of energies for output
         :return: None
         """
         energy = self.scale_energy(unit=unit)
@@ -79,9 +80,9 @@ class Path:
             eng_align = eng - energy[0]
             eng_delta = eng - energy[i-1] if i > 0 else 0
             if i > 0:
-                print("%16s : %8.2f%8.2f" % (label, eng_align, eng_delta))
+                print(f"{label:>16s} : {eng_align:8.2f}{eng_delta:8.2f}")
             else:
-                print("%16s : %8.2f%8s" % (label, eng_align, "diff"))
+                print(f"{label:>16s} : {eng_align:8.2f}{'diff':>8s}")
 
 
 class MultiPath(ABC):
@@ -97,15 +98,15 @@ class MultiPath(ABC):
         self.paths = []
 
     @abstractmethod
-    def gen_paths(self):
+    def gen_paths(self) -> None:
         """To be implemented in derived classes."""
         pass
 
-    def eval_eng(self, unit="ev"):
+    def eval_eng(self, unit: str = "ev") -> None:
         """
         Print energy levels and differences of the reaction paths.
 
-        :param string unit: unit of energies for output
+        :param unit: unit of energies for output
         :return: None
         """
         self.gen_paths()
@@ -122,7 +123,7 @@ class Profile:
     ---------
     axes: instance of 'matplotlib.pyplot.Axes' class
         axes on which the profiles will be plotted
-    default_label_color: string
+    default_label_color: str
         default color of labels
     default_connector: integer
         order of polynomial for connecting labels (energy levels)
@@ -131,7 +132,7 @@ class Profile:
         length of labels of energy levels
     label_width: float
         width of labels of energy levels
-    unit: string
+    unit: str
         unit of energy
     react_coord: List[int]
         x-coordinates of labels
@@ -142,8 +143,12 @@ class Profile:
     connector: list[int]
         order of polynomial for connecting each label and the next label
     """
-    def __init__(self, axes, default_label_color="k", default_connector=1,
-                 label_length=0.6, label_width=1.8, unit="ev") -> None:
+    def __init__(self, axes: plt.Axes,
+                 default_label_color: str = "k",
+                 default_connector: int = 1,
+                 label_length: float = 0.6,
+                 label_width: float = 1.8,
+                 unit: str = "ev") -> None:
         self.axes = axes
         self.default_label_color = default_label_color
         self.default_connector = default_connector
@@ -158,21 +163,24 @@ class Profile:
         self.connector = []
 
     @property
-    def curr_x(self):
+    def curr_x(self) -> int:
         """Get the reaction coordinate of last energy level."""
         if len(self.react_coord) == 0:
             return -1
         else:
             return self.react_coord[-1]
 
-    def add_eng(self, react_coord, energy, label_color=None, connector=None):
+    def add_eng(self, react_coord: int,
+                energy: float,
+                label_color: str = None,
+                connector: int = None) -> None:
         """
         Add an absolute energy level to the profile.
 
-        :param int react_coord: x-coordinate of the energy level
-        :param float energy: y-coordinate of the energy level
-        :param str label_color: color of the energy level
-        :param int connector: order of polynomial for the label
+        :param react_coord: x-coordinate of the energy level
+        :param energy: y-coordinate of the energy level
+        :param label_color: color of the energy level
+        :param connector: order of polynomial for the label
         :return: None
         """
         self.react_coord.append(react_coord)
@@ -184,13 +192,13 @@ class Profile:
             connector = self.default_connector
         self.connector.append(connector)
 
-    def add_de(self, de, dx=1, **kwargs):
+    def add_de(self, de: float, dx: int = 1, **kwargs: dict) -> None:
         """
         Add a relative energy level to the profile.
 
-        :param float de: relative energy w.r.t. previous energy level
-        :param int dx: incremental of reaction coordinate of the energy level
-        :param dict kwargs: arguments to be passed to the 'add_eng' method
+        :param de: relative energy w.r.t. previous energy level
+        :param dx: incremental of reaction coordinate of the energy level
+        :param kwargs: arguments to be passed to the 'add_eng' method
         :return: None
         """
         react_coord = self.curr_x + dx
@@ -200,7 +208,8 @@ class Profile:
             energy = self.energy[-1] + de
         self.add_eng(react_coord, energy, **kwargs)
 
-    def linear_fit(self, xco, yco):
+    def linear_fit(self, xco: np.ndarray,
+                   yco: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """Linear connector."""
         x0 = xco[0] + 0.5 * self.label_length
         x1 = xco[1] - 0.5 * self.label_length
@@ -210,7 +219,8 @@ class Profile:
         return xfi, yfi
 
     @staticmethod
-    def cubic_fit(xco, yco):
+    def cubic_fit(xco: np.ndarray,
+                  yco: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """Cubic connector."""
         x0, y0 = xco[0], yco[0]
         x1, y1 = xco[1], yco[1]
@@ -225,12 +235,12 @@ class Profile:
         yfi = np.polyval(c, xfi)
         return xfi, yfi
 
-    def scale_energy(self, unit="ev"):
+    def scale_energy(self, unit: str = "ev") -> np.ndarray:
         """
         Get scaled energy in given unit.
 
-        :param unit: string
-            unit of energy, should be either "ev" or "kjm"
+        :param unit: unit of energy, should be either "ev" or "kjm"
+        :return: scaled energies
         """
         ev2kjm = 96.4916
         if unit not in ("kjm", "ev"):
@@ -248,12 +258,12 @@ class Profile:
         energy = np.array(self.energy) * scale_factor
         return energy
 
-    def plot(self, unit="ev", **kwargs):
+    def plot(self, unit: str = "ev", **kwargs: dict) -> None:
         """
         Plot energy profile onto axes.
 
-        :param str unit: unit for energy levels
-        :param dict kwargs: arguments to be passed to Axes.plot()
+        :param unit: unit for energy levels
+        :param kwargs: arguments to be passed to Axes.plot()
         :return: None
         """
         # Prepare data
@@ -283,21 +293,26 @@ class Profile:
                                 linewidth=self.label_width)
         self.axes.add_collection(levels)
 
-    def add_barrier(self, i=1, unit="ev", ref_args=None,
-                    arrow_dx=0.0, arrow_args=None,
-                    text_dx=0.0, text_dy=0.0, text_args=None):
+    def add_barrier(self, i: int = 1,
+                    unit: str = "ev",
+                    ref_args: dict = None,
+                    arrow_dx: float = 0.0,
+                    arrow_args: dict = None,
+                    text_dx: float = 0.0,
+                    text_dy: float = 0.0,
+                    text_args: dict = None) -> None:
         """
         Add a barrier notation to the energy profile.
 
-        :param int i: index of energy level for which the notation will
+        :param i: index of energy level for which the notation will
             be added with respect to the previous energy level
-        :param str unit: unit for energy levels
-        :param dict ref_args: settings of the reference line
+        :param unit: unit for energy levels
+        :param ref_args: settings of the reference line
         :param float arrow_dx: shift of arrow from x1
-        :param dict arrow_args: settings of the arrow
-        :param float text_dx: shift of text from the center of arrow along x
-        :param float text_dy: shift of text from the center of arrow along y
-        :param dict text_args: settings of the text
+        :param arrow_args: settings of the arrow
+        :param text_dx: shift of text from the center of arrow along x
+        :param text_dy: shift of text from the center of arrow along y
+        :param text_args: settings of the text
         :return: None
         """
         # Prepare data
@@ -321,17 +336,17 @@ class Profile:
         ty = y0 + dy * 0.5 + text_dy
         self.axes.text(tx, ty, f"{dy:.2f}", **text_args)
 
-    def print(self, unit="ev"):
+    def print(self, unit: str = "ev") -> None:
         """
         Print absolute energy levels and energy differences of the profile.
 
-        :param str unit: unit for the energy levels
+        :param unit: unit for the energy levels
         :return: None
         """
         energy = self.scale_energy(unit=unit)
         for i, coord in enumerate(self.react_coord):
             eng_delta = energy[i] - energy[i-1] if i > 0 else 0
             if i > 0:
-                print("%4d : %8.2f%8.2f" % (coord, energy[i], eng_delta))
+                print(f"{coord:4d} : {energy[i]:8.2f}{eng_delta:8.2f}")
             else:
-                print("%4d : %8.2f%8s" % (coord, energy[i], "diff"))
+                print(f"{coord:4d} : {energy[i]:8.2f}{'diff':>8s}")

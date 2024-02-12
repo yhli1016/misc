@@ -5,35 +5,52 @@ import matplotlib.pyplot as plt
 from nebtools.profile import Profile
 
 
+class Config:
+    """Class for holding plotting configurations."""
+    def __init__(self) -> None:
+        # Figure settings
+        self.figure_size = (7, 5)
+        self.figure_dpi = 300
+        self.figure_name = "mep_0.png"
+
+        # Font settings
+        self.font_size = 12
+        self.font_family = "Liberation Sans"
+        self.font_weight = "normal"
+
+        # Axes settings
+        self.tick_width = 1.5
+        self.tick_length_major = 8
+        self.tick_length_minor = 4
+        self.spine_width = 1.5
+
+        # Line settings
+        self.line_width = 0.75
+        self.axline_width = 0.5
+
+    def rc(self, **kwargs) -> None:
+        """Change global configurations."""
+        plt.rc("font", size=self.font_size, family=self.font_family,
+               weight=self.font_weight, **kwargs)
+
+    def figure(self, **kwargs) -> plt.Figure:
+        """Create figure from configurations."""
+        return plt.figure(figsize=self.figure_size, dpi=self.figure_dpi,
+                          **kwargs)
+
+
 def main():
-    # Figure Settings
-    figure_size = (7, 5)
-    figure_dpi = 300
-
-    # Font settings
-    font_size = 12
-    font_family = "Arial"
-    # font_family = "Liberation Sans"
-    font_weight = "normal"
-
-    # Axes and spines settings
-    # ymin = -2.0
-    # ymax = 2.0
-    axes_width = 1.5
-    spines_width = 1.5
-
-    # Line settings
-    line_width = 0.75
-
     # Change global settings and create the figure
-    plt.rc("font", size=font_size, family=font_family, weight=font_weight)
-    fig, axes = plt.subplots(figsize=figure_size)
+    config = Config()
+    config.rc()
+    fig = config.figure()
+    axes = fig.add_subplot()
 
     # Predefined plotting styles
     # Names for colors: (b)lue, (r)ed, (g)reen, (c)yan, (m)agenta, blac(k), (w)hite
     # Allowed line styles are "-", "--", "-.", ":"
-    plot_args = {"linewidth": line_width, "linestyle": "--", "color": "k"}
-    ref_args = {"linewidth": line_width, "linestyle": ":", "color": "k"}
+    plot_args = {"linewidth": config.line_width, "linestyle": "--", "color": "k"}
+    ref_args = {"linewidth": config.line_width, "linestyle": ":", "color": "k"}
     arrow_args = {"width": 0.001, "head_width": 0.05, "head_length": 5,
                   "length_includes_head": True, "color": "k"}
     text_args = {"color": "k", "size": "x-small"}
@@ -67,24 +84,26 @@ def main():
     # Fine adjustments
 
     # Ticks
-    axes.set_xlabel("Reaction coordinate", fontsize="large", weight=font_weight)
-    axes.set_ylabel("$\mathrm{Energy (kJ \cdot mol^{-1})}$", fontsize="large", weight=font_weight)
+    axes.set_xlabel("Reaction coordinate", fontsize="large",
+                    weight=config.font_weight)
+    axes.set_ylabel("$\mathrm{Energy (kJ \cdot mol^{-1})}$", fontsize="large",
+                    weight=config.font_weight)
     axes.set_xticks([])
     # axes.set_ylim(ymin, ymax)
-    axes.tick_params(axis="y", width=axes_width)
+    axes.tick_params(axis="y", width=config.tick_width)
 
     # Spines
     for key in ("top", "bottom", "right"):
         # axes.spines[key].set_visible(False)
-        axes.spines[key].set_linewidth(spines_width)
-    axes.spines["left"].set_linewidth(spines_width)
+        axes.spines[key].set_linewidth(config.spine_width)
+    axes.spines["left"].set_linewidth(config.spine_width)
 
     # Legend
     axes.legend(edgecolor="w")
 
     # Save the figure
     fig.tight_layout()
-    fig.savefig("mep_0.png", dpi=figure_dpi)
+    fig.savefig(config.figure_name, dpi=config.figure_dpi)
 
 
 if __name__ == "__main__":

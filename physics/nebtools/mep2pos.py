@@ -3,7 +3,7 @@
 
 from ase.io import read
 
-from idpp import mep2pos
+from nebtools.neb import mep2pos
 
 
 def main():

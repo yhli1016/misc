@@ -1,34 +1,37 @@
-#! /usr/bin/env python
-"""Prepare directories and POSCARs for NEB Calculation."""
+"""Functions for NEB calculation."""
 
 import os
+from typing import List
 
 import numpy as np
 from scipy.optimize import minimize
+from ase import Atoms
 from ase.io import read, write
 from ase.neb import NEB
 
+from .base import get_int
 
-def norm(x):
+
+def norm(x: np.ndarray) -> float:
     """
     Calculate the norm of vector.
 
-    :param np.ndarray x: incoming vector
+    :param x: incoming vector
     :return: modulus of x
-    :rtype: float
     """
     return np.linalg.norm(x).item()
 
 
-def select_atoms(image, exclude_atoms=None, offset=0):
+def select_atoms(image: Atoms,
+                 exclude_atoms: List[int] = None,
+                 offset: int = 0) -> List[int]:
     """
     Select atoms from an image.
 
-    :param ase.Atoms image: image from which to select atoms
-    :param List[int] exclude_atoms: indices of atoms to exclude
-    :param int offset: offset of exclude_atoms, use 0 for ase and 1 for vesta
+    :param image: image from which to select atoms
+    :param exclude_atoms: indices of atoms to exclude
+    :param offset: offset of exclude_atoms, use 0 for ase and 1 for vesta
     :return: indices of selected atoms
-    :rtype: List[int]
     """
     if exclude_atoms is None:
         exclude_atoms = []
@@ -37,13 +40,13 @@ def select_atoms(image, exclude_atoms=None, offset=0):
     return selected_atoms
 
 
-def correct_pbc(ref_image, chk_image, **kwargs):
+def correct_pbc(ref_image: Atoms, chk_image: Atoms, **kwargs) -> None:
     """
     Correct the coordinates of atoms wrapped back by periodic boundary
     condition to minimize the mismatch.
 
-    :param ase.Atoms ref_image: reference image
-    :param ase.Atoms chk_image: image to correct
+    :param ref_image: reference image
+    :param chk_image: the image to correct
     :param kwargs: arguments for 'select_atoms'
     :return: None. chk_image is modified.
     """
@@ -68,12 +71,12 @@ def correct_pbc(ref_image, chk_image, **kwargs):
     chk_image.set_positions(chk_pos)
 
 
-def align_image(ref_image, chk_image, **kwargs):
+def align_image(ref_image: Atoms, chk_image: Atoms, **kwargs) -> None:
     """
     Align image to reference to minimize the mismatch.
 
-    :param ase.Atoms ref_image: reference image
-    :param ase.Atoms chk_image: image to align
+    :param ref_image: reference image
+    :param chk_image: the image to align
     :param kwargs: arguments for 'select_atoms'
     :return: None. chk_image is modified.
     """
@@ -101,12 +104,12 @@ def align_image(ref_image, chk_image, **kwargs):
     chk_image.set_positions(chk_pos)
 
 
-def center_image(image, center=0.5, **kwargs):
+def center_image(image: Atoms, center: float = 0.5, **kwargs) -> None:
     """
     Center the image at given position along z-axis.
 
-    :param ase.Atoms image: image to center
-    :param float center: position to center the image
+    :param image: image to center
+    :param center: position to center the image
     :param kwargs: arguments for 'select_atoms'
     :return: None. Incoming image is modified.
     """
@@ -118,16 +121,32 @@ def center_image(image, center=0.5, **kwargs):
     image.set_scaled_positions(scaled_pos)
 
 
-def interpolate(initial_image, final_image, num_inter_images, **kwargs):
+def diff_image(ref_image: Atoms, chk_image: Atoms) -> float:
+    """
+    Evaluate the difference between given image and reference.
+
+    :param ref_image: reference image
+    :param chk_image: the image to diff
+    :return: total difference
+    """
+    ref_pos = ref_image.get_positions()
+    chk_pos = chk_image.get_positions()
+    diff_pos = ref_pos - chk_pos
+    return sum([norm(diff_pos[i_a])**2 for i_a in range(len(ref_image))])
+
+
+def interpolate(initial_image: Atoms,
+                final_image: Atoms,
+                num_inter_images: int,
+                **kwargs) -> List[Atoms]:
     """
     Generate a path by interpolation between initial and final images.
 
-    :param ase.Atoms initial_image: initial state
-    :param ase.Atoms final_image: final state
-    :param int num_inter_images: number of intermediate states
+    :param initial_image: initial state
+    :param final_image: final state
+    :param num_inter_images: number of intermediate states
     :param kwargs: arguments for 'neb.interpolate'
     :return: path connecting initial and final images
-    :rtype: List[ase.Atoms]
     """
     images = [initial_image]
     images += [initial_image.copy() for _ in range(num_inter_images)]
@@ -137,68 +156,30 @@ def interpolate(initial_image, final_image, num_inter_images, **kwargs):
     return images
 
 
-def mep2pos(mep):
+def mep2pos(mep: List[Atoms]) -> None:
     """
     Write mep to POSCAR.
 
-    :param List[ase.Atoms] mep: mep to save
+    :param mep: mep to save
     :return: None
     """
     vasp_args = {"vasp5": True, "direct": True}
     os.system("rm -rf 0*")
     for i, image in enumerate(mep):
-        dir_name = "%02d" % i
+        dir_name = f"{i:02d}"
         os.mkdir(dir_name)
-        write("%s/POSCAR" % dir_name, image, format="vasp", **vasp_args)
+        write(f"{dir_name}/POSCAR", image, format="vasp", **vasp_args)
 
 
-def main():
-    # File names and number of intermediate states
-    poscar_ini = "POSCAR_ini"
-    poscar_fin = "POSCAR_fin"
-    num_inter_images = 8
-
-    # Normalization parameters
-    _correct_pbc = True
-    _align_image = True
-    _center_image = True
-    free_atoms = [9, 31, 32, 33]
-    offset = 0
-    center_z = 0.2
-
-    # Interpolation parameters
-    method = "idpp"
-    mic = True
-    apply_constraint = True
-
-    # Debugging flags
-    debug = False
-
-    # Load initial and final images
-    image_ini = read(poscar_ini, index=-1)
-    image_fin = read(poscar_fin, index=-1)
-
-    # Correct final image
-    select_args = {"exclude_atoms": free_atoms, "offset": offset}
-    if _correct_pbc:
-        correct_pbc(image_ini, image_fin, **select_args)
-    if _align_image:
-        align_image(image_ini, image_fin, **select_args)
-
-    # Interpolate
-    mep = interpolate(image_ini, image_fin, num_inter_images,
-                      method=method, mic=mic, apply_constraint=apply_constraint)
-
-    # Center images
-    if _center_image:
-        for image in mep:
-            center_image(image, center_z, **select_args)
-
-    # Output
-    if not debug:
-        mep2pos(mep)
-    write("mep_0.traj", mep)
-
-
-if __name__ == "__main__":
-    main()
+def pos2mep() -> None:
+    """Convert CONTCAR/POSCAR to mep after NEB calculation."""
+    num_image = get_int("INCAR", "IMAGES")
+    last_run = get_int("run_neb.sh", "run")
+    images = []
+    for i in range(num_image+2):
+        try:
+            image = read(f"{i:02d}/CONTCAR", index=-1)
+        except FileNotFoundError:
+            image = read(f"{i:02d}/POSCAR", index=-1)
+        images.append(image)
+    write(f"mep_{last_run}.traj", images)

@@ -23,9 +23,9 @@ write("CONTCAR", image, vasp5=True, direct=True)
 
 # Write to xyz file
 with open("test.xyz", "w") as xyz:
-    xyz.write("%4d\n" % len(image))
+    xyz.write(f"{len(image):4d}\n")
     xyz.write("Generated with ASE\n")
     for i, atom in enumerate(image):
-        xyz.write("%4s%14.9f%14.9f%14.9f%14.9f%14.9f%14.9f\n" % (atom.symbol,
-                   positions[i, 0], positions[i, 1], positions[i, 2],
+        xyz.write("%4s%14.9f%14.9f%14.9f%14.9f%14.9f%14.9f\n" %
+                  (atom.symbol, positions[i, 0], positions[i, 1], positions[i, 2],
                    forces[i, 0], forces[i, 1], forces[i, 2]))

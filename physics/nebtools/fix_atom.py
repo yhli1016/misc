@@ -4,7 +4,7 @@
 from ase.io import read, write
 from ase.constraints import FixAtoms
 
-from nebtools import idpp
+from nebtools.neb import select_atoms
 
 
 def main():
@@ -18,8 +18,8 @@ def main():
     if fix_selected_atoms:
         fixed_atoms = selected_atoms
     else:
-        fixed_atoms = idpp.select_atoms(image, exclude_atoms=selected_atoms,
-                                        offset=offset)
+        fixed_atoms = select_atoms(image, exclude_atoms=selected_atoms,
+                                   offset=offset)
     image.set_constraint(FixAtoms(fixed_atoms))
     write(poscar_out, image, format="vasp", vasp5=True, direct=True)
 

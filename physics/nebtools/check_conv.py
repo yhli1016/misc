@@ -1,28 +1,9 @@
 #! /usr/bin/env python
 """Check convergence of ionic steps from OSZICAR."""
 
-import re
 import sys
 
-
-def get_int(file_name, pattern):
-    """
-    Get value of pattern in form of 'pattern = value' from file.
-
-    :param str file_name: name of the file
-    :param str pattern: name of pattern
-    :return: value: int
-    """
-    value = None
-    with open(file_name, "r") as inf:
-        content = inf.readlines()
-        for line in content:
-            result = re.search(r"%s( )?=( )?\d+" % pattern, line)
-            if result is not None:
-                value = int(result.group().split("=")[1])
-    if value is None:
-        raise RuntimeError(f"{pattern} not found")
-    return value
+from nebtools.base import get_int
 
 
 def main():
@@ -50,15 +31,15 @@ def main():
 
         # Check if the calculation is complete
         if len(start_lines) != len(end_lines):
-            print("WARNING: ionic step %4d not completed" % (len(start_lines)))
+            print(f"WARNING: ionic step {len(start_lines):4d} not completed")
 
         # Check convergence for each ionic step
         for i, nl in enumerate(end_lines):
             num_step = nl - start_lines[i] - 1
             if num_step >= nelm:
-                print("WARNING: ionic step %4d not converged" % i)
+                print(f"WARNING: ionic step {i:4d} not converged")
             else:
-                print("ionic step %4d converged in %4d iterations " % (i, num_step))
+                print(f"ionic step {i:4d} converged in {num_step:4d} iterations")
 
 
 if __name__ == "__main__":
