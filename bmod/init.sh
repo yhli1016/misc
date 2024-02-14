@@ -151,6 +151,14 @@ bmod () {
     local modname=""
     local path=""
     local script=""
+    # for compatibility with old versions which use BMOD_MOD
+    if [[ ! -z "$BMOD_MOD" ]]; then
+        echo "WARNING: BMOD_MOD is deprecated. Use BMOD_MODPATH instead."
+        for path in $(echo $BMOD_MOD | sed 's/:/\n/g'); do
+            set_env add BMOD_MODPATH $path
+        done
+        unset BMOD_MOD
+    fi
     if [[ "$cmd" == "add" || "$cmd" == "rm" ]]; then
         shift 
         for modname in $*; do
