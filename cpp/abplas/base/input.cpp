@@ -73,6 +73,22 @@ double getScaleFactorTime(const std::string &currentUnit) {
     return scale_factor;
 }
 
+// ParameterNotFound::ParameterNotFound(const std::string &msg) {
+//     m_Message = msg;
+// }
+
+// const char * ParameterNotFound::what() const noexcept {
+//     return m_Message.data();
+// }
+
+ParameterNotFound::ParameterNotFound(const char * msg) {
+    m_Message = msg;
+}
+
+const char * ParameterNotFound::what() const noexcept {
+    return m_Message;
+}
+
 InputFile::InputFile(const std::string &fileName) {
     m_InFile.open(fileName, std::ios::in);
     if (!m_InFile.is_open()) {

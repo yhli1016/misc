@@ -4,6 +4,8 @@
 #include <fstream>
 #include <sstream>
 #include <regex>
+#include <stdexcept>
+
 #include <eigen3/Eigen/Dense>
 
 namespace abplas {
@@ -14,6 +16,24 @@ double getScaleFactorLength(const std::string &currentUnit);
 double getScaleFactorEnergy(const std::string &currentUnit);
 
 double getScaleFactorTime(const std::string &currentUnit);
+
+// Exception based on std::string
+// class ParameterNotFound: public std::exception {
+//     private:
+//         std::string m_Message;
+//     public:
+//         ParameterNotFound(const std::string &msg);
+//         virtual const char * what() const noexcept;
+// };
+
+// Exception based on char *
+class ParameterNotFound: public std::exception {
+    private:
+        const char *m_Message;
+    public:
+        ParameterNotFound(const char *msg);
+        virtual const char * what() const noexcept;
+};
 
 class InputFile {
     public:
