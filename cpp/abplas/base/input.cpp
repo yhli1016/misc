@@ -8,11 +8,18 @@
 
 namespace {
 
+/// @brief Reset the stringstream object
+/// @param[in,out] ss stringstream object to reset 
 void resetStringStream(std::stringstream &ss) {
     ss.clear();
     ss.str("");
 }
 
+/// @brief Count the number of lines between header and tail
+/// @param[in] idxStart line number of header, starting from either 0 or 1
+/// @param[in] idxEnd line number of tail, starting from either 0 or 1
+/// @return number of lines, with header and tail excluded
+/// @note The header and tail lines are excluded, otherwise it should be +1 instead of -1.
 int countLine(int idxStart, int idxEnd) {
     return idxEnd - idxStart - 1;
 }
@@ -73,14 +80,6 @@ double getScaleFactorTime(const std::string &currentUnit) {
     return scale_factor;
 }
 
-// ParameterNotFound::ParameterNotFound(const std::string &msg) {
-//     m_Message = msg;
-// }
-
-// const char * ParameterNotFound::what() const noexcept {
-//     return m_Message.data();
-// }
-
 ParameterNotFound::ParameterNotFound(const char * msg) {
     m_Message = msg;
 }
@@ -88,6 +87,14 @@ ParameterNotFound::ParameterNotFound(const char * msg) {
 const char * ParameterNotFound::what() const noexcept {
     return m_Message;
 }
+
+// ParameterNotFound::ParameterNotFound(const std::string &msg) {
+//     m_Message = msg;
+// }
+
+// const char * ParameterNotFound::what() const noexcept {
+//     return m_Message.data();
+// }
 
 InputFile::InputFile(const std::string &fileName) {
     m_InFile.open(fileName, std::ios::in);
