@@ -203,8 +203,10 @@ bmod () {
     elif [[ "$cmd" == "use" ]]; then
         if [[ "$2" =~ "append" ]]; then
             export BMOD_MOD=$BMOD_MOD:$3
-        else
+        elif [[ "$2" =~ "prepend" ]]; then
             export BMOD_MOD=$3:$BMOD_MOD
+        else
+            export BMOD_MOD=$3
         fi
     else
         echo "ERROR: Illegal command '$cmd'"
