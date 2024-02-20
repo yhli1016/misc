@@ -1,3 +1,9 @@
+///
+/// Functions and classes for parsing input and struct files and unit conversion
+///
+/// @author: Yunhai Li (yhli)
+///
+
 #ifndef ABPLAS_BASE_INPUT_H
 #define ABPLAS_BASE_INPUT_H
 

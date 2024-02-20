@@ -1,3 +1,9 @@
+///
+/// Functions and classes for coordinates conversion and lattice operations
+///
+/// @author: Yunhai Li (yhli)
+///
+
 #ifndef ABPLAS_BASE_LATTICE_H
 #define ABPLAS_BASE_LATTICE_H
 

@@ -1,11 +1,15 @@
+///
+/// CODATA recommended values of fundamental physical constants: 2018
+/// Review of Modern Physics, 93, 025010 (2021).
+///
+/// @author: Yunhai Li (yhli)
+///
+
 #ifndef ABPLAS_BASE_CONSTS_H
 #define ABPLAS_BASE_CONSTS_H
 
 namespace abplas {
 namespace base {
-
-// CODATA recommended values of fundamental physical constants: 2018
-// Review of Modern Physics, 93, 025010 (2021).
 
 /// @brief PI
 constexpr double PI = 3.14159265358979323846;
