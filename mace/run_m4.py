@@ -2,7 +2,7 @@
 from mace import include, Mace
 
 
-m = {}
+m = Mace()
 
 # Macros can be strings, integers and floats.
 m["PREFIX"] = "'test'"
@@ -46,4 +46,4 @@ ATOMIC_POSITIONS {crystal}
 m["KPT"] = include("kpt.inc")
 
 # Generate input from template
-Mace(m).expand_m4("scf.m4", "test.in")
+m.expand_file_m4("scf.m4", "test.in")

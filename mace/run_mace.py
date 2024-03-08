@@ -2,7 +2,7 @@
 from mace import include, Mace
 
 
-m = {}
+m = Mace()
 
 # Macros can be strings, integers and floats.
 m["PREFIX"] = "'test'"
@@ -46,4 +46,4 @@ ATOMIC_POSITIONS {crystal}
 m["KPT"] = include("kpt.inc")
 
 # Call expand_file to expand the macros
-Mace(m).expand_re("scf.tpl", "test.in")
+m.expand_file("scf.tpl", "test.in")
