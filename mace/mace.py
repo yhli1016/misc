@@ -68,10 +68,10 @@ class Mace:
         :return: (line, status) where line is the expanded line and flag is
             whether expansion has been performed
         """
-        result = re.search(self._pattern, line)
+        result = re.findall(self._pattern, line)
         status = False
-        if result is not None:
-            name = result.group()[1:-1]
+        for item in result:
+            name = item[1:-1]
             try:
                 text = str(self._macro[name]).lstrip("\n").rstrip("\n")
             except KeyError:
