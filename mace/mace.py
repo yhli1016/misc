@@ -125,6 +125,14 @@ class Mace:
                 m4_file.write(f"define([{key}], [{value}])dnl\n")
         os.system(f"m4 {args} {template} | awk 'NF>0' > {output}")
 
+    def clear(self) -> None:
+        """
+        Clear all macro definitions.
+
+        :return: None
+        """
+        self._macro = dict()
+
 
 def main() -> None:
     """
