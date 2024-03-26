@@ -213,4 +213,33 @@ bmod () {
     fi
 }
 
-complete -W "add rm ls av cl pg use" bmod
+# Auto-complete for 'bmod' command
+_bmod_complete() {
+    COMPREPLY=()
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    local cmd=${COMP_WORDS[COMP_CWORD-1]}
+    local opts=""
+    case $cmd in
+    bmod)
+        # DO NOT put options in a variable
+        COMPREPLY=($(compgen -W "add rm ls av cl pg use" -- $cur))
+        ;;
+    add)
+        for path in $(echo $BMOD_MOD | sed 's/:/\n/g'); do
+            opts=$(ls $path | sed 's/.sh//g')
+        done
+        COMPREPLY=($(compgen -W "${opts[@]}" -- $cur))
+        ;;
+    rm)
+        opts=$(echo $BMOD_LOADED_MODS | sed -e 's/:/\n/g' -e 's/.sh//g')
+        COMPREPLY=($(compgen -W "${opts[@]}" -- $cur))
+        ;;
+    use)
+        # DO NOT put options in a variable
+        COMPREPLY=($(compgen -W "append prepend" -- $cur))
+        ;;
+    *)
+        ;;
+    esac
+}
+complete -F _bmod_complete bmod
