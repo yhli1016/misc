@@ -4,47 +4,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
-
-class Config:
-    """Class for holding plotting configurations."""
-    def __init__(self) -> None:
-        # Figure settings
-        self.figure_size = (6.4, 4.8)
-        self.figure_dpi = 300
-        self.figure_name = "bands.png"
-
-        # Font settings
-        self.font_size = 16
-        self.font_family = "Liberation Sans"
-        self.font_weight = "normal"
-
-        # Axes settings
-        self.tick_width = 1.0
-        self.tick_length_major = 8
-        self.tick_length_minor = 4
-        self.spine_width = 1.0
-
-        # Line settings
-        self.line_width = 1.5
-        self.axline_width = 0.5
-
-    def rc(self, **kwargs) -> None:
-        """Change global configurations."""
-        plt.rc("font", size=self.font_size, family=self.font_family,
-               weight=self.font_weight, **kwargs)
-
-    def figure(self, **kwargs) -> plt.Figure:
-        """Create figure from configurations."""
-        return plt.figure(figsize=self.figure_size, dpi=self.figure_dpi,
-                          **kwargs)
+from plotutils import Config, SinglePlot
 
 
+@SinglePlot(Config(figure_name="bands.png"))
 def plot(ax: plt.Axes, config: Config) -> None:
     """Actually plot the data."""
     # Load data
-    k_idx = np.load("k_idx.npy")
-    k_len = np.load("k_len.npy")
-    bands = np.load("bands.npy")
+    data_dir = "data/bands"
+    k_idx = np.load(f"{data_dir}/k_idx.npy")
+    k_len = np.load(f"{data_dir}/k_len.npy")
+    bands = np.load(f"{data_dir}/bands.npy")
 
     # Plot data
     num_bands = bands.shape[1]
@@ -54,7 +24,7 @@ def plot(ax: plt.Axes, config: Config) -> None:
         ax.axvline(k_len[idx], color="k", linewidth=config.axline_width)
 
     # Basic ticks settings
-    k_label = ["$\Gamma$", "M", "K", "$\Gamma$"]
+    k_label = ["L", "G", "X", "W", "K", "G"]
     # ax.set_xlabel()
     ax.set_ylabel("Energy (eV)")
     ax.set_xlim(0, np.amax(k_len))
@@ -80,21 +50,5 @@ def plot(ax: plt.Axes, config: Config) -> None:
         ax.spines[pos].set_linewidth(config.spine_width)
 
 
-def main():
-    config = Config()
-    config.rc()
-
-    # Create figure and axes
-    fig = config.figure()
-    ax = fig.add_subplot()
-
-    # Plot data
-    plot(ax, config)
-
-    # Save figure
-    fig.tight_layout()
-    fig.savefig(config.figure_name)
-
-
 if __name__ == "__main__":
-    main()
+    plot()

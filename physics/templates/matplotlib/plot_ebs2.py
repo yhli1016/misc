@@ -4,10 +4,9 @@ import re
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-from plotutils import Config, SinglePlot
+from plotutils import Config, plot_single
 
 
-@SinglePlot(Config(figure_name="ebs.png"))
 def plot(ax: plt.Axes, config: Config) -> None:
     """Actually plot the data."""
     data_dir = "data/ebs"
@@ -63,4 +62,4 @@ def plot(ax: plt.Axes, config: Config) -> None:
 
 
 if __name__ == "__main__":
-    plot()
+    plot_single(Config(figure_name="ebs2.png"), plot)

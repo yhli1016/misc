@@ -2,10 +2,9 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from plotutils import Config, SinglePlot
+from plotutils import Config, plot_single
 
 
-@SinglePlot(Config(figure_name="dos.png"))
 def plot(ax: plt.Axes, config: Config) -> None:
     """
     Plot DOS as function of energy.
@@ -47,4 +46,4 @@ def plot(ax: plt.Axes, config: Config) -> None:
 
 
 if __name__ == "__main__":
-    plot()
+    plot_single(Config(figure_name="dos2.png"), plot)
