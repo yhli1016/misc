@@ -75,7 +75,7 @@ class SinglePlot:
             self.config.rc()
             fig = self.config.figure()
             ax = fig.add_subplot()
-            func(ax, self.config, *args, *kwargs)
+            func(ax, self.config, *args, **kwargs)
             fig.tight_layout()
             fig.savefig(self.config.figure_name)
         return _plot
@@ -108,7 +108,7 @@ def plot_single(config: Config, func: Callable, *args, **kwargs) -> None:
     config.rc()
     fig = config.figure()
     ax = fig.add_subplot()
-    func(ax, config, *args, *kwargs)
+    func(ax, config, *args, **kwargs)
     fig.tight_layout()
     fig.savefig(config.figure_name)
 
