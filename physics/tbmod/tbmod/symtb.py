@@ -1,5 +1,5 @@
 from collections import namedtuple
-from typing import Tuple, List
+from typing import Tuple, List, Union
 
 import sympy as sp
 import numpy as np
@@ -43,7 +43,7 @@ class Model:
 
     Attributes
     ----------
-    _lattice: (3, 3) float64 np.ndarray
+    _lattice: Union[sp.Matrix, np.ndarray]
         Cartesian coordinates of lattice vectors
     _orbitals: List[Orbital]
         list of orbital positions and on-site energies
@@ -51,12 +51,15 @@ class Model:
         keys: cell indices + orbital pairs
         values: hopping energies
     """
-    def __init__(self, lattice: np.ndarray = np.eye(3)) -> None:
+    def __init__(self, lattice: Union[sp.Matrix, np.ndarray] = None) -> None:
         """
-        :param lattice: (3, 3) float64 np.ndarray
+        :param lattice: (3, 3) sympy or numpy array
             Cartesian coordinates of lattice vectors
         """
-        self._lattice = lattice
+        if lattice is None:
+            self._lattice = sp.eye(3)
+        else:
+            self._lattice = lattice
         self._orbitals = []
         self._hoppings = dict()
 
@@ -175,8 +178,11 @@ class Model:
                 dr = rn
             k_dot_r = kpt[0] * dr[0] + kpt[1] * dr[1] + kpt[2] * dr[2]
             phase = 2 * sp.pi * k_dot_r
-            hk[orb_i, orb_j] += energy * sp.exp(sp.I * phase)
-            hk[orb_j, orb_i] = hk[orb_i, orb_j].conjugate()
+            hij = energy * sp.exp(sp.I * phase)
+            # DO NOT use hk[i, j] = hk[j, i].conjugate(), otherwise the diagonal
+            # terms will be wrong!
+            hk[orb_i, orb_j] += hij
+            hk[orb_j, orb_i] += hij.conjugate()
         return hk
 
     def plot(self, fig_name: str = None,

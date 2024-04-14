@@ -1,16 +1,14 @@
 """Functions and classes for advanced modeling."""
 
 from typing import Tuple, Union
-from abc import ABC, abstractmethod
 import math
 
 import sympy as sp
 import numpy as np
-from scipy.optimize import leastsq
 
 
 __all__ = ["f_type", "c_type", "rn_type", "pos_type", "cart2frac", "frac2cart",
-           "SK", "SOCTable", "ParamFit"]
+           "SK", "SOCTable"]
 
 
 # Type aliases
@@ -18,6 +16,7 @@ f_type = Union[int, float, sp.Basic]
 c_type = Union[int, float, complex, sp.Basic]
 rn_type = Tuple[int, int, int]
 pos_type = Tuple[f_type, f_type, f_type]
+
 
 def cart2frac(lattice_vectors: np.ndarray,
               cartesian_coordinates: np.ndarray,
@@ -654,89 +653,3 @@ class SOCTable:
         s_i = 0 if spin_i == "up" else 1
         s_j = 0 if spin_j == "up" else 1
         return soc_mat[s_i, s_j]
-
-
-class ParamFit(ABC):
-    """
-    Class for fitting on-site energies and hopping parameters to reference
-    band data.
-
-    Attributes
-    ----------
-    _k_points: (num_kpt, 3) float64 array
-        FRACTIONAL coordinates of the k-points corresponding to the band data
-    _bands_ref: (num_kpt, num_orb) float64 array
-        copy of reference band data
-    _weights: (num_orb,) float64 array
-        weights of each band during fitting process
-    """
-    def __init__(self, k_points: np.ndarray,
-                 weights: np.ndarray = None) -> None:
-        """
-        :param k_points: (num_kpt, 3) float64 array
-            FRACTIONAL coordinates of the k-points
-        :param weights: (num_orb,) float64 array
-            weights of each band for fitting
-        :raises ValueError: if length of weights does not match band data
-        """
-        self._k_points = k_points
-        self._bands_ref = self.calc_bands_ref()
-        num_bands = self._bands_ref.shape[1]
-        if weights is None:
-            self._weights = np.ones(num_bands)
-        else:
-            if weights.shape[0] != num_bands:
-                raise ValueError(f"Length of weights should be {num_bands}")
-            weights = np.abs(weights)
-            weights /= weights.sum()
-            self._weights = weights
-
-    @abstractmethod
-    def calc_bands_ref(self) -> np.ndarray:
-        """
-        Method for calculating reference band data.
-
-        :return: (num_kpt, num_orb) float64 array
-            reference band data
-        """
-        pass
-
-    @abstractmethod
-    def calc_bands_fit(self, params: np.ndarray) -> np.ndarray:
-        """
-        Method for calculating fitted band data from given parameters.
-
-        :param params: parameters to fit
-        :return: (num_kpt, num_orb) float64 array
-            band data of the model built from parameters
-        """
-        pass
-
-    def estimate_error(self, params: np.ndarray) -> np.ndarray:
-        """
-        Object function for minimizing the error between reference and fitted
-        band data.
-
-        :param params: parameters to fit
-        :return: flattened difference between band data
-        """
-        bands_fit = self.calc_bands_fit(params)
-        bands_diff = self._bands_ref - bands_fit
-        for i, w in enumerate(self._weights):
-            bands_diff[:, i] *= w
-        return bands_diff.flatten()
-
-    def fit(self, params0: np.ndarray, **kwargs) -> np.ndarray:
-        """
-        Fit the parameters to reference band data.
-
-        :param params0: initial value of parameters to fit
-        :param kwargs: keyword parameters for the 'leastsq' function of scipy
-        :return: the optimal parameters after fitting
-        :raises RuntimeError: if the fitting fails
-        """
-        result = leastsq(self.estimate_error, params0, **kwargs)
-        params, status = result[0], result[1]
-        if status not in (1, 2, 3, 4):
-            raise RuntimeError(f"Fitting failed with status {status}")
-        return params
