@@ -52,7 +52,7 @@ class AtomicOrbital:
         :raises ValueError: if the quantum numbers are illegal
         """
         l, m, s = key
-        if (not -l <= m <= l) or  (s != -1 and s != 1):
+        if (not -l <= m <= l) or (s != -1 and s != 1):
             raise ValueError(f"Illegal quantum number {key}")
 
     def l_plus(self) -> None:
@@ -265,7 +265,9 @@ class SOC:
     """
     def __init__(self) -> None:
         self._orbital_labels = {"s", "px", "py", "pz",
-                                "dxy", "dx2-y2", "dyz", "dzx", "dz2"}
+                                "dxy", "dx2-y2", "dyz", "dzx", "dz2",
+                                "fy(3x2-y2)", "fxyz", "fyz2", "fz3", "fxz2",
+                                "fz(x2-y2)", "fx(x2-3y2)"}
         self._spin_labels = {"up", "down"}
 
         # Initialize atomic orbitals
@@ -301,6 +303,21 @@ class SOC:
             self._orbital_basis[("dzx", spin)][(2, 1, s)] = -c
             self._orbital_basis[("dx2-y2", spin)][(2, -2, s)] = c
             self._orbital_basis[("dx2-y2", spin)][(2, 2, s)] = c
+
+            # f states
+            self._orbital_basis[("fy(3x2-y2)", spin)][(3, -3, s)] = ci
+            self._orbital_basis[("fy(3x2-y2)", spin)][(3, 3, s)] = ci
+            self._orbital_basis[("fxyz", spin)][(3, -2, s)] = ci
+            self._orbital_basis[("fxyz", spin)][(3, 2, s)] = -ci
+            self._orbital_basis[("fyz2", spin)][(3, -1, s)] = ci
+            self._orbital_basis[("fyz2", spin)][(3, 1, s)] = ci
+            self._orbital_basis[("fz3", spin)][(3, 0, s)] = 1
+            self._orbital_basis[("fxz2", spin)][(3, -1, s)] = c
+            self._orbital_basis[("fxz2", spin)][(3, 1, s)] = -c
+            self._orbital_basis[("fz(x2-y2)", spin)][(3, -2, s)] = c
+            self._orbital_basis[("fz(x2-y2)", spin)][(3, 2, s)] = c
+            self._orbital_basis[("fx(x2-3y2)", spin)][(3, -3, s)] = c
+            self._orbital_basis[("fx(x2-3y2)", spin)][(3, 3, s)] = -c
 
     @staticmethod
     def _eval_soc(bra: AtomicOrbital, ket: AtomicOrbital) -> c_type:
@@ -361,7 +378,7 @@ class SOC:
         return soc
 
 
-def main():
+def test_tbplas() -> None:
     import tbplas as tb
     soc = tb.SOC()
     soc2 = SOC()
@@ -385,10 +402,32 @@ def main():
                         print(v1 - v2)
     timer.report_total_time()
 
+
+def print_soc_table(soc: SOC, labels: Iterable[str]) -> None:
+    spin_labels = ("up", "down")
+    for s1 in spin_labels:
+        for s2 in spin_labels:
+            print(f"{s1} {s2}")
+            for o1 in labels:
+                for o2 in labels:
+                    v = soc.eval(o1, s1, o2, s2)
+                    if abs(v) >= 1.0e-5:
+                        v2 = v**2
+                        print(f"{o1:>16s}{o2:>16s}{str(v):>16s}{str(v2):>16s}")
+
+
+def main():
     # Print SOC table
-    soc2.print_soc_table("up", "up")
-    soc2.print_soc_table("up", "down")
-    soc2.print_soc_table("down", "up")
+    soc = SOC()
+    labels = {"p": ("px", "py", "pz"),
+              "d": ("dxy", "dx2-y2", "dyz", "dzx", "dz2"),
+              "f": ("fy(3x2-y2)", "fxyz", "fyz2", "fz3", "fxz2", "fz(x2-y2)",
+                    "fx(x2-3y2)")}
+    print("<l*s> and <l*s>**2 in hbar**2 and hbar**4:\n")
+    for key, value in labels.items():
+        print(f"{key} orbitals:")
+        print_soc_table(soc, value)
+        print()
 
 
 if __name__ == "__main__":
