@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Plot carrier mobility with wrapper function."""
 
 import numpy as np
 import matplotlib.pyplot as plt

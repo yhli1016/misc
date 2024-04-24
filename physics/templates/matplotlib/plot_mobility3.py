@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""Plot carrier mobility without decorator or wrapper."""
 
 import numpy as np
 import matplotlib.pyplot as plt
