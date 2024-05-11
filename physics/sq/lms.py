@@ -251,24 +251,23 @@ class AtomicOrbital:
 
 class SOC:
     """
-    Class for evaluating spin-orbital coupling terms, adapted from the 'SOC'
-    class of TBPLaS.
+    Class for evaluating spin-orbital coupling terms.
 
     Attributes
     ----------
-    _orbital_labels: Set[str]
+    _orbital_labels: Tuple[str, ...]
         labels of atomic orbitals
-    _spin_labels: Set[str]
+    _spin_labels: Tuple[str, ...]
         directions of spins
     _orbital_basis: Dict[str, AtomicOrbital]
         collection of atomic orbitals s, px, py, pz. etc
     """
     def __init__(self) -> None:
-        self._orbital_labels = {"s", "px", "py", "pz",
+        self._orbital_labels = ("s", "px", "py", "pz",
                                 "dxy", "dx2-y2", "dyz", "dzx", "dz2",
                                 "fy(3x2-y2)", "fxyz", "fyz2", "fz3", "fxz2",
-                                "fz(x2-y2)", "fx(x2-3y2)"}
-        self._spin_labels = {"up", "down"}
+                                "fz(x2-y2)", "fx(x2-3y2)")
+        self._spin_labels = ("up", "down")
 
         # Initialize atomic orbitals
         self._orbital_basis = dict()
@@ -328,29 +327,63 @@ class SOC:
         product = sp.Rational(1, 2) * (p1 + p2) + p3
         return product
 
-    def print_soc_table(self, spin_i: str = "up", spin_j: str = "up") -> None:
+    def print_table_py(self) -> None:
         """
-        Print SOC terms between orbital basis functions, for generating the
-        coefficients in 'SOCTable' class.
+        Print SOC table in python format.
 
-        :param spin_i: spin direction of bra
-        :param spin_j: spin direction kf ket
         :return: None
-        :raises ValueError: if spin directions are illegal
         """
-        for spin in (spin_i, spin_j):
-            if spin not in self._spin_labels:
-                raise ValueError(f"Illegal spin direction {spin}")
-        soc_table = dict()
-        for label_i in self._orbital_labels:
-            for label_j in self._orbital_labels:
-                bra = self._orbital_basis[(label_i, spin_i)]
-                ket = self._orbital_basis[(label_j, spin_j)]
-                soc = self._eval_soc(bra, ket)
-                if abs(soc) > 1.0e-5:
-                    soc_table[(label_i, label_j)] = soc
         print("Factor: h_bar**2")
-        print(soc_table)
+        print("I = 1j")
+        for spin_i in self._spin_labels:
+            for spin_j in self._spin_labels:
+                print(spin_i, spin_j)
+                soc_table = dict()
+                for label_i in self._orbital_labels:
+                    for label_j in self._orbital_labels:
+                        bra = self._orbital_basis[(label_i, spin_i)]
+                        ket = self._orbital_basis[(label_j, spin_j)]
+                        soc = self._eval_soc(bra, ket).evalf()
+                        if abs(soc) > 1.0e-5:
+                            soc_table[(label_i, label_j)] = soc
+                print(soc_table)
+
+    def print_table_cpp(self) -> None:
+        """
+        Print SOC table in c++ format.
+
+        :return: None
+        """
+        print("Factor: h_bar**2")
+        print("const std::complex<double> I = {0.0, 1.0};")
+        print("std::<std::tuple<std::string, std::string> std::complex<double>> data;")
+        for spin_i in self._spin_labels:
+            for spin_j in self._spin_labels:
+                print(spin_i, spin_j)
+                for label_i in self._orbital_labels:
+                    for label_j in self._orbital_labels:
+                        bra = self._orbital_basis[(label_i, spin_i)]
+                        ket = self._orbital_basis[(label_j, spin_j)]
+                        soc = self._eval_soc(bra, ket).evalf()
+                        if abs(soc) > 1.0e-5:
+                            print(f'data[{{"{label_i}", "{label_j}"}}] = {soc};')
+
+    def print_table_text(self) -> None:
+        """
+        Print SOC table in raw text.
+
+        :return: None
+        """
+        for spin_i in self._spin_labels:
+            for spin_j in self._spin_labels:
+                print(spin_i, spin_j)
+                for label_i in self._orbital_labels:
+                    for label_j in self._orbital_labels:
+                        bra = self._orbital_basis[(label_i, spin_i)]
+                        ket = self._orbital_basis[(label_j, spin_j)]
+                        soc = self._eval_soc(bra, ket)
+                        if abs(soc) > 1.0e-5:
+                            print(f"{label_i:>16s}{label_j:>16s}{str(soc):>16s}")
 
     def eval(self, label_i: str = "s",
              spin_i: str = "up",
@@ -364,14 +397,11 @@ class SOC:
         :param label_j: orbital label of ket
         :param spin_j: spin direction of ket
         :return: matrix element in h_bar**2
-        :raises ValueError: if orbital labels or spin directions are illegal
         """
         for label in (label_i, label_j):
-            if label not in self._orbital_labels:
-                raise ValueError(f"Illegal orbital label {label}")
+            assert label in self._orbital_labels
         for spin in (spin_i, spin_j):
-            if spin not in self._spin_labels:
-                raise ValueError(f"Illegal spin direction {spin}")
+            assert spin in self._spin_labels
         bra = self._orbital_basis[(label_i, spin_i)]
         ket = self._orbital_basis[(label_j, spin_j)]
         soc = self._eval_soc(bra, ket)
@@ -403,31 +433,10 @@ def test_tbplas() -> None:
     timer.report_total_time()
 
 
-def print_soc_table(soc: SOC, labels: Iterable[str]) -> None:
-    spin_labels = ("up", "down")
-    for s1 in spin_labels:
-        for s2 in spin_labels:
-            print(f"{s1} {s2}")
-            for o1 in labels:
-                for o2 in labels:
-                    v = soc.eval(o1, s1, o2, s2)
-                    if abs(v) >= 1.0e-5:
-                        v2 = v**2
-                        print(f"{o1:>16s}{o2:>16s}{str(v):>16s}{str(v2):>16s}")
-
-
 def main():
-    # Print SOC table
     soc = SOC()
-    labels = {"p": ("px", "py", "pz"),
-              "d": ("dxy", "dx2-y2", "dyz", "dzx", "dz2"),
-              "f": ("fy(3x2-y2)", "fxyz", "fyz2", "fz3", "fxz2", "fz(x2-y2)",
-                    "fx(x2-3y2)")}
-    print("<l*s> and <l*s>**2 in hbar**2 and hbar**4:\n")
-    for key, value in labels.items():
-        print(f"{key} orbitals:")
-        print_soc_table(soc, value)
-        print()
+    soc.print_table_cpp()
+    test_tbplas()
 
 
 if __name__ == "__main__":
