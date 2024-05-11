@@ -70,7 +70,7 @@ class AtomicOrbital:
             l, m, s = key
             key_new = (l, m+1, s)
             try:
-                self._check_qn(key)
+                self._check_qn(key_new)
             except ValueError:
                 pass
             else:
@@ -93,7 +93,7 @@ class AtomicOrbital:
             l, m, s = key
             key_new = (l, m-1, s)
             try:
-                self._check_qn(key)
+                self._check_qn(key_new)
             except ValueError:
                 pass
             else:
@@ -146,7 +146,7 @@ class AtomicOrbital:
             l, m, s = key
             key_new = (l, m, s+2)
             try:
-                self._check_qn(key)
+                self._check_qn(key_new)
             except ValueError:
                 pass
             else:
@@ -170,7 +170,7 @@ class AtomicOrbital:
             l, m, s = key
             key_new = (l, m, s-2)
             try:
-                self._check_qn(key)
+                self._check_qn(key_new)
             except ValueError:
                 pass
             else:
