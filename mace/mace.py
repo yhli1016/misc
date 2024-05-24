@@ -41,7 +41,7 @@ class Mace:
             self._macro = dict()
         self._pattern = re.compile(r"<\w+>")
 
-    def __getitem__(self, key: str) -> str:
+    def __getitem__(self, key: str) -> Any:
         """
         Get macro content.
 
@@ -73,10 +73,14 @@ class Mace:
         for item in result:
             name = item[1:-1]
             try:
-                text = str(self._macro[name]).lstrip("\n").rstrip("\n")
+                macro = self._macro[name]
             except KeyError:
                 pass
             else:
+                if isinstance(macro, list):
+                    text = "".join(macro).lstrip("\n").rstrip("\n")
+                else:
+                    text = str(macro).lstrip("\n").rstrip("\n")
                 line = re.sub(f"<{name}>", text, line)
                 status = True
         return line, status
