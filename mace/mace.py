@@ -20,6 +20,51 @@ def include(filename: str, nl0: int = None, nl1: int = None) -> str:
     return line
 
 
+def parse_block(filename: str) -> Dict[str, List[str]]:
+    """
+    Read file and split into blocks according to tags.
+
+    Beginning tag: /* begin xxx */
+    Ending tag: /* end xxx */
+
+    :param filename: name of the file
+    :return: dict with keys being block names and values begin block contents
+    """
+    # Read raw content
+    with open(filename, "r") as infile:
+        content = infile.readlines()
+
+    # Determine starting and ending line numbers
+    begin_pattern = re.compile(r"^\s*/\s*\*\s*begin\s+(\w+)\s*\*\s*/$", re.I)
+    end_pattern = re.compile(r"^\s*/\s*\*\s*end\s+(\w+)\s*\*\s*/$", re.I)
+    begin_nl = dict()
+    end_nl = dict()
+    for i, line in enumerate(content):
+        result = re.search(begin_pattern, line)
+        if result is not None:
+            begin_nl[result.group(1)] = i
+        result = re.search(end_pattern, line)
+        if result is not None:
+            end_nl[result.group(1)] = i
+
+    # Check if any block has missing line numbers
+    diff = set(begin_nl.keys()).difference(end_nl.keys())
+    if len(diff) > 0:
+        for key in diff:
+            raise RuntimeError(f"Ending tag of {key} not found")
+    diff = set(end_nl.keys()).difference(begin_nl.keys())
+    if len(diff) > 0:
+        for key in diff:
+            raise RuntimeError(f"Beginning tag of {key} not found")
+
+    # Split content into blocks
+    blocks = dict()
+    for key, nl0 in begin_nl.items():
+        nl1 = end_nl[key]
+        blocks[key] = content[nl0:nl1+1]
+    return blocks
+
+
 class Mace:
     """
     Class for macro expansion.
@@ -28,8 +73,10 @@ class Mace:
     ----------
     _macro: Dict[str, Any]
         macro definitions
-    _pattern: re.Pattern
-        pre-compiled regular expressions
+    _pattern_var: re.Pattern
+        regular expression for detecting variable references
+    _pattern_func: re.Pattern
+        regular expression for detecting function calls
     """
     def __init__(self, macro: Dict[str, Any] = None) -> None:
         """
@@ -39,7 +86,8 @@ class Mace:
             self._macro = macro
         else:
             self._macro = dict()
-        self._pattern = re.compile(r"<\w+>")
+        self._pattern_var = re.compile(r"<\s*(\w+)\s*>")
+        self._pattern_func = re.compile(r"<\s*(\w+\s*:.+)\s*>")
 
     def __getitem__(self, key: str) -> Any:
         """
@@ -60,29 +108,79 @@ class Mace:
         """
         self._macro[key] = value
 
+    def _expand_func(self, line: str) -> Tuple[str, bool]:
+        """
+        Expand function calls in given line.
+
+        :param line: line to expand
+        :return: (line, status) expanded line and whether it differs from the
+            original line
+        """
+        status = False
+        result = re.findall(self._pattern_func, line)
+        for item in result:
+            # Parse function name and arguments
+            item_split = item.split(":")
+            func_name = item_split[0].lstrip().rstrip()
+            func_args = [_.lstrip().rstrip() for _ in item_split[1].split(",")]
+
+            # Convert key=val in func_args to dict
+            args_dict = dict()
+            for arg in func_args:
+                arg_split = arg.split("=")
+                arg_name = arg_split[0].lstrip().rstrip()
+                arg_text = arg_split[1].lstrip().rstrip()
+                args_dict[arg_name] = arg_text
+
+            # Expand function calls
+            try:
+                func_text = self._macro[func_name]
+            except KeyError:
+                pass
+            else:
+                if isinstance(func_text, list):
+                    func_text = "".join(func_text)
+                for key, value in args_dict.items():
+                    func_text = re.sub(f"<{key}>", value, func_text)
+                line = re.sub(f"<{item}>", func_text, line)
+                status = True
+        return line, status
+
+    def _expand_var(self, line: str) -> Tuple[str, bool]:
+        """
+        Expand variable references in given line.
+
+        :param line: line to expand
+        :return: (line, status) expanded line and whether it differs from the
+            original line
+        """
+        status = False
+        result = re.findall(self._pattern_var, line)
+        for item in result:
+            try:
+                var_text = self._macro[item]
+            except KeyError:
+                pass
+            else:
+                if isinstance(var_text, list):
+                    var_text = "".join(var_text).lstrip("\n").rstrip("\n")
+                else:
+                    var_text = str(var_text).lstrip("\n").rstrip("\n")
+                line = re.sub(f"<{item}>", var_text, line)
+                status = True
+        return line, status
+
     def _expand(self, line: str) -> Tuple[str, bool]:
         """
         Expand macros in given line once.
 
-        :param line: line to be expanded
-        :return: (line, status) where line is the expanded line and flag is
-            whether expansion has been performed
+        :param line: line to expand
+        :return: (line, status) expanded line and whether it differs from the
+            original line
         """
-        result = re.findall(self._pattern, line)
-        status = False
-        for item in result:
-            name = item[1:-1]
-            try:
-                macro = self._macro[name]
-            except KeyError:
-                pass
-            else:
-                if isinstance(macro, list):
-                    text = "".join(macro).lstrip("\n").rstrip("\n")
-                else:
-                    text = str(macro).lstrip("\n").rstrip("\n")
-                line = re.sub(f"<{name}>", text, line)
-                status = True
+        line, status_func = self._expand_func(line)
+        line, status_var = self._expand_var(line)
+        status = status_func and status_var
         return line, status
 
     def expand_lines(self, lines: List[str]) -> List[str]:
