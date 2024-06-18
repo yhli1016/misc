@@ -227,6 +227,28 @@ class Mace:
                 m4_file.write(f"define([{key}], [{value}])dnl\n")
         os.system(f"m4 {args} {template} | awk 'NF>0' > {output}")
 
+    def line_replace(self, template: str, output: str) -> None:
+        """
+        Perform simple line replace on template file and save to output.
+
+        :param template: name of template file
+        :param output: name of output file
+        :return: None
+        """
+        with open(template, "r") as in_file:
+            raw_content = in_file.readlines()
+        patterns = {_: re.compile(rf"^\s*<\s*{_}\s*>\s*$")
+                    for _ in self._macro.keys()}
+        with open(output, "w") as out_file:
+            for line in raw_content:
+                expanded = False
+                for key, value in self._macro.items():
+                    if re.search(patterns[key], line) is not None:
+                        out_file.writelines(value)
+                        expanded = True
+                if not expanded:
+                    out_file.write(line)
+
     def clear(self) -> None:
         """
         Clear all macro definitions.
