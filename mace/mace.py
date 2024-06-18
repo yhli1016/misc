@@ -163,7 +163,7 @@ class Mace:
                 pass
             else:
                 if isinstance(var_text, list):
-                    var_text = "".join(var_text).lstrip("\n").rstrip("\n")
+                    var_text = "".join(var_text)
                 else:
                     var_text = str(var_text).lstrip("\n").rstrip("\n")
                 line = re.sub(f"<{item}>", var_text, line)
