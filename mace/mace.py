@@ -1,28 +1,41 @@
 import re
 import os
+from collections import defaultdict
 from typing import Dict, Tuple, List, Any
 
 
-def include(filename: str, nl0: int = None, nl1: int = None) -> str:
+def read_lines(filename: str, nl0: int = None, nl1: int = None) -> List[str]:
     """
-    Read file and return the content in a single line.
+    Read and select file content according to line numbers.
 
     :param filename: name of the file
     :param nl0: starting line number, counted from 1
     :param nl1: ending line number, counted from 1
-    :return: file content
+    :return: list of selected lines
     """
     with open(filename, "r") as infile:
         content = infile.readlines()
     nl_start = nl0 if nl0 is not None else 1
     nl_end = nl1 if nl1 is not None else len(content)
-    line = "".join(content[(nl_start-1):nl_end])
+    return content[(nl_start-1):nl_end]
+
+
+def include(filename: str, nl0: int = None, nl1: int = None) -> str:
+    """
+    Read and select file content according to line numbers.
+
+    :param filename: name of the file
+    :param nl0: starting line number, counted from 1
+    :param nl1: ending line number, counted from 1
+    :return: single line merged from selected lines
+    """
+    line = "".join(read_lines(filename, nl0, nl1))
     return line
 
 
 def parse_block(filename: str) -> Dict[str, List[str]]:
     """
-    Read file and split into blocks according to tags.
+    Read and split file content into blocks according to tags.
 
     Beginning tag: /* begin xxx */
     Ending tag: /* end xxx */
@@ -82,10 +95,12 @@ class Mace:
         """
         :param macro: dictionary containing macro definitions
         """
-        if macro is not None:
+        if macro is None:
+            self._macro = dict()
+        elif isinstance(macro, dict) or isinstance(macro, defaultdict):
             self._macro = macro
         else:
-            self._macro = dict()
+            raise TypeError("macro should be dict or defaultdict")
         self._pattern_var = re.compile(r"<\s*(\w+)\s*>")
         self._pattern_func = re.compile(r"<\s*(\w+\s*:.+)\s*>")
 
@@ -255,7 +270,10 @@ class Mace:
 
         :return: None
         """
-        self._macro = dict()
+        if isinstance(self._macro, dict):
+            self._macro = dict()
+        else:
+            self._macro = defaultdict(list)
 
 
 def main() -> None:
