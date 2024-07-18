@@ -1,0 +1,9 @@
+{
+    "job": "wfc",
+    "model": "fractal",
+    "tbg_kind": 10,
+    "quasi_crystal_kind": 2.0,
+    "fractal_kind": [2, 3, 4],
+    "wfc_energy": 0.0,
+    "output": "result.png"
+}
