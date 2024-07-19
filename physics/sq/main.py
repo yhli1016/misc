@@ -1,7 +1,3 @@
-import time
-from itertools import product
-from copy import deepcopy
-
 import numpy as np
 import scipy.linalg.lapack as lapack
 import sympy as sp
@@ -18,63 +14,21 @@ def eval_matrix_elements(operator, basis):
                 print(f"H({ib}, {ik}) = {result}")
 
 
-def get_eig_val(sp_states, num_particle, hop_terms, u_terms):
-    # Set Hamiltonian matrix
-    basis = [Fermion(_) for _ in sp_states.combinations(num_particle)]
-    ham = np.zeros((len(basis), len(basis)))
+def get_u_contrib(basis, hop_terms, u_terms):
+    # Set Hamiltonian and U matrices
+    t_mat = np.zeros((len(basis), len(basis)))
+    u_mat = np.zeros((len(basis), len(basis)))
     for ib, bra in enumerate(basis):
         for ik, ket in enumerate(basis):
-            ham[ib, ik] += hop_terms.eval(bra, ket)
-            ham[ib, ik] += u_terms.eval(bra, ket)
+            t_mat[ib, ik] += hop_terms.eval(bra, ket)
+            u_mat[ib, ik] += u_terms.eval(bra, ket)
 
     # Diagonalization
-    eig_val, eig_vec, info = lapack.zheev(ham)
-    return eig_val
-
-
-def add(a1, a2):
-    result = []
-    for i in product(a1, a2):
-        result.append(i[0] + i[1])
-    return result
-
-
-def diff(a1, a2):
-    for x in a1:
-        x_in_a2 = False
-        for y in a2:
-            if abs(y - x) < 1.0e-7:
-                x_in_a2 = True
-                break
-        if not x_in_a2:
-            print(x)
-
-
-def split_det(det_list, i):
-    result = []
-    for det in det_list:
-        d1, d2 = list(deepcopy(det)), list(deepcopy(det))
-        if i == 0:
-            d1[i] = ("u-x", d1[i][1], d1[i][2])
-            d2[i] = ("u", 0, 0)
-        elif i == 1:
-            d1[i] = (d1[i][0], "u-x", d1[i][2])
-            d2[i] = (0, "u", 0)
-        else:
-            d1[i] = (d1[i][0], d1[i][1], "u-x")
-            d2[i] = (0, 0, "u")
-        d1, d2 = tuple(d1), tuple(d2)
-        result.append(d1)
-        result.append(d2)
-    return result
-
-
-def print_det(det):
-    for row in det:
-        for v in row:
-            print("%4s" % v, end="")
-        print()
-    print("------------")
+    eig_val, eig_vec, info = lapack.zheev(t_mat + u_mat)
+    gs = eig_vec[:, 0]
+    t_contrib = np.matmul(gs.conjugate(), np.matmul(t_mat, gs))
+    u_contrib = np.matmul(gs.conjugate(), np.matmul(u_mat, gs))
+    print(t_contrib, u_contrib, abs(u_contrib / t_contrib))
 
 
 def test_u():
@@ -112,7 +66,7 @@ def test_u():
     eval_matrix_elements(u_terms, basis)
 
 
-def test_u2():
+def test_u_sympy():
     # Define single-particle states
     sp_states = SPStates()
     sp_states.append('1+')
@@ -147,110 +101,33 @@ def test_u2():
     eval_matrix_elements(u_terms, basis)
 
 
-def test_eig():
-    # Define single particle states
+def test_u_contrib():
+    num_site = 5
+    # Define single-particle states
     sp_states = SPStates()
-    sp_states.append('1+')
-    sp_states.append('1-')
-    sp_states.append('2+')
-    sp_states.append('2-')
-    sp_states.append('3+')
-    sp_states.append('3-')
-    sp_states.append('4+')
-    sp_states.append('4-')
+    for i in range(num_site):
+        sp_states.append(f"{i}+")
+        sp_states.append(f"{i}-")
     idx = sp_states.index
 
     # Define operators
+    t = 1.0
+    u = 2.0
     hop_terms = Operator()
-    # On-site terms
-    hop_terms.add_ons(idx['1+'], -0.2)
-    hop_terms.add_ons(idx['1-'], 0.5)
-    hop_terms.add_ons(idx['2+'], -1.0)
-    hop_terms.add_ons(idx['2-'], 0.1)
-    hop_terms.add_ons(idx['3+'], 0.3)
-    hop_terms.add_ons(idx['3-'], -0.5)
-    hop_terms.add_ons(idx['4+'], 1.0)
-    hop_terms.add_ons(idx['4-'], 0.1)
-    # 1st nearest hopping terms
-    hop_terms.add_hop(idx['1+'], idx['2+'], -1.0, True)
-    hop_terms.add_hop(idx['2+'], idx['3+'], 2.5, True)
-    hop_terms.add_hop(idx['3+'], idx['4+'], -1.5, True)
-    hop_terms.add_hop(idx['1-'], idx['2-'], -2.0, True)
-    hop_terms.add_hop(idx['2-'], idx['3-'], 1.2, True)
-    hop_terms.add_hop(idx['3-'], idx['4-'], -1.0, True)
-    # 2nd nearest hopping terms
-    hop_terms.add_hop(idx['1+'], idx['3+'], -0.5, True)
-    hop_terms.add_hop(idx['2+'], idx['4+'], 0.3, True)
-    hop_terms.add_hop(idx['1-'], idx['3-'], 0.5, True)
-    hop_terms.add_hop(idx['2-'], idx['4-'], -0.3, True)
-    # Hubbard terms
+    for i in range(num_site - 1):
+        hop_terms.add_hop(idx[f"{i}+"], idx[f"{i+1}+"], t, True)
+        hop_terms.add_hop(idx[f"{i}-"], idx[f"{i+1}-"], t, True)
     u_terms = Operator()
-    u_terms.add_hubbard(idx['1+'], idx['1-'], 0.0)
-    u_terms.add_hubbard(idx['2+'], idx['2-'], 0.0)
-    u_terms.add_hubbard(idx['3+'], idx['3-'], 0.0)
-    u_terms.add_hubbard(idx['4+'], idx['4-'], 0.0)
-
-    # Actual eigenvalues
-    eig1 = get_eig_val(sp_states, 1, hop_terms, u_terms)
-    eig2 = get_eig_val(sp_states, 2, hop_terms, u_terms)
-    eig3 = get_eig_val(sp_states, 3, hop_terms, u_terms)
-    eig4 = get_eig_val(sp_states, 4, hop_terms, u_terms)
-
-    # Sum of eigenvalues
-    eig11 = add(eig1, eig1)
-    eig12 = add(eig1, eig2)
-    eig13 = add(eig1, eig3)
-    eig22 = add(eig2, eig2)
-
-    # Check
-    print("\nTwo particle")
-    diff(eig2, eig11)
-    print("\nTree particle")
-    diff(eig3, eig12)
-    print("\nFour particle 13")
-    diff(eig4, eig13)
-    print("\nFour particle 22")
-    diff(eig4, eig22)
-
-
-def test_speed():
-    # Define single particle states
-    sp_states = SPStates()
-    for i in range(10):
-        sp_states.append(i)
+    for i in range(num_site):
+        u_terms.add_hubbard(idx[f"{i}+"], idx[f"{i}-"], u)
 
     # Define Fock states
-    num_particle = 2
-    basis = [Fermion(_) for _ in sp_states.combinations(num_particle)]
-
-    # Define operators
-    hop_terms = Operator()
-    for i, j in sp_states.permutations(2):
-        hop_terms.add_hop(i, j)
-
-    # Benchmark
-    t0 = time.time()
-    for ib, bra in enumerate(basis):
-        for ik, ket in enumerate(basis):
-            hop_terms.eval(bra, ket)
-    t1 = time.time()
-    print(t1 - t0)
-
-
-def test_det():
-    det = (("2u-x", "t", 0),
-           ("t", "2u-x", "t"),
-           (0, "t", "2u-x"))
-    det_list = [det]
-    det_list = split_det(det_list, 0)
-    det_list = split_det(det_list, 1)
-    det_list = split_det(det_list, 2)
-    for det in det_list:
-        print_det(det)
+    for num_particle in range(1, num_site * 2+1):
+        basis = [Fermion(_) for _ in sp_states.combinations(num_particle)]
+        get_u_contrib(basis, hop_terms, u_terms)
 
 
 if __name__ == "__main__":
     test_u()
-    test_eig()
-    test_speed()
-    test_det()
+    test_u_sympy()
+    test_u_contrib()

@@ -103,7 +103,10 @@ class SPStates:
 
         :return: indexing dictionary
         """
-        return {state: idx+1 for idx, state in self._states.items()}
+        idx = dict()
+        for key, value in self._states.items():
+            idx[key] = value + 1
+        return idx
 
 
 class Boson:
