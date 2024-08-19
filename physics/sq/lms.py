@@ -29,7 +29,7 @@ class AtomicOrbital:
         :param value: the new coefficient
         :return: None
         """
-        self._check_qn(key)
+        assert self._check_qn(key), f"Illegal qn {key}"
         self._coeff[key] = value
 
     def __getitem__(self, key: Tuple[int, int, int]) -> c_type:
@@ -39,21 +39,22 @@ class AtomicOrbital:
         :param key: (l, m, s) of the state
         :return: the coefficient
         """
-        self._check_qn(key)
+        assert self._check_qn(key), f"Illegal qn {key}"
         return self._coeff[key]
 
     @staticmethod
-    def _check_qn(key: Tuple[int, int, int]) -> None:
+    def _check_qn(key: Tuple[int, int, int]) -> bool:
         """
         Check if the combination of (l, m, s) is legal.
 
         :param key: (l, m, s) of the state
-        :return: None
-        :raises ValueError: if the quantum numbers are illegal
+        :return: True if legal, otherwise False
         """
         l, m, s = key
-        if (not -l <= m <= l) or (s != -1 and s != 1):
-            raise ValueError(f"Illegal quantum number {key}")
+        if (-l <= m <= l) and (s == -1 or s == 1):
+            return True
+        else:
+            return False
 
     def l_plus(self) -> None:
         """
@@ -69,11 +70,7 @@ class AtomicOrbital:
         for key, value in self._coeff.items():
             l, m, s = key
             key_new = (l, m+1, s)
-            try:
-                self._check_qn(key_new)
-            except ValueError:
-                pass
-            else:
+            if self._check_qn(key_new):
                 factor = sp.sqrt((l - m) * (l + m + 1))
                 new_coefficients[key_new] = value * factor
         self._coeff = new_coefficients
@@ -92,11 +89,7 @@ class AtomicOrbital:
         for key, value in self._coeff.items():
             l, m, s = key
             key_new = (l, m-1, s)
-            try:
-                self._check_qn(key_new)
-            except ValueError:
-                pass
-            else:
+            if self._check_qn(key_new):
                 factor = sp.sqrt((l + m) * (l - m + 1))
                 new_coefficients[key_new] = value * factor
         self._coeff = new_coefficients
@@ -145,11 +138,7 @@ class AtomicOrbital:
         for key, value in self._coeff.items():
             l, m, s = key
             key_new = (l, m, s+2)
-            try:
-                self._check_qn(key_new)
-            except ValueError:
-                pass
-            else:
+            if self._check_qn(key_new):
                 new_coefficients[key_new] = value
         self._coeff = new_coefficients
 
@@ -169,11 +158,7 @@ class AtomicOrbital:
         for key, value in self._coeff.items():
             l, m, s = key
             key_new = (l, m, s-2)
-            try:
-                self._check_qn(key_new)
-            except ValueError:
-                pass
-            else:
+            if self._check_qn(key_new):
                 new_coefficients[key_new] = value
         self._coeff = new_coefficients
 
@@ -223,8 +208,6 @@ class AtomicOrbital:
         :param ket: the ket vector
         :param operators: the operators
         :return: the matrix element
-        :raises ValueError: if any operator is not in l+, l-, lz, l2 or their
-            spin operator counterparts
         """
         ket_copy = deepcopy(ket)
         for op in operators:
@@ -245,7 +228,7 @@ class AtomicOrbital:
             elif op == "s2":
                 ket_copy.s_square()
             else:
-                raise ValueError(f"Illegal operator {op}")
+                raise AssertionError(f"Illegal operator {op}")
         return self.product(ket_copy)
 
 
