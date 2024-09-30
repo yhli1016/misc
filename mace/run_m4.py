@@ -5,7 +5,7 @@ from mace import include, Mace
 m = Mace()
 
 # Macros can be strings, integers and floats.
-m["PREFIX"] = "'test'"
+m["PREFIX"] = "test"
 m["NTYP"] = 1
 m["NAT"] = 4
 m["ECUTWFC"] = 60.5

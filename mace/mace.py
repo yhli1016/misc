@@ -123,45 +123,7 @@ class Mace:
         """
         self._macro[key] = value
 
-    def _expand_func(self, line: str) -> Tuple[str, bool]:
-        """
-        Expand function calls in given line.
-
-        :param line: line to expand
-        :return: (line, status) expanded line and whether it differs from the
-            original line
-        """
-        status = False
-        result = re.findall(self._pattern_func, line)
-        for item in result:
-            # Parse function name and arguments
-            item_split = item.split(":")
-            func_name = item_split[0].lstrip().rstrip()
-            func_args = [_.lstrip().rstrip() for _ in item_split[1].split(",")]
-
-            # Convert key=val in func_args to dict
-            args_dict = dict()
-            for arg in func_args:
-                arg_split = arg.split("=")
-                arg_name = arg_split[0].lstrip().rstrip()
-                arg_text = arg_split[1].lstrip().rstrip()
-                args_dict[arg_name] = arg_text
-
-            # Expand function calls
-            try:
-                func_text = self._macro[func_name]
-            except KeyError:
-                pass
-            else:
-                if isinstance(func_text, list):
-                    func_text = "".join(func_text)
-                for key, value in args_dict.items():
-                    func_text = re.sub(f"<{key}>", value, func_text)
-                line = re.sub(f"<{item}>", func_text, line)
-                status = True
-        return line, status
-
-    def _expand_var(self, line: str) -> Tuple[str, bool]:
+    def _expand(self, line: str) -> Tuple[str, bool]:
         """
         Expand variable references in given line.
 
@@ -177,25 +139,9 @@ class Mace:
             except KeyError:
                 pass
             else:
-                if isinstance(var_text, list):
-                    var_text = "".join(var_text)
-                else:
-                    var_text = str(var_text).lstrip("\n").rstrip("\n")
+                var_text = str(var_text).lstrip("\n").rstrip("\n")
                 line = re.sub(f"<{item}>", var_text, line)
                 status = True
-        return line, status
-
-    def _expand(self, line: str) -> Tuple[str, bool]:
-        """
-        Expand macros in given line once.
-
-        :param line: line to expand
-        :return: (line, status) expanded line and whether it differs from the
-            original line
-        """
-        line, status_func = self._expand_func(line)
-        line, status_var = self._expand_var(line)
-        status = status_func and status_var
         return line, status
 
     def expand_lines(self, lines: List[str]) -> List[str]:
@@ -237,9 +183,8 @@ class Mace:
         :return: None
         """
         with open("defs.m4", "w") as m4_file:
-            m4_file.write("changequote([,])dnl\n")
             for key, value in self._macro.items():
-                m4_file.write(f"define([{key}], [{value}])dnl\n")
+                m4_file.write(f"define(`{key}', `{value}')dnl\n")
         os.system(f"m4 {args} {template} | awk 'NF>0' > {output}")
 
     def line_replace(self, template: str, output: str) -> None:

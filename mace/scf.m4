@@ -14,7 +14,7 @@ include(defs.m4)
 #     'CELL_PARAMETERS {alat}'.
 #
 &CONTROL
-    prefix           = PREFIX
+    prefix           = 'PREFIX'
     calculation      = 'scf'
     restart_mode     = 'from_scratch'
     pseudo_dir       = './'
