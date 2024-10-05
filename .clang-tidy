@@ -1,0 +1,72 @@
+---
+Checks: >
+  -*,
+  bugprone-*,
+  cert-*,
+  clang-analyzer-*,
+  cppcoreguidelines-*,
+  google-*,
+  hicpp-*,
+  llvm-*,
+  misc-*,
+  modernize-*,
+  mpi-*,
+  openmp-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -cppcoreguidelines-non-private-member-variables-in-classes,
+  -misc-non-private-member-variables-in-classes,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -readability-magic-numbers,
+  -modernize-use-trailing-return-type,
+  -cppcoreguidelines-avoid-c-arrays,
+  -modernize-avoid-c-arrays,
+  -hicpp-avoid-c-arrays,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic
+
+WarningsAsErrors: ''
+HeaderFilterRegex: ''
+FormatStyle: webkit
+InheritParentConfig: true
+User: yhli
+CheckOptions:
+  # Length
+  readability-identifier-length.MinimumVariableNameLength: 1
+  readability-identifier-length.MinimumParameterNameLength: 1
+  readability-identifier-length.MinimumLoopCounterNameLength: 1
+
+  # Naming
+  ## Class attributes
+  readability-identifier-naming.ClassCase: CamelCase
+  ### Public
+  readability-identifier-naming.ClassMemberPrefix: ''
+  readability-identifier-naming.ClassMemberCase: lower_case
+  readability-identifier-naming.ClassMemberSuffix: ''
+  ### Protected
+  readability-identifier-naming.ProtectedMemberPrefix: ''
+  readability-identifier-naming.ProtectedMemberCase: lower_case
+  readability-identifier-naming.ProtectedMemberSuffix: '_'
+  ### Private
+  readability-identifier-naming.PrivateMemberPrefix: ''
+  readability-identifier-naming.PrivateMemberCase: lower_case
+  readability-identifier-naming.PrivateMemberSuffix: '_'
+  ### Functions
+  readability-identifier-naming.ClassMethodCase: lower_case
+  readability-identifier-naming.ProtectedMethodCase: lower_case
+  readability-identifier-naming.PrivateMethodCase: lower_case
+
+  ## Variables
+  readability-identifier-naming.VariableCase: lower_case
+  readability-identifier-naming.LocalVariableCase: lower_case
+
+  ## Misc.
+  readability-identifier-naming.FunctionCase: lower_case
+  readability-identifier-naming.EnumCase: CamelCase
+  readability-identifier-naming.EnumConstantCase: UPPER_CASE
+  readability-identifier-naming.GlobalConstantCase: UPPER_CASE
+  readability-identifier-naming.NamespaceCase: lower_case
+  readability-identifier-naming.StructCase: CamelCase
+  readability-identifier-naming.TemplateParameterCase: lower_case
+...
+# DO NOT REMOVE THIS LINE.

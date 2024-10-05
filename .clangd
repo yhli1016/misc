@@ -1,0 +1,6 @@
+CompileFlags:
+  Remove: -std=gnu++1z
+  Add: [-std=c++17, -I/home/yhli/proj/tbplas-cpp/sources,
+        -I/home/yhli/proj/tbplas-cpp/3rdparty,
+        -I/home/yhli/soft/lib/miniconda3/envs/tbplas/include/python3.12,
+        -I/home/yhli/soft/lib/miniconda3/envs/tbplas/lib/python3.12/site-packages/pybind11/include]
