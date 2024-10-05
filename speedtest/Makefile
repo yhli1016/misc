@@ -1,9 +1,9 @@
 CXX = g++
 CXXFLAGS = -O3 -fopenmp -DWITH_FULL_CSR
 
-TBPLAS_ROOT = ${HOME}/proj/tbplas-cpp
-INCFLAGS = -I${TBPLAS_ROOT}/sources -I${TBPLAS_ROOT}/3rdparty
-LIBFLAGS = -L${TBPLAS_ROOT}/build/out -ltbpm -ldiag -lbuilder -lbase -ladapter
+TBPLAS_PROJ_DIR = ${HOME}/proj/tbplas-cpp
+INCFLAGS = -I${TBPLAS_PROJ_DIR}/sources -I${TBPLAS_PROJ_DIR}/3rdparty
+LIBFLAGS = -L${TBPLAS_PROJ_DIR}/build/out -ltbpm -ldiag -lbuilder -lbase -ladapter
 
 # Top level pseudo-targets
 .PHONY: default all clean
