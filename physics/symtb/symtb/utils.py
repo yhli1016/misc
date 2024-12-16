@@ -1,6 +1,7 @@
 """Functions and classes for advanced modeling."""
 
-from typing import Tuple, Union
+from typing import Tuple, Union, Dict
+from collections import OrderedDict
 import math
 
 import sympy as sp
@@ -8,7 +9,7 @@ import numpy as np
 
 
 __all__ = ["f_type", "c_type", "rn_type", "pos_type", "cart2frac", "frac2cart",
-           "SK", "SOCTable"]
+           "SK", "SOCTable", "HopDict"]
 
 
 # Type aliases
@@ -653,3 +654,82 @@ class SOCTable:
         s_i = 0 if spin_i == "up" else 1
         s_j = 0 if spin_j == "up" else 1
         return soc_mat[s_i, s_j]
+
+
+class HopDict:
+    """
+    Class for holding hopping terms in matrix form, reserved for compatibility
+    with old version of TBPlaS.
+
+    DO NOT try to rewrite this class based on IntraHopping. This class is
+    intended for compatibility reasons and follows a different philosophy than
+    IntraHopping. Hopping terms will not be reduced by conjugate relation even
+    for the (0, 0, 0) cell, as some users may utilize H(R) and H(-R) for
+    different kinds of hopping terms. However, this makes this class bug-prone.
+    So we do not recommend common users to use this class.
+
+    Since the hopping terms are not reduced, the order of H(R) and H(-R) may
+    lead to random results. To avoid that, we use OrderedDict instead of dict
+    for holding the hopping terms.
+
+    Attributes
+    ----------
+    _hoppings: OrderedDict[Tuple[int, int, int], sp.Matrix]
+        Keys should be cell indices and values should be complex matrices.
+    _num_orb: int
+        number of orbitals
+    _mat_shape: Tuple[int, int]
+        shape of hopping matrices
+    """
+    def __init__(self, num_orb: int) -> None:
+        """
+        :param num_orb: number of orbitals
+        """
+        assert num_orb > 0, f"Number of orbital {num_orb} should be > 0"
+        self._hoppings = OrderedDict()
+        self._num_orb = num_orb
+        self._mat_shape = (self._num_orb, self._num_orb)
+
+    def __setitem__(self, rn: rn_type, hop_mat: sp.Matrix) -> None:
+        """
+        Add or update a hopping matrix according to cell index.
+        :param rn: cell index of hopping matrix
+        :param hop_mat: (num_orb, num_orb) hopping matrix
+        :return: None
+        """
+        if not isinstance(hop_mat, sp.Matrix):
+            hop_mat = sp.Matrix(hop_mat)
+        error_msg = (f"Shape of hopping matrix {hop_mat.shape} does not match"
+                     f" {self._mat_shape}")
+        assert hop_mat.shape == self._mat_shape,  error_msg
+
+        # Set hopping matrix
+        # We copy the hopping matrix to avoid changing it accidentally.
+        self._hoppings[rn] = hop_mat.copy()
+
+    def __getitem__(self, rn: rn_type) -> sp.Matrix:
+        """
+        Get the hopping matrix according to cell index.
+        :param rn: cell index of hopping matrix
+        :return: (num_orb, num_orb) hopping matrix of rn
+        """
+        try:
+            hop_mat = self._hoppings[rn]
+        except KeyError:
+            hop_mat = self._hoppings[rn] = sp.zeros(self._num_orb, self._num_orb)
+        return hop_mat
+
+    @property
+    def num_orb(self) -> int:
+        """Interface for the '_num_orb' attribute."""
+        return self._num_orb
+
+    @property
+    def mat_shape(self) -> Tuple[int, int]:
+        """Interface for the 'mat_shape' attribute."""
+        return self._mat_shape
+
+    @property
+    def hoppings(self) -> Dict[rn_type, sp.Matrix]:
+        """Interface for the 'hoppings' attribute."""
+        return self._hoppings

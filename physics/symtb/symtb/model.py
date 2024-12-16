@@ -6,7 +6,7 @@ import numpy as np
 from scipy.spatial import KDTree
 import matplotlib.pyplot as plt
 
-from .utils import f_type, c_type, pos_type, rn_type, frac2cart
+from .utils import f_type, c_type, pos_type, rn_type, frac2cart, HopDict
 from .visual import ModelViewer
 
 
@@ -14,7 +14,7 @@ __all__ = ["Model"]
 
 
 # Type aliases
-Orbital = namedtuple("Orbital", ("position", "energy"))
+Orbital = namedtuple("Orbital", ("position", "energy", "label"))
 HopTerm = namedtuple("HopTerm", ("rn", "pair", "rij", "distance"))
 
 
@@ -51,7 +51,7 @@ class Model:
         keys: cell indices + orbital pairs
         values: hopping energies
     """
-    def __init__(self, lattice: Union[sp.Matrix, np.ndarray] = None) -> None:
+    def __init__(self, lattice: Union[sp.Matrix, np.ndarray]) -> None:
         """
         :param lattice: (3, 3) sympy or numpy array
             Cartesian coordinates of lattice vectors
@@ -63,17 +63,22 @@ class Model:
         self._orbitals = []
         self._hoppings = dict()
 
-    def add_orbital(self, position: pos_type, energy: f_type = 0) -> None:
+    def add_orbital(self,
+                    position: pos_type,
+                    energy: f_type = 0,
+                    label: str = "X") -> None:
         """
         Add a new orbital to the primitive cell.
 
         :param position: FRACTIONAL coordinate of the orbital
         :param energy: on-site energy of the orbital in eV
+        :param label: label of orbital
         :return: None
         """
-        self._orbitals.append(Orbital(position, energy))
+        self._orbitals.append(Orbital(position, energy, label))
 
-    def add_hopping(self, rn: rn_type,
+    def add_hopping(self,
+                    rn: rn_type,
                     orb_i: int,
                     orb_j: int,
                     energy: c_type = 0) -> None:
@@ -106,7 +111,25 @@ class Model:
             energy = energy.conjugate()
         self._hoppings[rn + pair] = energy
 
-    def find_neighbors(self, a_max: int = 0,
+    def add_hopping_dict(self, hop_dict: HopDict) -> None:
+        """
+        Add a matrix of hopping terms to the primitive cell, or update existing
+        hopping terms.
+
+        Reserved for compatibility with old version of TBPLaS.
+
+        :param hop_dict: hopping dictionary
+        :return: None
+        """
+        for rn, hop_mat in hop_dict.hoppings.items():
+            for orb_i in range(hop_mat.shape[0]):
+                for orb_j in range(hop_mat.shape[1]):
+                    hop_eng = hop_mat[orb_i, orb_j]
+                    if hop_eng != 0:
+                        self.add_hopping(rn, orb_i, orb_j, hop_eng)
+
+    def find_neighbors(self,
+                       a_max: int = 0,
                        b_max: int = 0,
                        c_max: int = 0,
                        max_distance: float = 1.0,
@@ -204,8 +227,6 @@ class Model:
         Print c++ code for constructing model.
         :return: None
         """
-        print("// Units assumed to be ANGSTROM/eV.\n")
-
         # Lattice vectors and origin
         print("// Lattice vectors and origin.")
         print("Eigen::Matrix3d lat_vec{")
@@ -214,20 +235,25 @@ class Model:
             for j in range(2):
                 print(" ", self._lattice[i, j], ",", end="")
             if i < 2:
-                print(" ", self._lattice[i, j], "},")
+                print(" ", self._lattice[i, 2], "},")
             else:
-                print(" ", self._lattice[i, j], "}")
+                print(" ", self._lattice[i, 2], "}")
         print("};")
         print("Eigen::Vector3d origin(0.0, 0.0, 0.0);\n")
 
         # Create the primitive cell and set orbitals
         print("// Create the primitive cell and set orbitals.")
         print(f"PrimitiveCell<complex_t> prim_cell({self.num_orb}, lat_vec,"
-              f" origin, tbplas::base::ANG);")
+              f" origin, UNIT_TO_FILL);")
+        label_table = []
+        for orbital in self._orbitals:
+            if orbital.label not in label_table:
+                label_table.append(orbital.label)
         for i, orbital in enumerate(self._orbitals):
             pos = orbital.position
             eng = orbital.energy
-            print(f"prim_cell.set_orbital{i, pos[0], pos[1], pos[2], eng, 0};")
+            label = label_table.index(orbital.label)
+            print(f"prim_cell.set_orbital{i, pos[0], pos[1], pos[2], eng, label};")
         print()
 
         # Add hopping terms
@@ -236,7 +262,8 @@ class Model:
             if eng != 0:
                 print(f"prim_cell.add_hopping{rn[0], rn[1], rn[2], rn[3], rn[4], eng};")
 
-    def plot(self, fig_name: str = None,
+    def plot(self,
+             fig_name: str = None,
              fig_size: Tuple[float, float] = None,
              fig_dpi: int = 300,
              with_orbitals: bool = True,
