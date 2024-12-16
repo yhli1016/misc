@@ -3,17 +3,7 @@ import math
 import sympy as sp
 import numpy as np
 
-from tbmod import Model
-
-
-def print_hk(model: Model) -> None:
-    gauges = {1: "Atomic", 2: "Lattice"}
-    for conv in (1, 2):
-        print(f"{gauges[conv]} gauge:")
-        hk = model.get_hk(conv)
-        for ii in range(model.num_orb):
-            for jj in range(model.num_orb):
-                print(f"ham[{ii}, {jj}] = {hk[ii, jj]}")
+from symtb import Model
 
 
 def kane_mele() -> None:
@@ -28,7 +18,7 @@ def kane_mele() -> None:
     # Function for generating unit vector in xOy plane
     def _ev(_theta):
         _theta *= (sp.pi / 180)
-        return sp.Array([sp.cos(_theta), sp.sin(_theta), 1])
+        return sp.Array([sp.cos(_theta), sp.sin(_theta), 0])
 
     # Lattice vectors
     vectors = sp.Matrix([_ev(-30)*lat, _ev(30)*lat, [0, 0, 1]])
@@ -65,7 +55,9 @@ def kane_mele() -> None:
                 hij = hop_mat[ii, jj]
                 prim_cell.add_hopping(rn, ii, jj, hij)
                 prim_cell.add_hopping(rn, ii+2, jj+2, -hij)
-    print_hk(prim_cell)
+    prim_cell.print_hk(1)
+    prim_cell.print_hk(2)
+    prim_cell.print_cxx()
 
 
 def graphene() -> None:
@@ -87,7 +79,8 @@ def graphene() -> None:
     model.add_hopping((0, 1, 0), 1, 0, t)
 
     # Print analytical Hamiltonian
-    print_hk(model)
+    model.print_hk(1)
+    model.print_hk(2)
 
     # Plot model
     model.plot(orb_color=["r", "b"], hop_color="gray")

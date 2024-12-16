@@ -185,6 +185,57 @@ class Model:
             hk[orb_j, orb_i] += hij.conjugate()
         return hk
 
+    def print_hk(self, convention: int = 1) -> None:
+        """
+        Print analytical hamiltonian
+
+        :param convention: convention for setting up the Hamiltonian
+        :return:
+        """
+        gauge = "Atomic" if convention == 1 else "Lattice"
+        print(f"{gauge} gauge:")
+        hk = self.get_hk(convention)
+        for ii in range(self.num_orb):
+            for jj in range(self.num_orb):
+                print(f"ham[{ii}, {jj}] = {hk[ii, jj]}")
+
+    def print_cxx(self) -> None:
+        """
+        Print c++ code for constructing model.
+        :return: None
+        """
+        print("// Units assumed to be ANGSTROM/eV.\n")
+
+        # Lattice vectors and origin
+        print("// Lattice vectors and origin.")
+        print("Eigen::Matrix3d lat_vec{")
+        for i in range(3):
+            print("{", end="")
+            for j in range(2):
+                print(" ", self._lattice[i, j], ",", end="")
+            if i < 2:
+                print(" ", self._lattice[i, j], "},")
+            else:
+                print(" ", self._lattice[i, j], "}")
+        print("};")
+        print("Eigen::Vector3d origin(0.0, 0.0, 0.0);\n")
+
+        # Create the primitive cell and set orbitals
+        print("// Create the primitive cell and set orbitals.")
+        print(f"PrimitiveCell<complex_t> prim_cell({self.num_orb}, lat_vec,"
+              f" origin, tbplas::base::ANG);")
+        for i, orbital in enumerate(self._orbitals):
+            pos = orbital.position
+            eng = orbital.energy
+            print(f"prim_cell.set_orbital{i, pos[0], pos[1], pos[2], eng, 0};")
+        print()
+
+        # Add hopping terms
+        print("// Add hopping terms.")
+        for rn, eng in self._hoppings.items():
+            if eng != 0:
+                print(f"prim_cell.add_hopping{rn[0], rn[1], rn[2], rn[3], rn[4], eng};")
+
     def plot(self, fig_name: str = None,
              fig_size: Tuple[float, float] = None,
              fig_dpi: int = 300,

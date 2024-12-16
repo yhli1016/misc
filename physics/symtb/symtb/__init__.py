@@ -1,2 +1,2 @@
 from .utils import *
-from .symtb import *
+from .model import *
