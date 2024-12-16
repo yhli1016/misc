@@ -58,6 +58,7 @@ def kane_mele() -> None:
     prim_cell.print_hk(1)
     prim_cell.print_hk(2)
     prim_cell.print_cxx()
+    prim_cell.print_py()
 
 
 def graphene() -> None:

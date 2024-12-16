@@ -125,7 +125,7 @@ class Model:
             for orb_i in range(hop_mat.shape[0]):
                 for orb_j in range(hop_mat.shape[1]):
                     hop_eng = hop_mat[orb_i, orb_j]
-                    if hop_eng != 0:
+                    if not (rn == (0, 0, 0) and orb_i == orb_j) and hop_eng != 0:
                         self.add_hopping(rn, orb_i, orb_j, hop_eng)
 
     def find_neighbors(self,
@@ -221,6 +221,38 @@ class Model:
         for ii in range(self.num_orb):
             for jj in range(self.num_orb):
                 print(f"ham[{ii}, {jj}] = {hk[ii, jj]}")
+
+    def print_py(self) -> None:
+        """
+        Print python for constructing model.
+        :return: None
+        """
+        # Lattice vectors and origin
+        print("# Lattice vectors and origin.")
+        print("lat_vec = np.array([")
+        for i in range(3):
+            print("[", end="")
+            for j in range(3):
+                print(" ", self._lattice[i, j], ",", end="")
+            print("],")
+        print("])")
+        print("origin = np.zeros(3)\n")
+
+        # Create the primitive cell and set orbitals
+        print("# Create the primitive cell and set orbitals.")
+        print("prim_cell = PrimitiveCell(lat_vec, origin, UNIT_TO_FILL)")
+        for i, orbital in enumerate(self._orbitals):
+            pos = orbital.position
+            eng = orbital.energy
+            label = orbital.label
+            print(f"prim_cell.add_orbital{(pos[0], pos[1], pos[2]), eng, label}")
+        print()
+
+        # Add hopping terms
+        print("# Add hopping terms.")
+        for rn, eng in self._hoppings.items():
+            if eng != 0:
+                print(f"prim_cell.add_hopping{(rn[0], rn[1], rn[2]), rn[3], rn[4], eng}")
 
     def print_cxx(self) -> None:
         """
