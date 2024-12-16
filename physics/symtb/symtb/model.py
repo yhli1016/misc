@@ -43,7 +43,7 @@ class Model:
 
     Attributes
     ----------
-    _lattice: Union[sp.Matrix, np.ndarray]
+    _lattice: sp.Matrix
         Cartesian coordinates of lattice vectors
     _orbitals: List[Orbital]
         list of orbital positions and on-site energies
@@ -51,15 +51,15 @@ class Model:
         keys: cell indices + orbital pairs
         values: hopping energies
     """
-    def __init__(self, lattice: Union[sp.Matrix, np.ndarray]) -> None:
+    def __init__(self, lattice: sp.Matrix) -> None:
         """
-        :param lattice: (3, 3) sympy or numpy array
+        :param lattice: (3, 3) sympy array
             Cartesian coordinates of lattice vectors
         """
         if lattice is None:
             self._lattice = sp.eye(3)
         else:
-            self._lattice = lattice
+            self._lattice = sp.Matrix(lattice)
         self._orbitals = []
         self._hoppings = dict()
 
@@ -152,8 +152,9 @@ class Model:
         :return: list of neighbors as named tuples
         """
         # Get Cartesian coordinates of orbitals
+        lattice_np = np.array(self._lattice, dtype=np.float64)
         pos_r0 = np.array([orb.position for orb in self._orbitals])
-        pos_r0 = frac2cart(self._lattice, pos_r0)
+        pos_r0 = frac2cart(lattice_np, pos_r0)
 
         # Prepare for the loop
         tree_r0 = KDTree(pos_r0)
@@ -165,7 +166,7 @@ class Model:
         # Loop over neighboring cells to search for orbital pairs
         neighbors = []
         for rn in neighbor_rn:
-            pos_rn = pos_r0 + np.matmul(rn, self._lattice)
+            pos_rn = pos_r0 + np.matmul(rn, lattice_np)
             tree_rn = KDTree(pos_rn)
             dist_matrix = tree_r0.sparse_distance_matrix(tree_rn,
                                                          max_distance=max_distance)
@@ -328,20 +329,21 @@ class Model:
         :raises ValueError: if view is illegal
         """
         # Assemble arrays
+        lattice_np = np.array(self._lattice, dtype=np.float64)
         hop_ind = np.array([_ for _ in self._hoppings.keys()])
         orb_pos = np.array([orb.position for orb in self._orbitals])
-        orb_pos = frac2cart(self._lattice, orb_pos)
+        orb_pos = frac2cart(lattice_np, orb_pos)
         origin = np.zeros(3)
         dr = np.zeros((self.num_hop, 3), dtype=np.float64)
         for i_h, ind in enumerate(hop_ind):
             orb_i, orb_j = ind.item(3), ind.item(4)
-            rn = np.matmul(ind[0:3], self._lattice)
+            rn = np.matmul(ind[0:3], lattice_np)
             dr[i_h] = orb_pos[orb_j] + rn - orb_pos[orb_i]
 
         # Initialize visualizer
         fig, axes = plt.subplots(figsize=fig_size)
         axes.set_aspect('equal')
-        viewer = ModelViewer(axes, self._lattice, origin, view)
+        viewer = ModelViewer(axes, lattice_np, origin, view)
 
         # Determine the range of rn
         rn_range = np.zeros((3, 2), dtype=np.int32)
@@ -367,7 +369,7 @@ class Model:
                 for i_a in range(ra_min, ra_max+1):
                     for i_b in range(rb_min, rb_max+1):
                         for i_c in range(rc_min, rc_max+1):
-                            center = np.matmul((i_a, i_b, i_c), self._lattice)
+                            center = np.matmul((i_a, i_b, i_c), lattice_np)
                             pos_rn = orb_pos + center
                             viewer.scatter(pos_rn, s=100, c=orb_color)
 
