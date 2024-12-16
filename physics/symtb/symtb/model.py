@@ -225,7 +225,7 @@ class Model:
 
     def print_py(self) -> None:
         """
-        Print python for constructing model.
+        Print python code for constructing the model.
         :return: None
         """
         # Lattice vectors and origin
@@ -246,18 +246,22 @@ class Model:
             pos = orbital.position
             eng = orbital.energy
             label = orbital.label
-            print(f"prim_cell.add_orbital{(pos[0], pos[1], pos[2]), eng, label}")
+            print(f"prim_cell.add_orbital("
+                  f"({pos[0]}, {pos[1]}, {pos[2]}), {eng}, '{label}'"
+                  f")")
         print()
 
         # Add hopping terms
         print("# Add hopping terms.")
         for rn, eng in self._hoppings.items():
             if eng != 0:
-                print(f"prim_cell.add_hopping{(rn[0], rn[1], rn[2]), rn[3], rn[4], eng}")
+                print(f"prim_cell.add_hopping("
+                      f"({rn[0]}, {rn[1]}, {rn[2]}), {rn[3]}, {rn[4]}, {eng}"
+                      f")")
 
     def print_cxx(self) -> None:
         """
-        Print c++ code for constructing model.
+        Print c++ code for constructing the model.
         :return: None
         """
         # Lattice vectors and origin
@@ -285,15 +289,19 @@ class Model:
         for i, orbital in enumerate(self._orbitals):
             pos = orbital.position
             eng = orbital.energy
-            label = label_table.index(orbital.label)
-            print(f"prim_cell.set_orbital{i, pos[0], pos[1], pos[2], eng, label};")
+            label_idx = label_table.index(orbital.label)
+            print(f"prim_cell.set_orbital("
+                  f"{i}, {pos[0]}, {pos[1]}, {pos[2]}, {eng}, {label_idx}"
+                  f");")
         print()
 
         # Add hopping terms
         print("// Add hopping terms.")
         for rn, eng in self._hoppings.items():
             if eng != 0:
-                print(f"prim_cell.add_hopping{rn[0], rn[1], rn[2], rn[3], rn[4], eng};")
+                print(f"prim_cell.add_hopping("
+                      f"{rn[0]}, {rn[1]}, {rn[2]}, {rn[3]}, {rn[4]}, {eng}"
+                      f");")
 
     def plot(self,
              fig_name: str = None,
