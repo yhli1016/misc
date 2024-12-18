@@ -258,6 +258,7 @@ class Model:
                 print(f"prim_cell.add_hopping("
                       f"({rn[0]}, {rn[1]}, {rn[2]}), {rn[3]}, {rn[4]}, {eng}"
                       f")")
+        print("\nreturn prim_cell")
 
     def print_cxx(self) -> None:
         """
@@ -302,6 +303,7 @@ class Model:
                 print(f"prim_cell.add_hopping("
                       f"{rn[0]}, {rn[1]}, {rn[2]}, {rn[3]}, {rn[4]}, {eng}"
                       f");")
+        print("\nreturn prim_cell;")
 
     def plot(self,
              fig_name: str = None,
